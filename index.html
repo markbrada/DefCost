@@ -55,6 +55,8 @@ summary:hover{background:var(--btn);color:#fff}
 .sub-row td{background:var(--alt);font-size:.95em}
 .sub-row .item-input{min-height:1.6em}
 .sub-marker{opacity:.7;margin-right:.4rem}
+.sub-item-cell{position:relative;padding-left:1.25rem}
+.sub-item-cell::before{content:"";position:absolute;left:.5rem;top:.4rem;bottom:.4rem;width:2px;background:var(--border);opacity:.6;border-radius:1px}
 .sub-controls{display:inline-flex;gap:.25rem;margin-right:.25rem;vertical-align:middle}
 .subbtn{padding:.1rem .35rem;border:1px solid var(--border);background:var(--panel);cursor:pointer;border-radius:4px}
 .subbtn.active{background:var(--btn);color:#fff;border-color:var(--btn)}
@@ -228,11 +230,11 @@ function addItem(row,header){
     if(j!==catIdx&&String(row[j]).trim()!==''){firstNonEmpty=row[j];break;}
   }
   var desc=itemCol!==-1?row[itemCol]:firstNonEmpty||'Unnamed Item';
+  var exVal=exIdx===-1?NaN:+row[exIdx];
   if(captureParentId){
-    basket.push({id:++uid,pid:captureParentId,kind:'sub',item:desc});
+    basket.push({id:++uid,pid:captureParentId,kind:'sub',item:desc,qty:1,ex:exVal});
   }else{
-    var ex=exIdx===-1?NaN:+row[exIdx];
-    basket.push({id:++uid,pid:null,kind:'line',collapsed:false,item:desc,qty:1,ex:ex});
+    basket.push({id:++uid,pid:null,kind:'line',collapsed:false,item:desc,qty:1,ex:exVal});
   }
   renderBasket();
 }
@@ -257,7 +259,7 @@ function renderBasket(){
     var cap=document.createElement('button'); cap.className='subbtn'+(captureParentId===b.id?' active':''); cap.title='Capture catalog adds as sub-items'; cap.textContent='⊞';
     cap.onclick=function(){ captureParentId=(captureParentId===b.id?null:b.id); renderBasket(); };
     var addS=document.createElement('button'); addS.className='subbtn'; addS.title='Add note sub-item'; addS.textContent='+';
-    addS.onclick=function(){ basket.push({id:++uid,pid:b.id,kind:'sub',item:''}); renderBasket(); };
+    addS.onclick=function(){ basket.push({id:++uid,pid:b.id,kind:'sub',item:'',qty:1,ex:0}); renderBasket(); };
     var tog=document.createElement('button'); tog.className='subbtn'; tog.title='Collapse/expand sub-items'; tog.textContent=b.collapsed?'▸':'▾';
     tog.onclick=function(){ b.collapsed=!b.collapsed; renderBasket(); };
     ctrl.appendChild(cap); ctrl.appendChild(addS); ctrl.appendChild(tog); tdItem.appendChild(ctrl);
@@ -284,16 +286,25 @@ function renderBasket(){
     var kids=childrenMap[b.id]||[];
     for(var k=0;k<kids.length;k++){
       (function(s){
+        if(typeof s.qty==='undefined') s.qty=1;
         var sr=document.createElement('tr'); sr.className='sub-row'; sr.dataset.id=String(s.id||'');
         var c1=document.createElement('td'); c1.textContent=''; sr.appendChild(c1);
-        var c2=document.createElement('td'); var marker=document.createElement('span'); marker.className='sub-marker'; marker.textContent='—';
+        var c2=document.createElement('td'); c2.className='sub-item-cell'; var marker=document.createElement('span'); marker.className='sub-marker'; marker.textContent='—';
         var t=document.createElement('textarea'); t.rows=1; t.className='editable item-input'; t.value=s.item||''; t.oninput=function(){ s.item=t.value; saveBasket(); };
         c2.appendChild(marker); c2.appendChild(t); sr.appendChild(c2);
-        var c3=document.createElement('td'); c3.textContent='—'; sr.appendChild(c3);
-        var c4=document.createElement('td'); c4.textContent='—'; sr.appendChild(c4);
-        var c5=document.createElement('td'); c5.textContent='—'; sr.appendChild(c5);
-        var c6=document.createElement('td'); c6.textContent='—'; sr.appendChild(c6);
-        var c7=document.createElement('td'); c7.textContent='—'; sr.appendChild(c7);
+        var c3=document.createElement('td'); var qc=document.createElement('div'); qc.className='qty-controls';
+        var minus=document.createElement('button'); minus.textContent='-';
+        var inp=document.createElement('input'); inp.type='number'; inp.step='0.1'; inp.className='qty-input'; inp.value=s.qty||1;
+        var plus=document.createElement('button'); plus.textContent='+';
+        minus.onclick=function(){ s.qty=Math.max(1,(s.qty||1)-1); renderBasket(); };
+        plus.onclick=function(){ s.qty=(s.qty||1)+1; renderBasket(); };
+        inp.onchange=function(){ s.qty=Math.max(1,parseFloat(inp.value)||1); renderBasket(); };
+        qc.appendChild(minus); qc.appendChild(inp); qc.appendChild(plus); c3.appendChild(qc); sr.appendChild(c3);
+        var c4=document.createElement('td'); var exInput=document.createElement('input'); exInput.type='number'; exInput.step='0.01'; exInput.className='editable price-input'; exInput.value=isNaN(s.ex)?'':Number(s.ex).toFixed(2); exInput.onchange=function(){ var v=parseFloat(exInput.value); s.ex=isFinite(v)?v:NaN; renderBasket(); }; c4.appendChild(exInput); sr.appendChild(c4);
+        var le=isNaN(s.ex)?0:(s.qty||1)*s.ex; var gstAmt=le*GST_RATE; var li=le+gstAmt; totEx+=le; totGst+=gstAmt;
+        var c5=document.createElement('td'); c5.textContent=isNaN(s.ex)?'N/A':le.toFixed(2); sr.appendChild(c5);
+        var c6=document.createElement('td'); c6.textContent=isNaN(s.ex)?'N/A':gstAmt.toFixed(2); sr.appendChild(c6);
+        var c7=document.createElement('td'); c7.textContent=isNaN(s.ex)?'N/A':li.toFixed(2); sr.appendChild(c7);
         var c8=document.createElement('td'); var rx=document.createElement('span'); rx.className='remove-btn'; rx.textContent='X';
         rx.onclick=function(){ for(var r=basket.length-1;r>=0;r--){ if(basket[r].id===s.id){ basket.splice(r,1); break; } } renderBasket(); };
         c8.appendChild(rx); sr.appendChild(c8);
@@ -327,11 +338,9 @@ if(exportBtn){
       var b=basket[i];
       var le=isNaN(b.ex)?0:(b.qty||1)*b.ex;
       var label=(b.pid?' - ':'')+(b.item||'');
-      var gstAmt=0, li=0;
-      if(!b.pid){
-        totEx+=le; gstAmt=le*GST_RATE; totGst+=gstAmt; li=le+gstAmt;
-      }
-      lines.push([label, b.pid?"":(b.qty||1), isNaN(b.ex)?"N/A":Number(b.ex).toFixed(2), isNaN(b.ex)?"N/A":le.toFixed(2), isNaN(b.ex)?"N/A":gstAmt.toFixed(2), isNaN(b.ex)?"N/A":li.toFixed(2)]);
+      var gstAmt=le*GST_RATE; var li=le+gstAmt;
+      totEx+=le; totGst+=gstAmt;
+      lines.push([label,(b.qty||1),isNaN(b.ex)?"N/A":Number(b.ex).toFixed(2),isNaN(b.ex)?"N/A":le.toFixed(2),isNaN(b.ex)?"N/A":gstAmt.toFixed(2),isNaN(b.ex)?"N/A":li.toFixed(2)]);
     }
     var grand=(totEx+totGst).toFixed(2);
     lines.push(["Totals","","",totEx.toFixed(2),totGst.toFixed(2),grand]);
