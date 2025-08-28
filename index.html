@@ -5,7 +5,7 @@
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
 <meta charset="UTF-8">
-<title>DefCost 1.0.2</title>
+<title>DefCost 1.0.3</title>
 <style>
 :root{--bg:#f7f7f7;--fg:#333;--header:#e0e0e0;--btn:#007bff;--btnh:#0056b3;--add:#28a745;--addh:#218838;--border:#aaa;--alt:#f9f9f9;--panel:#fff;--toast:#007bff;--toastfg:#fff;--rowHover:#e9f1ff}
 .dark-mode{--bg:#222;--fg:#eee;--header:#444;--btn:#0d6efd;--btnh:#0a58ca;--add:#198754;--addh:#157347;--border:#555;--alt:#2a2a2a;--panel:#333;--toast:#0d6efd;--toastfg:#fff;--rowHover:#383838}
@@ -89,7 +89,7 @@ input[type=number]{-moz-appearance:textfield}
 </style>
 </head>
 <body>
-<h1>DefCost 1.0.2</h1>
+<h1>DefCost 1.0.3</h1>
 <button id="darkModeToggle">Toggle Dark Mode</button>
 <div id="sheetTabs"></div>
 <div id="status" style="margin:.5rem 0;font-size:.9rem"></div>
@@ -354,33 +354,7 @@ if(exportBtn){
     }
     lines.push(["Totals","","","",report.grandEx.toFixed(2),report.grandGst.toFixed(2),report.grandTotal.toFixed(2)]);
     var out=[]; for(var r=0;r<lines.length;r++){ var row=lines[r]; for(var c=0;c<row.length;c++){ row[c]=esc(row[c]); } out.push(row.join(',')); }
-    var csv=out.join("
-"); var blob=new Blob([csv],{type:"text/csv"}); var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="quote_basket.csv"; document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  };
-    var lines=[["Item","Quantity","Price Ex. GST","Line Ex","GST","Line Total"]];
-    var totEx=0,totGst=0;
-    for(var i=0;i<basket.length;i++){
-      var b=basket[i];
-      var le=isNaN(b.ex)?0:(b.qty||1)*b.ex;
-      var label=(b.pid?' - ':'')+(b.item||'');
-      var gstAmt=le*GST_RATE; var li=le+gstAmt;
-      totEx+=le; totGst+=gstAmt;
-      lines.push([label,(b.qty||1),isNaN(b.ex)?"N/A":Number(b.ex).toFixed(2),isNaN(b.ex)?"N/A":le.toFixed(2),isNaN(b.ex)?"N/A":gstAmt.toFixed(2),isNaN(b.ex)?"N/A":li.toFixed(2)]);
-    }
-    var grand=(totEx+totGst).toFixed(2);
-    lines.push(["Totals","","",totEx.toFixed(2),totGst.toFixed(2),grand]);
-    var out=[];
-    for(var r=0;r<lines.length;r++){
-      var row=lines[r];
-      for(var c=0;c<row.length;c++){ row[c]=esc(row[c]); }
-      out.push(row.join(','));
-    }
-    var csv=out.join("\n");
-    var blob=new Blob([csv],{type:"text/csv"});
-    var a=document.createElement("a");
-    a.href=URL.createObjectURL(blob);
-    a.download="quote_basket.csv";
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    var csv=out.join("\n"); var blob=new Blob([csv],{type:"text/csv"}); var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="quote_basket.csv"; document.body.appendChild(a); a.click(); document.body.removeChild(a);
   };
 }
 window.__wd_main_ok__=true;
