@@ -5,12 +5,12 @@
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
 <meta charset="UTF-8">
-<title>DefCost 1.0.3</title>
+<title>DefCost 1.1.0</title>
 <style>
 :root{--bg:#f7f7f7;--fg:#333;--header:#e0e0e0;--btn:#007bff;--btnh:#0056b3;--add:#28a745;--addh:#218838;--border:#aaa;--alt:#f9f9f9;--panel:#fff;--toast:#007bff;--toastfg:#fff;--rowHover:#e9f1ff}
 .dark-mode{--bg:#222;--fg:#eee;--header:#444;--btn:#0d6efd;--btnh:#0a58ca;--add:#198754;--addh:#157347;--border:#555;--alt:#2a2a2a;--panel:#333;--toast:#0d6efd;--toastfg:#fff;--rowHover:#383838}
 body{font-family:sans-serif;margin:1rem;background:var(--bg);color:var(--fg);transition:.3s}
-h1{margin:.2rem 0}p{margin:0 0 2rem}
+h1{margin:.2rem 0}
 #darkModeToggle{position:fixed;top:10px;right:10px;z-index:3000;background:var(--btn);color:#fff;border:none;padding:.5rem .75rem;border-radius:4px;cursor:pointer}
 #darkModeToggle:hover{background:var(--btnh)}
 #sheetTabs{border-bottom:1px solid var(--border);margin-bottom:1rem}
@@ -22,7 +22,7 @@ h1{margin:.2rem 0}p{margin:0 0 2rem}
 .highlight{background:yellow}
 table{border-collapse:collapse;width:100%}
 thead th{position:sticky;top:0;background:var(--header);border:1px solid var(--border);padding:.5rem;text-align:center;z-index:2}
-tbody td{border:1px solid var(--border);padding:.5rem}
+tbody td{border:1px solid var(--border);padding:.28rem}
 tbody tr{background:var(--panel)}
 tbody tr:hover{background:var(--rowHover)}
 .add-button{background:var(--add);color:#fff;border:none;padding:.3rem .6rem;border-radius:4px;font-weight:bold;cursor:pointer}
@@ -49,7 +49,7 @@ summary:hover{background:var(--btn);color:#fff}
 #basketTable th,#basketTable td{border:1px solid var(--border);padding:.28rem;box-sizing:border-box;vertical-align:middle;overflow:hidden}
 #basketContainer thead th{position:static}
 #basketTable tbody tr:hover{background:var(--rowHover)}
-.sort-handle{cursor:move;user-select:none;text-align:left;font-size:1.1rem;min-width:2em}
+.sort-handle{user-select:none;text-align:left;font-size:1.1rem;min-width:2em}
 .qty-input{width:48px;text-align:center}
 .remove-btn{color:red;font-weight:bold;cursor:pointer}
 .sub-row td{background:var(--alt);font-size:.95em}
@@ -63,6 +63,14 @@ summary:hover{background:var(--btn);color:#fff}
 .dark-mode .subbtn:hover{filter:brightness(.95)}
 .subbtn.active{background:var(--btn);color:#fff;border-color:var(--btn)}
 .dark-mode .subbtn.active{background:var(--btn);color:#fff;border-color:var(--btn)}
+.section-row td{background:var(--header);font-weight:bold}
+.section-name{margin:0 .5rem}
+.section-subtotal td{background:var(--panel)}
+.sec-badge{margin-left:.5rem;font-size:.85em;opacity:.8}
+.sec-more{float:right}
+.sec-menu{position:fixed;z-index:5000;display:none;background:var(--panel);border:1px solid var(--border);border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.2);}
+.sec-menu button{display:block;width:100%;padding:.4rem .6rem;background:none;border:none;text-align:left;cursor:pointer}
+.sec-menu button:hover{background:var(--rowHover)}
 #toast{margin-left:1rem;background:var(--toast);color:var(--toastfg);padding:.3rem .6rem;border-radius:4px;opacity:0;transition:.3s}
 #toast.show{opacity:1}
 .editable{background:#fff;border:1px solid var(--border);padding:.35rem .45rem;border-radius:6px;width:100%;box-sizing:border-box;display:block;margin:0}
@@ -89,7 +97,7 @@ input[type=number]{-moz-appearance:textfield}
 </style>
 </head>
 <body>
-<h1>DefCost 1.0.3</h1>
+<h1>DefCost 1.1.0</h1>
 <button id="darkModeToggle">Toggle Dark Mode</button>
 <div id="sheetTabs"></div>
 <div id="status" style="margin:.5rem 0;font-size:.9rem"></div>
@@ -98,12 +106,13 @@ input[type=number]{-moz-appearance:textfield}
 <div id="basketContainer">
   <div id="basketSticky">
     <div id="basketHeader">
-      <div style="display:flex;align-items:center;gap:.5rem"><h3>Quote Basket</h3><span id="toast"></span></div>
+      <div style="display:flex;align-items:center;gap:.5rem"><h3>Quote Builder</h3><span id="toast"></span></div>
       <div>
+        <button id="addSectionBtn">+ Section</button>
         <button id="addCustomBtn">Add custom line</button>
         <button id="clearBasketBtn">Clear</button>
         <button id="exportCsvBtn">Export quote CSV</button>
-        <button id="toggleBasketBtn">Hide Basket</button>
+        <button id="toggleBasketBtn">Hide</button>
       </div>
     </div>
     <div id="basketStickyHead">
@@ -147,6 +156,7 @@ input[type=number]{-moz-appearance:textfield}
     </table>
   </div>
 </div>
+<div id="secMenu" class="sec-menu"><button data-act="rename">Rename Section</button><button data-act="delete">Delete Section</button></div>
 <button id="basketFab" aria-label="Open quote basket" title="Open quote basket">Quote (0)</button>
 <script src="xlsx.full.min.js"></script>
 <script>if(!window.XLSX){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js';s.setAttribute('data-sheetjs','1');document.head.appendChild(s);}</script>
@@ -158,18 +168,21 @@ var META=(function(){var o={};for(var i=0;i<ORDER.length;i++){o[ORDER[i][0]]={id
 var FALL=META["uncategorised"];
 var PRICE_EX=["Rate Ex. GST","Price Ex. GST","Price","Price Ex Tax","Price ex GST"];
 var TOAST_MS=3000,GST_RATE=0.10,LS_KEY='defcost_basket_v2';
-var wb=null,basket=[],uid=0,captureParentId=null;
+var wb=null,basket=[],uid=0,captureParentId=null,sections=[],activeSectionId=null,nextSectionId=2;
 var tabs=document.getElementById("sheetTabs"),container=document.getElementById("sheetContainer"),toast=document.getElementById("toast");
 function active(n){if(!tabs)return;var kids=tabs.children;for(var i=0;i<kids.length;i++){var b=kids[i];b.classList.toggle('active',b.dataset&&b.dataset.sheet===n);}}
-function saveBasket(){try{localStorage.setItem(LS_KEY,JSON.stringify(basket));}catch(e){}
+function saveState(){var obj={basket:basket,sections:sections,activeSectionId:activeSectionId};try{localStorage.setItem(LS_KEY,JSON.stringify(obj));}catch(e){}
 }
-function loadBasket(){try{var raw=localStorage.getItem(LS_KEY);if(raw){var arr=JSON.parse(raw);if(Array.isArray(arr)){basket=arr;uid=0;for(var i=0;i<arr.length;i++){var id=+arr[i].id||0;if(id>uid)uid=id;}renderBasket();}}}catch(e){}
-}
+function ensureSections(){if(!Array.isArray(sections)||!sections.length){sections=[{id:1,name:'Section 1',collapsed:false}];activeSectionId=1;nextSectionId=2;}}
+function assignSectionDefaults(){ensureSections();for(var i=0;i<basket.length;i++){if(!basket[i])continue;if(typeof basket[i].sectionId==='undefined'||basket[i].sectionId===null){basket[i].sectionId=activeSectionId||sections[0].id;}}}
+function loadState(){try{var raw=localStorage.getItem(LS_KEY);if(raw){var data=JSON.parse(raw);if(Array.isArray(data)){basket=data;sections=[{id:1,name:'Section 1',collapsed:false}];activeSectionId=1;uid=0;for(var i=0;i<basket.length;i++){if(!basket[i])continue;basket[i].sectionId=1;var id=+basket[i].id||0;if(id>uid)uid=id;}return renderBasket();}if(data&&typeof data==='object'){basket=Array.isArray(data.basket)?data.basket:[];sections=Array.isArray(data.sections)&&data.sections.length?data.sections:[{id:1,name:'Section 1',collapsed:false}];activeSectionId=+data.activeSectionId||sections[0].id;uid=0;for(var i=0;i<basket.length;i++){var id=+basket[i].id||0;if(id>uid)uid=id;}assignSectionDefaults();return renderBasket();}}}catch(e){} assignSectionDefaults();renderBasket();}
 function showToast(msg,undo){var el=toast;el.textContent=msg;el.classList.add("show");if(undo){el.style.cursor="pointer";el.onclick=function(){undo();el.classList.remove("show");};}else{el.style.cursor="default";el.onclick=null;}setTimeout(function(){el.classList.remove("show");},TOAST_MS);} 
 function escapeHtml(s){s=String(s==null?'':s);return s.replace(/[&<>"']/g,function(m){switch(m){case'&':return'&amp;';case'<':return'&lt;';case'>':return'&gt;';case'"':return'&quot;';default:return'&#39;';}});} 
-function getDefaultSections(){return [{id:1,name:'Section 1'}];}
-function buildReportModel(basket,sections){sections=(sections&&sections.length)?sections:getDefaultSections();var sectionsById={};for(var i=0;i<sections.length;i++){sectionsById[sections[i].id]=sections[i];}var childMap={};for(var i2=0;i2<basket.length;i2++){var it=basket[i2];if(it&&it.pid){(childMap[it.pid]||(childMap[it.pid]=[])).push(it);}}var secMap={};function ensureSec(id){if(!secMap[id]){var name=sectionsById[id]?sectionsById[id].name:('Section '+id);secMap[id]={id:id,name:name,items:[],subtotalEx:0,subtotalGst:0,subtotalTotal:0};}return secMap[id];}function addAmounts(obj,qty,ex){var le=isNaN(ex)?0:(qty||1)*ex;var gst=le*GST_RATE;obj.subtotalEx+=le;obj.subtotalGst+=gst;obj.subtotalTotal+=le+gst;}for(var i3=0;i3<basket.length;i3++){var it2=basket[i3];if(!it2||it2.pid)continue;var sid=it2.sectionId||sections[0].id;var sec=ensureSec(sid);var subs=childMap[it2.id]||[];sec.items.push({parent:it2,subs:subs});addAmounts(sec,it2.qty,it2.ex);for(var k=0;k<subs.length;k++){addAmounts(sec,subs[k].qty,subs[k].ex);}}var orderedSections=[];for(var j=0;j<sections.length;j++){if(secMap[sections[j].id])orderedSections.push(secMap[sections[j].id]);}for(var id in secMap){if(secMap.hasOwnProperty(id)){var present=false;for(var j2=0;j2<orderedSections.length;j2++){if(orderedSections[j2].id==id){present=true;break;}}if(!present)orderedSections.push(secMap[id]);}}if(!orderedSections.length){orderedSections.push({id:sections[0].id,name:sections[0].name,items:[],subtotalEx:0,subtotalGst:0,subtotalTotal:0});}var grandEx=0,grandGst=0,grandTotal=0;for(var s=0;s<orderedSections.length;s++){grandEx+=orderedSections[s].subtotalEx;grandGst+=orderedSections[s].subtotalGst;grandTotal+=orderedSections[s].subtotalTotal;}return{sections:orderedSections,grandEx:grandEx,grandGst:grandGst,grandTotal:grandTotal};}
-loadBasket();
+function getDefaultSections(){return sections&&sections.length?sections:[{id:1,name:'Section 1'}];}
+function buildReportModel(basket,secs){var ss=(secs&&secs.length)?secs:getDefaultSections();var byId={};for(var i=0;i<ss.length;i++){byId[ss[i].id]=ss[i];}var childMap={};for(var i2=0;i2<basket.length;i2++){var it=basket[i2];if(it&&it.pid){(childMap[it.pid]||(childMap[it.pid]=[])).push(it);}}var secMap={};function ensureSec(id){if(!secMap[id]){var name=byId[id]?byId[id].name:('Section '+id);secMap[id]={id:id,name:name,items:[],subtotalEx:0,subtotalGst:0,subtotalTotal:0};}return secMap[id];}function addAmt(obj,qty,ex){var le=isNaN(ex)?0:(qty||1)*ex;var gst=le*GST_RATE;obj.subtotalEx+=le;obj.subtotalGst+=gst;obj.subtotalTotal+=le+gst;}for(var i3=0;i3<basket.length;i3++){var it2=basket[i3];if(!it2||it2.pid)continue;var sid=it2.sectionId||(ss[0]&&ss[0].id)||1;var sec=ensureSec(sid);var subs=childMap[it2.id]||[];sec.items.push({parent:it2,subs:subs});addAmt(sec,it2.qty,it2.ex);for(var k=0;k<subs.length;k++){addAmt(sec,subs[k].qty,subs[k].ex);}}var ordered=[];for(var j=0;j<ss.length;j++){if(secMap[ss[j].id])ordered.push(secMap[ss[j].id]);}for(var id in secMap){if(secMap.hasOwnProperty(id)){var present=false;for(var j2=0;j2<ordered.length;j2++){if(ordered[j2].id==id){present=true;break;}}if(!present)ordered.push(secMap[id]);}}if(!ordered.length){ordered.push({id:ss[0].id,name:ss[0].name,items:[],subtotalEx:0,subtotalGst:0,subtotalTotal:0});}var grandEx=0,grandGst=0,grandTotal=0;for(var s=0;s<ordered.length;s++){grandEx+=ordered[s].subtotalEx;grandGst+=ordered[s].subtotalGst;grandTotal+=ordered[s].subtotalTotal;}return{sections:ordered,grandEx:grandEx,grandGst:grandGst,grandTotal:grandTotal};}
+var addSectionBtn=document.getElementById('addSectionBtn');
+if(addSectionBtn){addSectionBtn.onclick=function(){ensureSections();var id=0;for(var i=0;i<sections.length;i++){if(sections[i].id>=nextSectionId)nextSectionId=sections[i].id+1;}id=nextSectionId++;var name='Section '+id;sections.push({id:id,name:name,collapsed:false});activeSectionId=id;captureParentId=null;saveState();renderBasket();};}
+loadState();
 document.getElementById("darkModeToggle").onclick=function(){document.body.classList.toggle("dark-mode")};
 var statusEl=document.getElementById('status');var pickerWrap=document.getElementById('manualLoad');var picker=document.getElementById('xlsxPicker');
 function showStatus(html){if(statusEl){statusEl.innerHTML=html;}}
@@ -210,8 +223,8 @@ document.getElementById('toggleBasketBtn').onclick=function(){
 var basketFab=document.getElementById('basketFab');
 if(basketFab){ basketFab.onclick=function(){ var cont=document.getElementById('basketContainer'); cont.style.display=basket.length?'block':'none'; basketFab.style.display='none'; }; }
 var addCustomBtn=document.getElementById('addCustomBtn');var clearBasketBtn=document.getElementById('clearBasketBtn');
-if(addCustomBtn){addCustomBtn.addEventListener('click',function(){var nl;if(captureParentId){nl={id:++uid,pid:captureParentId,kind:'sub',item:'Sub item',qty:1,ex:0};}else{nl={id:++uid,pid:null,kind:'line',collapsed:false,item:'Custom item',qty:1,ex:0};}basket.push(nl);renderBasket();try{var rows=bBody.querySelectorAll('tr.main-row');if(rows.length){var last=rows[rows.length-1].querySelector('.item-input');if(last)last.focus();}}catch(_){}});} 
-if(clearBasketBtn){clearBasketBtn.addEventListener('click',function(){if(!basket.length)return;basket=[];renderBasket();showToast('Basket cleared');});}
+if(addCustomBtn){addCustomBtn.addEventListener('click',function(){ensureSections();var nl;if(captureParentId){nl={id:++uid,pid:captureParentId,kind:'sub',item:'Sub item',qty:1,ex:0,sectionId:getParentSection(captureParentId)};}else{nl={id:++uid,pid:null,kind:'line',collapsed:false,item:'Custom item',qty:1,ex:0,sectionId:activeSectionId||sections[0].id};}basket.push(nl);saveState();renderBasket();try{var rows=bBody.querySelectorAll('tr.main-row');if(rows.length){var last=rows[rows.length-1].querySelector('.item-input');if(last)last.focus();}}catch(_){}});} 
+if(clearBasketBtn){clearBasketBtn.addEventListener('click',function(){if(!basket.length)return;basket=[];captureParentId=null;saveState();renderBasket();showToast('Basket cleared');});}
 function updateBasketHeaderOffset(){
   var cont=document.getElementById('basketContainer');
   var sticky=document.getElementById('basketSticky');
@@ -221,142 +234,22 @@ function updateBasketHeaderOffset(){
 }
 window.addEventListener('resize',updateBasketHeaderOffset);
 window.addEventListener('load',updateBasketHeaderOffset);
-function addItem(row,header){
-  var catIdx=header.indexOf("Category");
-  var itemCol=-1;
-  for(var i=0;i<header.length;i++){
-    var key=String(header[i]).toLowerCase();
-    if(key==='item'||key==='service / item'||key==='service'){itemCol=i;break;}
-  }
-  var exIdx=-1;
-  for(var i2=0;i2<header.length;i2++){
-    if(PRICE_EX.indexOf(header[i2])>-1){exIdx=i2;break;}
-  }
-  var firstNonEmpty='';
-  for(var j=0;j<row.length;j++){
-    if(j!==catIdx&&String(row[j]).trim()!==''){firstNonEmpty=row[j];break;}
-  }
-  var desc=itemCol!==-1?row[itemCol]:firstNonEmpty||'Unnamed Item';
-  var exVal=exIdx===-1?NaN:+row[exIdx];
-  if(captureParentId){
-    basket.push({id:++uid,pid:captureParentId,kind:'sub',item:desc,qty:1,ex:exVal});
-  }else{
-    basket.push({id:++uid,pid:null,kind:'line',collapsed:false,item:desc,qty:1,ex:exVal});
-  }
-  renderBasket();
-}
-function renderBasket(){
-  var cont=document.getElementById('basketContainer');
-  var fab=document.getElementById('basketFab');
-  if(!basket.length){
-    cont.style.display='none'; if(fab) fab.style.display='none';
-    bBody.innerHTML=''; bFoot.innerHTML=''; saveBasket(); return;
-  } else {
-    if(fab){ fab.textContent='Quote ('+basket.length+')'; if(cont.style.display==='none'){ fab.style.display='inline-block'; } else { fab.style.display='none'; } }
-  }
-  bBody.innerHTML='';
-  var totExAll=0,totGstAll=0; for(var ti=0; ti<basket.length; ti++){ var bi=basket[ti]; var le_i=isNaN(bi.ex)?0:(bi.qty||1)*bi.ex; totExAll+=le_i; totGstAll+=le_i*GST_RATE; }
-  var childrenMap={};
-  for(var i=0;i<basket.length;i++){ var it=basket[i]; if(it&&it.pid){ (childrenMap[it.pid]||(childrenMap[it.pid]=[])).push(it); } }
-  function renderParent(b){
-    var tr=document.createElement('tr'); tr.className='main-row'; tr.dataset.id=String(b.id||'');
-    var tdHandle=document.createElement('td'); tdHandle.className='sort-handle'; tdHandle.textContent='≡'; tr.appendChild(tdHandle);
-    var tdItem=document.createElement('td');
-    var ctrl=document.createElement('span'); ctrl.className='sub-controls';
-    var cap=document.createElement('button'); cap.className='subbtn'+(captureParentId===b.id?' active':''); cap.title='Capture catalog adds as sub-items'; cap.textContent='⊞';
-    cap.onclick=function(){ captureParentId=(captureParentId===b.id?null:b.id); renderBasket(); };
-    var addS=document.createElement('button'); addS.className='subbtn'; addS.title='Add note sub-item'; addS.textContent='+';
-    addS.onclick=function(){ basket.push({id:++uid,pid:b.id,kind:'sub',item:'',qty:1,ex:0}); renderBasket(); };
-    var tog=document.createElement('button'); tog.className='subbtn'; tog.title='Collapse/expand sub-items'; tog.textContent=b.collapsed?'▸':'▾';
-    tog.onclick=function(){ b.collapsed=!b.collapsed; renderBasket(); };
-    ctrl.appendChild(cap); ctrl.appendChild(addS); ctrl.appendChild(tog); tdItem.appendChild(ctrl);
-    var itemInput=document.createElement('textarea'); itemInput.rows=2; itemInput.value=b.item||''; itemInput.className='editable item-input'; itemInput.oninput=function(){ b.item=itemInput.value; saveBasket(); }; tdItem.appendChild(itemInput); tr.appendChild(tdItem);
-    var tdQ=document.createElement('td'); var qc=document.createElement('div'); qc.className='qty-controls';
-    var minus=document.createElement('button'); minus.textContent='-';
-    var inp=document.createElement('input'); inp.type='number'; inp.step='0.1'; inp.className='qty-input'; inp.value=b.qty||1;
-    var plus=document.createElement('button'); plus.textContent='+';
-    minus.onclick=function(){ b.qty=Math.max(1,(b.qty||1)-1); renderBasket(); };
-    plus.onclick=function(){ b.qty=(b.qty||1)+1; renderBasket(); };
-    inp.onchange=function(){ b.qty=Math.max(1,parseFloat(inp.value)||1); renderBasket(); };
-    qc.appendChild(minus); qc.appendChild(inp); qc.appendChild(plus); tdQ.appendChild(qc); tr.appendChild(tdQ);
-    var tdEx=document.createElement('td'); var exInput=document.createElement('input'); exInput.type='number'; exInput.step='0.01'; exInput.className='editable price-input'; exInput.value=isNaN(b.ex)?'':Number(b.ex).toFixed(2); exInput.onchange=function(){ var v=parseFloat(exInput.value); b.ex=isFinite(v)?v:NaN; renderBasket(); }; tdEx.appendChild(exInput); tr.appendChild(tdEx);
-    var le=isNaN(b.ex)?0:(b.qty||1)*b.ex; var gstAmt=le*GST_RATE; var li=le+gstAmt;
-    var tdLe=document.createElement('td'); tdLe.textContent=isNaN(b.ex)?'N/A':le.toFixed(2);
-    var tdG=document.createElement('td'); tdG.textContent=isNaN(b.ex)?'N/A':gstAmt.toFixed(2);
-    var tdLi=document.createElement('td'); tdLi.textContent=isNaN(b.ex)?'N/A':li.toFixed(2);
-    tr.appendChild(tdLe); tr.appendChild(tdG); tr.appendChild(tdLi);
-    var tdRem=document.createElement('td'); var x=document.createElement('span'); x.className='remove-btn'; x.textContent='X';
-    x.onclick=function(){ var id=b.id; var nb=[]; for(var r=0;r<basket.length;r++){ var it=basket[r]; if(!it) continue; if(it.id===id||it.pid===id) continue; nb.push(it);} basket=nb; if(captureParentId===id) captureParentId=null; renderBasket(); };
-    tdRem.appendChild(x); tr.appendChild(tdRem);
-    bBody.appendChild(tr);
-    if(b.collapsed) return;
-    var kids=childrenMap[b.id]||[];
-    for(var k=0;k<kids.length;k++){
-      (function(s){
-        if(typeof s.qty==='undefined') s.qty=1;
-        var sr=document.createElement('tr'); sr.className='sub-row'; sr.dataset.id=String(s.id||'');
-        var c1=document.createElement('td'); c1.textContent=''; sr.appendChild(c1);
-        var c2=document.createElement('td'); c2.className='sub-item-cell'; var t=document.createElement('textarea'); t.rows=1; t.className='editable item-input'; t.value=s.item||''; t.oninput=function(){ s.item=t.value; saveBasket(); }; c2.appendChild(t); sr.appendChild(c2);
-        var c3=document.createElement('td'); var qc=document.createElement('div'); qc.className='qty-controls';
-        var minus=document.createElement('button'); minus.textContent='-';
-        var inp=document.createElement('input'); inp.type='number'; inp.step='0.1'; inp.className='qty-input'; inp.value=s.qty||1;
-        var plus=document.createElement('button'); plus.textContent='+';
-        minus.onclick=function(){ s.qty=Math.max(1,(s.qty||1)-1); renderBasket(); };
-        plus.onclick=function(){ s.qty=(s.qty||1)+1; renderBasket(); };
-        inp.onchange=function(){ s.qty=Math.max(1,parseFloat(inp.value)||1); renderBasket(); };
-        qc.appendChild(minus); qc.appendChild(inp); qc.appendChild(plus); c3.appendChild(qc); sr.appendChild(c3);
-        var c4=document.createElement('td'); var exInput=document.createElement('input'); exInput.type='number'; exInput.step='0.01'; exInput.className='editable price-input'; exInput.value=isNaN(s.ex)?'':Number(s.ex).toFixed(2); exInput.onchange=function(){ var v=parseFloat(exInput.value); s.ex=isFinite(v)?v:NaN; renderBasket(); }; c4.appendChild(exInput); sr.appendChild(c4);
-        var le=isNaN(s.ex)?0:(s.qty||1)*s.ex; var gstAmt=le*GST_RATE; var li=le+gstAmt;
-        var c5=document.createElement('td'); c5.textContent=isNaN(s.ex)?'N/A':le.toFixed(2); sr.appendChild(c5);
-        var c6=document.createElement('td'); c6.textContent=isNaN(s.ex)?'N/A':gstAmt.toFixed(2); sr.appendChild(c6);
-        var c7=document.createElement('td'); c7.textContent=isNaN(s.ex)?'N/A':li.toFixed(2); sr.appendChild(c7);
-        var c8=document.createElement('td'); var rx=document.createElement('span'); rx.className='remove-btn'; rx.textContent='X';
-        rx.onclick=function(){ for(var r=basket.length-1;r>=0;r--){ if(basket[r].id===s.id){ basket.splice(r,1); break; } } renderBasket(); };
-        c8.appendChild(rx); sr.appendChild(c8);
-        bBody.appendChild(sr);
-      })(kids[k]);
-    }
-  }
-  for(var i=0;i<basket.length;i++){ var it=basket[i]; if(it&&!it.pid){ if(typeof it.kind==='undefined') it.kind='line'; if(typeof it.collapsed==='undefined') it.collapsed=false; if(typeof it.qty==='undefined') it.qty=1; renderParent(it); } }
-  var grand=totExAll+totGstAll;
-  bFoot.innerHTML='<tr><td colspan="4" style="text-align:right;font-weight:bold">Grand Totals:</td><td style="font-weight:bold">'+totExAll.toFixed(2)+'</td><td style="font-weight:bold">'+totGstAll.toFixed(2)+'</td><td style="font-weight:bold">'+(totExAll+totGstAll).toFixed(2)+'</td><td></td></tr>';
-  if(window.Sortable && !bBody.getAttribute('data-sortable')){
-    Sortable.create(bBody,{handle:'.sort-handle',draggable:'tr.main-row',animation:150,onEnd:function(){
-      var rows=bBody.querySelectorAll('tr.main-row'); var order=[]; for(var k=0;k<rows.length;k++){ order.push(+rows[k].dataset.id); }
-      var childMap={}; for(var t=0;t<basket.length;t++){ var it=basket[t]; if(it && it.pid){ (childMap[it.pid]||(childMap[it.pid]=[])).push(it); } }
-      var byId={}; for(var t2=0;t2<basket.length;t2++){ byId[basket[t2].id]=basket[t2]; }
-      var newArr=[]; for(var o=0;o<order.length;o++){ var id=order[o]; var parent=byId[id]; if(parent && !parent.pid){ newArr.push(parent); if(childMap[id]){ for(var c=0;c<childMap[id].length;c++){ newArr.push(childMap[id][c]); } } } }
-      basket=newArr; saveBasket(); updateBasketHeaderOffset();
-    }});
-    bBody.setAttribute('data-sortable','1');
-  }
-  saveBasket(); updateBasketHeaderOffset();
-}
+function getParentSection(pid){for(var i=0;i<basket.length;i++){if(basket[i]&&basket[i].id===pid){return basket[i].sectionId;}}return activeSectionId||sections[0].id;}
+function addItem(row,header){ensureSections();var catIdx=header.indexOf("Category");var itemCol=-1;for(var i=0;i<header.length;i++){var key=String(header[i]).toLowerCase();if(key==='item'||key==='service / item'||key==='service'){itemCol=i;break;}}var exIdx=-1;for(var i2=0;i2<header.length;i2++){if(PRICE_EX.indexOf(header[i2])>-1){exIdx=i2;break;}}var firstNonEmpty='';for(var j=0;j<row.length;j++){if(j!==catIdx&&String(row[j]).trim()!==''){firstNonEmpty=row[j];break;}}var desc=itemCol!==-1?row[itemCol]:firstNonEmpty||'Unnamed Item';var exVal=exIdx===-1?NaN:+row[exIdx];if(captureParentId){basket.push({id:++uid,pid:captureParentId,kind:'sub',item:desc,qty:1,ex:exVal,sectionId:getParentSection(captureParentId)});}else{basket.push({id:++uid,pid:null,kind:'line',collapsed:false,item:desc,qty:1,ex:exVal,sectionId:activeSectionId||sections[0].id});}saveState();renderBasket();}
+function switchActiveSection(id){activeSectionId=id;for(var i=0;i<sections.length;i++){sections[i].collapsed=sections[i].id!==id;}captureParentId=null;saveState();renderBasket();}
+function openSecMenu(btn,sid){var m=document.getElementById('secMenu');m.dataset.sid=String(sid);var r=btn.getBoundingClientRect();m.style.left=r.left+'px';m.style.top=(r.bottom)+'px';m.style.display='block';}
+function closeSecMenu(){var m=document.getElementById('secMenu');m.style.display='none';m.dataset.sid='';}
+document.getElementById('secMenu').addEventListener('click',function(e){var act=e.target&&e.target.getAttribute('data-act');if(!act)return;var sid=+this.dataset.sid||0;if(!sid)return;if(act==='rename'){var s=sections.find(function(x){return x.id===sid});if(!s)return;var nv=prompt('Section name',s.name||'');if(nv&&nv.trim()){s.name=nv.trim();saveState();renderBasket();}}else if(act==='delete'){var has=false;for(var i=0;i<basket.length;i++){if(basket[i]&&basket[i].sectionId===sid){has=true;break;}}var ok=!has||confirm('Delete this section and all its items?');if(ok){var nb=[];for(var i=0;i<basket.length;i++){if(!basket[i]||basket[i].sectionId===sid)continue;nb.push(basket[i]);}basket=nb;var ns=[];for(var j=0;j<sections.length;j++){if(sections[j].id!==sid)ns.push(sections[j]);}sections=ns;if(!sections.length){sections=[{id:1,name:'Section 1',collapsed:false}];activeSectionId=1;}if(activeSectionId===sid){activeSectionId=sections[0].id;}captureParentId=null;saveState();renderBasket();}}closeSecMenu();});
+document.addEventListener('click',function(e){var m=document.getElementById('secMenu');if(m.style.display==='block'){if(!m.contains(e.target) && !(e.target&&e.target.classList&&e.target.classList.contains('sec-more'))){closeSecMenu();}}});
+function renderBasket(){var cont=document.getElementById('basketContainer');var fab=document.getElementById('basketFab');if(!basket.length){cont.style.display='none'; if(fab) fab.style.display='none';bBody.innerHTML='';bFoot.innerHTML='';saveState();return;} else {if(fab){ fab.textContent='Quote ('+basket.length+')'; if(cont.style.display==='none'){ fab.style.display='inline-block'; } else { fab.style.display='none'; } }}bBody.innerHTML='';ensureSections();assignSectionDefaults();var totExAll=0,totGstAll=0;for(var ti=0;ti<basket.length;ti++){var bi=basket[ti];var le_i=isNaN(bi.ex)?0:(bi.qty||1)*bi.ex;totExAll+=le_i;totGstAll+=le_i*GST_RATE;}var childrenMap={};for(var i=0;i<basket.length;i++){var it=basket[i];if(it&&it.pid){(childrenMap[it.pid]||(childrenMap[it.pid]=[])).push(it);}}function renderParent(b){var tr=document.createElement('tr');tr.className='main-row';tr.dataset.id=String(b.id||'');var tdHandle=document.createElement('td');tdHandle.className='sort-handle';tdHandle.textContent='≡';tr.appendChild(tdHandle);var tdItem=document.createElement('td');var ctrl=document.createElement('span');ctrl.className='sub-controls';var cap=document.createElement('button');cap.className='subbtn'+(captureParentId===b.id?' active':'');cap.title='Capture catalog adds as sub-items';cap.textContent='⊞';cap.onclick=function(){captureParentId=(captureParentId===b.id?null:b.id);saveState();renderBasket();};var addS=document.createElement('button');addS.className='subbtn';addS.title='Add note sub-item';addS.textContent='+';addS.onclick=function(){basket.push({id:++uid,pid:b.id,kind:'sub',item:'',qty:1,ex:0,sectionId:b.sectionId});saveState();renderBasket();};var tog=document.createElement('button');tog.className='subbtn';tog.title='Collapse/expand sub-items';tog.textContent=b.collapsed?'▸':'▾';tog.onclick=function(){b.collapsed=!b.collapsed;saveState();renderBasket();};ctrl.appendChild(cap);ctrl.appendChild(addS);ctrl.appendChild(tog);tdItem.appendChild(ctrl);var itemInput=document.createElement('textarea');itemInput.rows=2;itemInput.value=b.item||'';itemInput.className='editable item-input';itemInput.oninput=function(){b.item=itemInput.value;saveState();};tdItem.appendChild(itemInput);tr.appendChild(tdItem);var tdQ=document.createElement('td');var qc=document.createElement('div');qc.className='qty-controls';var minus=document.createElement('button');minus.textContent='-';var inp=document.createElement('input');inp.type='number';inp.step='0.1';inp.className='qty-input';inp.value=b.qty||1;var plus=document.createElement('button');plus.textContent='+';minus.onclick=function(){b.qty=Math.max(1,(b.qty||1)-1);saveState();renderBasket();};plus.onclick=function(){b.qty=(b.qty||1)+1;saveState();renderBasket();};inp.onchange=function(){b.qty=Math.max(1,parseFloat(inp.value)||1);saveState();renderBasket();};qc.appendChild(minus);qc.appendChild(inp);qc.appendChild(plus);tdQ.appendChild(qc);tr.appendChild(tdQ);var tdEx=document.createElement('td');var exInput=document.createElement('input');exInput.type='number';exInput.step='0.01';exInput.className='editable price-input';exInput.value=isNaN(b.ex)?'':Number(b.ex).toFixed(2);exInput.onchange=function(){var v=parseFloat(exInput.value);b.ex=isFinite(v)?v:NaN;saveState();renderBasket();};tdEx.appendChild(exInput);tr.appendChild(tdEx);var le=isNaN(b.ex)?0:(b.qty||1)*b.ex;var gstAmt=le*GST_RATE;var li=le+gstAmt;var tdLe=document.createElement('td');tdLe.textContent=isNaN(b.ex)?'N/A':le.toFixed(2);var tdG=document.createElement('td');tdG.textContent=isNaN(b.ex)?'N/A':gstAmt.toFixed(2);var tdLi=document.createElement('td');tdLi.textContent=isNaN(b.ex)?'N/A':li.toFixed(2);tr.appendChild(tdLe);tr.appendChild(tdG);tr.appendChild(tdLi);var tdRem=document.createElement('td');var x=document.createElement('span');x.className='remove-btn';x.textContent='X';x.onclick=function(){var id=b.id;var nb=[];for(var r=0;r<basket.length;r++){var it=basket[r];if(!it) continue;if(it.id===id||it.pid===id) continue;nb.push(it);}basket=nb;if(captureParentId===id) captureParentId=null;saveState();renderBasket();};tdRem.appendChild(x);tr.appendChild(tdRem);bBody.appendChild(tr);if(b.collapsed) return;var kids=childrenMap[b.id]||[];for(var k=0;k<kids.length;k++){(function(s){if(typeof s.qty==='undefined') s.qty=1;var sr=document.createElement('tr');sr.className='sub-row';sr.dataset.id=String(s.id||'');var c1=document.createElement('td');c1.textContent='';sr.appendChild(c1);var c2=document.createElement('td');c2.className='sub-item-cell';var t=document.createElement('textarea');t.rows=1;t.className='editable item-input';t.value=s.item||'';t.oninput=function(){s.item=t.value;saveState();};c2.appendChild(t);sr.appendChild(c2);var c3=document.createElement('td');var qc=document.createElement('div');qc.className='qty-controls';var minus=document.createElement('button');minus.textContent='-';var inp=document.createElement('input');inp.type='number';inp.step='0.1';inp.className='qty-input';inp.value=s.qty||1;var plus=document.createElement('button');plus.textContent='+';minus.onclick=function(){s.qty=Math.max(1,(s.qty||1)-1);saveState();renderBasket();};plus.onclick=function(){s.qty=(s.qty||1)+1;saveState();renderBasket();};inp.onchange=function(){s.qty=Math.max(1,parseFloat(inp.value)||1);saveState();renderBasket();};qc.appendChild(minus);qc.appendChild(inp);qc.appendChild(plus);c3.appendChild(qc);sr.appendChild(c3);var c4=document.createElement('td');var exInput=document.createElement('input');exInput.type='number';exInput.step='0.01';exInput.className='editable price-input';exInput.value=isNaN(s.ex)?'':Number(s.ex).toFixed(2);exInput.onchange=function(){var v=parseFloat(exInput.value);s.ex=isFinite(v)?v:NaN;saveState();renderBasket();};c4.appendChild(exInput);sr.appendChild(c4);var le=isNaN(s.ex)?0:(s.qty||1)*s.ex;var gstAmt=le*GST_RATE;var li=le+gstAmt;var c5=document.createElement('td');c5.textContent=isNaN(s.ex)?'N/A':le.toFixed(2);sr.appendChild(c5);var c6=document.createElement('td');c6.textContent=isNaN(s.ex)?'N/A':gstAmt.toFixed(2);sr.appendChild(c6);var c7=document.createElement('td');c7.textContent=isNaN(s.ex)?'N/A':li.toFixed(2);sr.appendChild(c7);var c8=document.createElement('td');var rx=document.createElement('span');rx.className='remove-btn';rx.textContent='X';rx.onclick=function(){for(var r=basket.length-1;r>=0;r--){if(basket[r].id===s.id){basket.splice(r,1);break;}}saveState();renderBasket();};c8.appendChild(rx);sr.appendChild(c8);bBody.appendChild(sr);})(kids[k]);}}
+function renderSectionHeader(sec){var tr=document.createElement('tr');tr.className='section-row';tr.dataset.sid=String(sec.id);var c0=document.createElement('td');c0.textContent='≡';tr.appendChild(c0);var c1=document.createElement('td');c1.colSpan=6;var caret=document.createElement('button');caret.className='subbtn';caret.textContent=(sec.collapsed?'▸':'▾');caret.onclick=function(){switchActiveSection(sec.id);};c1.appendChild(caret);var nameSpan=document.createElement('span');nameSpan.className='section-name';nameSpan.textContent=sec.name||('Section '+sec.id);nameSpan.onclick=function(){switchActiveSection(sec.id);};c1.appendChild(nameSpan);if(activeSectionId===sec.id){var b=document.createElement('span');b.className='sec-badge';b.textContent='Active';c1.appendChild(b);}tr.appendChild(c1);var c2=document.createElement('td');var more=document.createElement('button');more.className='subbtn sec-more';more.textContent='⋮';more.onclick=function(e){e.stopPropagation();openSecMenu(more,sec.id);};c2.appendChild(more);tr.appendChild(c2);bBody.appendChild(tr);} 
+function renderSectionTotals(ex,gst){var tr=document.createElement('tr');tr.className='section-subtotal';var td=document.createElement('td');td.colSpan=4;td.style.textAlign='right';td.style.fontWeight='bold';td.textContent='Section subtotal:';tr.appendChild(td);var td2=document.createElement('td');td2.style.fontWeight='bold';td2.textContent=ex.toFixed(2);tr.appendChild(td2);var td3=document.createElement('td');td3.style.fontWeight='bold';td3.textContent=gst.toFixed(2);tr.appendChild(td3);var td4=document.createElement('td');td4.style.fontWeight='bold';td4.textContent=(ex+gst).toFixed(2);tr.appendChild(td4);var td5=document.createElement('td');tr.appendChild(td5);bBody.appendChild(tr);} 
+var groupedBySection={};for(var i=0;i<sections.length;i++){groupedBySection[sections[i].id]=[];}for(var i=0;i<basket.length;i++){var it=basket[i];if(!it||it.pid)continue;var sid=it.sectionId||sections[0].id;groupedBySection[sid]=(groupedBySection[sid]||[]).concat(it);}for(var si=0;si<sections.length;si++){var sec=sections[si];renderSectionHeader(sec);if(sec.id===activeSectionId){var sEx=0,sGst=0;var parents=groupedBySection[sec.id]||[];for(var pi=0;pi<parents.length;pi++){var p=parents[pi];renderParent(p);var le=isNaN(p.ex)?0:(p.qty||1)*p.ex;var gst=le*GST_RATE;sEx+=le;sGst+=gst;var subs=childrenMap[p.id]||[];for(var sj=0;sj<subs.length;sj++){var s=subs[sj];var sle=isNaN(s.ex)?0:(s.qty||1)*s.ex;sEx+=sle;sGst+=sle*GST_RATE;}}renderSectionTotals(sEx,sGst);}}
+var grand=totExAll+totGstAll;bFoot.innerHTML='<tr><td colspan="4" style="text-align:right;font-weight:bold">Grand Totals:</td><td style="font-weight:bold">'+totExAll.toFixed(2)+'</td><td style="font-weight:bold">'+totGstAll.toFixed(2)+'</td><td style="font-weight:bold">'+(totExAll+totGstAll).toFixed(2)+'</td><td></td></tr>';
+if(window.Sortable && !bBody.getAttribute('data-sortable')){Sortable.create(bBody,{handle:'.sort-handle',draggable:'tr.main-row',animation:150,onEnd:function(){var rows=bBody.querySelectorAll('tr.main-row');var order=[];for(var k=0;k<rows.length;k++){order.push(+rows[k].dataset.id);}var childMap={};for(var t=0;t<basket.length;t++){var it=basket[t];if(it && it.pid){(childMap[it.pid]||(childMap[it.pid]=[])).push(it);}}var byId={};for(var t2=0;t2<basket.length;t2++){byId[basket[t2].id]=basket[t2];}var newArr=[];for(var o=0;o<order.length;o++){var id=order[o];var parent=byId[id];if(parent && !parent.pid){newArr.push(parent);if(childMap[id]){for(var c=0;c<childMap[id].length;c++){newArr.push(childMap[id][c]);}}}}basket=newArr;saveState();updateBasketHeaderOffset();}});bBody.setAttribute('data-sortable','1');}
+saveState();updateBasketHeaderOffset();}
 var exportBtn=document.getElementById("exportCsvBtn");
-if(exportBtn){
-  exportBtn.onclick=function(){
-    if(!basket.length) return;
-    var esc=function(v){return '"'+String(v).replace(/"/g,'""')+'"';};
-    var report=buildReportModel(basket,null);
-    var lines=[["Section","Item","Quantity","Price Ex. GST","Line Ex","GST","Line Total"]];
-    for(var si=0;si<report.sections.length;si++){
-      var sec=report.sections[si];
-      for(var gi=0;gi<sec.items.length;gi++){
-        var grp=sec.items[gi];
-        var p=grp.parent; var le=isNaN(p.ex)?0:(p.qty||1)*p.ex; var gstAmt=le*GST_RATE; var li=le+gstAmt;
-        lines.push([sec.name,(p.item||''),(p.qty||1),isNaN(p.ex)?"N/A":Number(p.ex).toFixed(2),isNaN(p.ex)?"N/A":le.toFixed(2),isNaN(p.ex)?"N/A":gstAmt.toFixed(2),isNaN(p.ex)?"N/A":li.toFixed(2)]);
-        var subs=grp.subs||[];
-        for(var sj=0;sj<subs.length;sj++){
-          var s=subs[sj]; var sle=isNaN(s.ex)?0:(s.qty||1)*s.ex; var sg=sle*GST_RATE; var st=sle+sg;
-          lines.push([sec.name,' - '+(s.item||''),(s.qty||1),isNaN(s.ex)?"N/A":Number(s.ex).toFixed(2),isNaN(s.ex)?"N/A":sle.toFixed(2),isNaN(s.ex)?"N/A":sg.toFixed(2),isNaN(s.ex)?"N/A":st.toFixed(2)]);
-        }
-      }
-    }
-    lines.push(["Totals","","","",report.grandEx.toFixed(2),report.grandGst.toFixed(2),report.grandTotal.toFixed(2)]);
-    var out=[]; for(var r=0;r<lines.length;r++){ var row=lines[r]; for(var c=0;c<row.length;c++){ row[c]=esc(row[c]); } out.push(row.join(',')); }
-    var csv=out.join("\n"); var blob=new Blob([csv],{type:"text/csv"}); var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="quote_basket.csv"; document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  };
-}
+if(exportBtn){exportBtn.onclick=function(){if(!basket.length) return;var esc=function(v){return '"'+String(v).replace(/"/g,'""')+'"';};var report=buildReportModel(basket,sections);var lines=[["Section","Item","Quantity","Price Ex. GST","Line Ex","GST","Line Total"]];for(var si=0;si<report.sections.length;si++){var sec=report.sections[si];for(var gi=0;gi<sec.items.length;gi++){var grp=sec.items[gi];var p=grp.parent;var le=isNaN(p.ex)?0:(p.qty||1)*p.ex;var gstAmt=le*GST_RATE;var li=le+gstAmt;lines.push([sec.name,(p.item||''),(p.qty||1),isNaN(p.ex)?"N/A":Number(p.ex).toFixed(2),isNaN(p.ex)?"N/A":le.toFixed(2),isNaN(p.ex)?"N/A":gstAmt.toFixed(2),isNaN(p.ex)?"N/A":li.toFixed(2)]);var subs=grp.subs||[];for(var sj=0;sj<subs.length;sj++){var s=subs[sj];var sle=isNaN(s.ex)?0:(s.qty||1)*s.ex;var sg=sle*GST_RATE;var st=sle+sg;lines.push([sec.name,' - '+(s.item||''),(s.qty||1),isNaN(s.ex)?"N/A":Number(s.ex).toFixed(2),isNaN(s.ex)?"N/A":sle.toFixed(2),isNaN(s.ex)?"N/A":sg.toFixed(2),isNaN(s.ex)?"N/A":st.toFixed(2)]);}}}lines.push(["Totals","","","",report.grandEx.toFixed(2),report.grandGst.toFixed(2),report.grandTotal.toFixed(2)]);var out=[];for(var r=0;r<lines.length;r++){var row=lines[r];for(var c=0;c<row.length;c++){row[c]=esc(row[c]);}out.push(row.join(','));}var csv=out.join("\n");var blob=new Blob([csv],{type:"text/csv"});var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="quote_basket.csv";document.body.appendChild(a);a.click();document.body.removeChild(a);};}
 window.__wd_main_ok__=true;
 })();
 </script>
