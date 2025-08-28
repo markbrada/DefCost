@@ -52,7 +52,6 @@ summary:hover{background:var(--btn);color:#fff}
 .sort-handle{cursor:move;user-select:none;text-align:left;font-size:1.1rem;min-width:2em}
 .qty-input{width:48px;text-align:center}
 .remove-btn{color:red;font-weight:bold;cursor:pointer}
-/* Sub-item UI */
 .sub-row td{background:var(--alt);font-size:.95em}
 .sub-row .item-input{min-height:1.6em}
 .sub-marker{opacity:.7;margin-right:.4rem}
@@ -64,8 +63,6 @@ summary:hover{background:var(--btn);color:#fff}
 .editable{background:#fff;border:1px solid var(--border);padding:.35rem .45rem;border-radius:6px;width:100%;box-sizing:border-box;display:block;margin:0}
 .item-input{display:block;width:100%;min-height:2.2em;max-height:8em;resize:vertical;overflow:auto;white-space:pre-wrap;line-height:1.22}
 .price-input{width:100%;height:2.2em;max-width:none;text-align:right;box-sizing:border-box;margin:0}
-.gst-cell{text-align:center}
-.gst-input{width:18px;height:18px}
 #basketTable th:nth-child(1),#basketTable td:nth-child(1){width:36px}
 #basketTable th:nth-child(3),#basketTable td:nth-child(3){width:140px}
 #basketTable th:nth-child(4),#basketTable td:nth-child(4){width:120px}
@@ -127,19 +124,19 @@ input[type=number]{-moz-appearance:textfield}
   <div id="basketContent">
     <table id="basketTable">
       <colgroup>
-          <col style="width:36px">
-          <col id="col-item">
-          <col style="width:120px">
-          <col style="width:100px">
-          <col style="width:110px">
-          <col style="width:90px">
-          <col style="width:120px">
-          <col style="width:50px">
-        </colgroup>
+        <col style="width:36px">
+        <col id="col-item">
+        <col style="width:120px">
+        <col style="width:100px">
+        <col style="width:110px">
+        <col style="width:90px">
+        <col style="width:120px">
+        <col style="width:50px">
+      </colgroup>
       <thead><tr>
         <th class="sort-handle">≡</th><th>Item</th><th>Quantity</th>
-          <th>Price Ex. GST</th>
-          <th>Line Total Ex. GST</th><th>GST</th><th>Line Total</th><th></th>
+        <th>Price Ex. GST</th>
+        <th>Line Total Ex. GST</th><th>GST</th><th>Line Total</th><th></th>
       </tr></thead>
       <tbody></tbody><tfoot></tfoot>
     </table>
@@ -154,7 +151,7 @@ input[type=number]{-moz-appearance:textfield}
 var ORDER=[["bannister rail","cat-orange"],["stainless steel grabrail","cat-orange"],["aluminium grabrail, powder coated","cat-orange"],["shower parts","cat-blue"],["plumbing","cat-blue"],["door components","cat-brown"],["fire safety","cat-red"],["anti slip solutions","cat-yellow"],["uncategorised","cat-yellow"]];
 var META=(function(){var o={};for(var i=0;i<ORDER.length;i++){o[ORDER[i][0]]={idx:i,cls:ORDER[i][1]};}return o;})();
 var FALL=META["uncategorised"];
-var PRICE_EX=["Rate Ex. GST","Price Ex. GST","Price","Price Ex Tax","Price ex GST"]; // widened detection
+var PRICE_EX=["Rate Ex. GST","Price Ex. GST","Price","Price Ex Tax","Price ex GST"];
 var TOAST_MS=3000,GST_RATE=0.10,LS_KEY='defcost_basket_v2';
 var wb=null,basket=[],uid=0,captureParentId=null;
 var tabs=document.getElementById("sheetTabs"),container=document.getElementById("sheetContainer"),toast=document.getElementById("toast");
@@ -180,7 +177,6 @@ if(bBody){
   bBody.addEventListener('click',function(e){
     var t=e.target; if(!t) return;
     if(/^(BUTTON|INPUT|TEXTAREA|SELECT|LABEL)$/i.test(t.tagName)) return;
-    if(t.classList && (t.classList.contains('remove-btn')||t.classList.contains('gst-input'))) return;
     var td=t.closest ? t.closest('td') : (function(n){while(n&&n.tagName!=='TD'){n=n.parentNode;}return n;})(t);
     if(!td) return; var text=(td.textContent||'').trim(); if(!text) return;
     navigator.clipboard.writeText(text).then(function(){ td.classList.add('copied-cell'); void td.offsetWidth; setTimeout(function(){ td.classList.remove('copied-cell'); },150); }).catch(function(){});
@@ -205,7 +201,7 @@ document.getElementById('toggleBasketBtn').onclick=function(){
 var basketFab=document.getElementById('basketFab');
 if(basketFab){ basketFab.onclick=function(){ var cont=document.getElementById('basketContainer'); cont.style.display=basket.length?'block':'none'; basketFab.style.display='none'; }; }
 var addCustomBtn=document.getElementById('addCustomBtn');var clearBasketBtn=document.getElementById('clearBasketBtn');
-if(addCustomBtn){addCustomBtn.addEventListener('click',function(){var nl;if(captureParentId){nl={id:++uid,pid:captureParentId,kind:'sub',item:'Sub item'};}else{nl={id:++uid,pid:null,kind:'line',collapsed:false,item:'Custom item',qty:1,ex:0};}basket.push(nl);renderBasket();try{var rows=bBody.querySelectorAll('tr.main-row');if(rows.length){var last=rows[rows.length-1].querySelector('.item-input');if(last)last.focus();}}catch(_){}});}
+if(addCustomBtn){addCustomBtn.addEventListener('click',function(){var nl;if(captureParentId){nl={id:++uid,pid:captureParentId,kind:'sub',item:'Sub item'};}else{nl={id:++uid,pid:null,kind:'line',collapsed:false,item:'Custom item',qty:1,ex:0};}basket.push(nl);renderBasket();try{var rows=bBody.querySelectorAll('tr.main-row');if(rows.length){var last=rows[rows.length-1].querySelector('.item-input');if(last)last.focus();}}catch(_){}});} 
 if(clearBasketBtn){clearBasketBtn.addEventListener('click',function(){if(!basket.length)return;basket=[];renderBasket();showToast('Basket cleared');});}
 function updateBasketHeaderOffset(){
   var cont=document.getElementById('basketContainer');
@@ -239,7 +235,7 @@ function addItem(row,header){
     basket.push({id:++uid,pid:null,kind:'line',collapsed:false,item:desc,qty:1,ex:ex});
   }
   renderBasket();
-}}var exIdx=-1;for(var i2=0;i2<header.length;i2++){if(PRICE_EX.indexOf(header[i2])>-1){exIdx=i2;break;}}var firstNonEmpty='';for(var j=0;j<row.length;j++){if(j!==catIdx&&String(row[j]).trim()!==''){firstNonEmpty=row[j];break;}}var desc=itemCol!==-1?row[itemCol]:firstNonEmpty||'Unnamed Item';var ex=exIdx===-1?NaN:+row[exIdx];var newLine={id:++uid,item:desc,qty:1,ex:ex,gst:true};basket.push(newLine);renderBasket();}
+}
 function renderBasket(){
   var cont=document.getElementById('basketContainer');
   var fab=document.getElementById('basketFab');
@@ -311,7 +307,16 @@ function renderBasket(){
   if(window.Sortable && !bBody.getAttribute('data-sortable')){
     Sortable.create(bBody,{handle:'.sort-handle',draggable:'tr.main-row',animation:150,onEnd:function(){
       var rows=bBody.querySelectorAll('tr.main-row'); var order=[]; for(var k=0;k<rows.length;k++){ order.push(+rows[k].dataset.id); }
-      var childMap={}; for(var t=0;t<basket.length;t++){ var itvar exportBtn=document.getElementById("exportCsvBtn");
+      var childMap={}; for(var t=0;t<basket.length;t++){ var it=basket[t]; if(it && it.pid){ (childMap[it.pid]||(childMap[it.pid]=[])).push(it); } }
+      var byId={}; for(var t2=0;t2<basket.length;t2++){ byId[basket[t2].id]=basket[t2]; }
+      var newArr=[]; for(var o=0;o<order.length;o++){ var id=order[o]; var parent=byId[id]; if(parent && !parent.pid){ newArr.push(parent); if(childMap[id]){ for(var c=0;c<childMap[id].length;c++){ newArr.push(childMap[id][c]); } } } }
+      basket=newArr; saveBasket(); updateBasketHeaderOffset();
+    }});
+    bBody.setAttribute('data-sortable','1');
+  }
+  saveBasket(); updateBasketHeaderOffset();
+}
+var exportBtn=document.getElementById("exportCsvBtn");
 if(exportBtn){
   exportBtn.onclick=function(){
     if(!basket.length) return;
@@ -329,7 +334,7 @@ if(exportBtn){
       lines.push([label, b.pid?"":(b.qty||1), isNaN(b.ex)?"N/A":Number(b.ex).toFixed(2), isNaN(b.ex)?"N/A":le.toFixed(2), isNaN(b.ex)?"N/A":gstAmt.toFixed(2), isNaN(b.ex)?"N/A":li.toFixed(2)]);
     }
     var grand=(totEx+totGst).toFixed(2);
-    lines.push(['','','','Totals:',totEx.toFixed(2),totGst.toFixed(2),grand]);
+    lines.push(["Totals","","",totEx.toFixed(2),totGst.toFixed(2),grand]);
     var out=[];
     for(var r=0;r<lines.length;r++){
       var row=lines[r];
@@ -344,8 +349,6 @@ if(exportBtn){
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
   };
 }
-window.__wd_main_ok__=true;),isNaN(b.ex)?"N/A":gstAmt.toFixed(2),isNaN(b.ex)?"N/A":li.toFixed(2)]);}var grand=(totEx+totGst).toFixed(2);lines.push(['','','','Totals:',totEx.toFixed(2),totGst.toFixed(2),grand]);var out=[];for(var r=0;r<lines.length;r++){var row=lines[r];for(var c=0;c<row.length;c++){row[c]=esc(row[c]);}out.push(row.join(','));}var csv=out.join("
-");var blob=new Blob([csv],{type:"text/csv"});var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="quote_basket.csv";document.body.appendChild(a);a.click();document.body.removeChild(a);}} 
 window.__wd_main_ok__=true;
 })();
 </script>
