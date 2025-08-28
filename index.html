@@ -5,12 +5,12 @@
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
 <meta charset="UTF-8">
-<title>Workplace Defender Pricing Tool 1.0.0</title>
+<title>DefCost 1.0.0</title>
 <style>
 :root{--bg:#f7f7f7;--fg:#333;--header:#e0e0e0;--btn:#007bff;--btnh:#0056b3;--add:#28a745;--addh:#218838;--border:#aaa;--alt:#f9f9f9;--panel:#fff;--toast:#007bff;--toastfg:#fff;--rowHover:#e9f1ff}
 .dark-mode{--bg:#222;--fg:#eee;--header:#444;--btn:#0d6efd;--btnh:#0a58ca;--add:#198754;--addh:#157347;--border:#555;--alt:#2a2a2a;--panel:#333;--toast:#0d6efd;--toastfg:#fff;--rowHover:#383838}
 body{font-family:sans-serif;margin:1rem;background:var(--bg);color:var(--fg);transition:.3s}
-h1{margin:.2rem 0}p{margin:0 0 2rem}
+# h1{margin:.2rem 0}p{margin:0 0 2rem}
 #darkModeToggle{position:fixed;top:10px;right:10px;z-index:3000;background:var(--btn);color:#fff;border:none;padding:.5rem .75rem;border-radius:4px;cursor:pointer}
 #darkModeToggle:hover{background:var(--btnh)}
 #sheetTabs{border-bottom:1px solid var(--border);margin-bottom:1rem}
@@ -62,11 +62,10 @@ summary:hover{background:var(--btn);color:#fff}
 #basketTable th:nth-child(1),#basketTable td:nth-child(1){width:36px}
 #basketTable th:nth-child(3),#basketTable td:nth-child(3){width:140px}
 #basketTable th:nth-child(4),#basketTable td:nth-child(4){width:120px}
-#basketTable th:nth-child(5),#basketTable td:nth-child(5){width:70px;text-align:center}
-#basketTable th:nth-child(6),#basketTable td:nth-child(6){width:120px}
-#basketTable th:nth-child(7),#basketTable td:nth-child(7){width:100px}
-#basketTable th:nth-child(8),#basketTable td:nth-child(8){width:120px}
-#basketTable th:nth-child(9),#basketTable td:nth-child(9){width:50px}
+#basketTable th:nth-child(5),#basketTable td:nth-child(5){width:120px}
+#basketTable th:nth-child(6),#basketTable td:nth-child(6){width:100px}
+#basketTable th:nth-child(7),#basketTable td:nth-child(7){width:120px}
+#basketTable th:nth-child(8),#basketTable td:nth-child(8){width:50px}
 .qty-controls{display:flex;align-items:center;gap:.25rem}
 .qty-controls button{padding:.2rem .45rem;line-height:1}
 #basketFab{position:fixed;right:16px;bottom:16px;background:var(--btn);color:#fff;border:none;border-radius:999px;padding:.6rem .9rem;box-shadow:0 6px 16px rgba(0,0,0,.2);cursor:pointer;z-index:1200;display:none}
@@ -81,7 +80,7 @@ input[type=number]{-moz-appearance:textfield}
 </style>
 </head>
 <body>
-<h1>Workplace Defender Pricing Tool 1.0.0</h1>
+<h1>DefCost 1.0.0</h1>
 <button id="darkModeToggle">Toggle Dark Mode</button>
 <div id="sheetTabs"></div>
 <div id="status" style="margin:.5rem 0;font-size:.9rem"></div>
@@ -105,7 +104,6 @@ input[type=number]{-moz-appearance:textfield}
           <col id="col-item">
           <col style="width:120px">
           <col style="width:100px">
-          <col style="width:70px">
           <col style="width:110px">
           <col style="width:90px">
           <col style="width:120px">
@@ -113,7 +111,7 @@ input[type=number]{-moz-appearance:textfield}
         </colgroup>
         <thead><tr>
           <th class="sort-handle">≡</th><th>Item</th><th>Quantity</th>
-          <th>Price Ex. GST</th><th>GST Apply</th>
+          <th>Price Ex. GST</th>
           <th>Line Total Ex. GST</th><th>GST</th><th>Line Total</th><th></th>
         </tr></thead>
       </table>
@@ -126,7 +124,6 @@ input[type=number]{-moz-appearance:textfield}
         <col id="col-item">
         <col style="width:120px">
         <col style="width:100px">
-        <col style="width:70px">
         <col style="width:110px">
         <col style="width:90px">
         <col style="width:120px">
@@ -134,7 +131,7 @@ input[type=number]{-moz-appearance:textfield}
       </colgroup>
       <thead><tr>
         <th class="sort-handle">≡</th><th>Item</th><th>Quantity</th>
-        <th>Price Ex. GST</th><th>GST Apply</th>
+        <th>Price Ex. GST</th>
         <th>Line Total Ex. GST</th><th>GST</th><th>Line Total</th><th></th>
       </tr></thead>
       <tbody></tbody><tfoot></tfoot>
@@ -150,7 +147,7 @@ input[type=number]{-moz-appearance:textfield}
 var ORDER=[["bannister rail","cat-orange"],["stainless steel grabrail","cat-orange"],["aluminium grabrail, powder coated","cat-orange"],["shower parts","cat-blue"],["plumbing","cat-blue"],["door components","cat-brown"],["fire safety","cat-red"],["anti slip solutions","cat-yellow"],["uncategorised","cat-yellow"]];
 var META=(function(){var o={};for(var i=0;i<ORDER.length;i++){o[ORDER[i][0]]={idx:i,cls:ORDER[i][1]};}return o;})();
 var FALL=META["uncategorised"];
-var PRICE_EX=["Rate Ex. GST","Price Ex. GST"]; // keep current behaviour/labels
+var PRICE_EX=["Rate Ex. GST","Price Ex. GST","Price","Price Ex Tax","Price ex GST"]; // widened detection
 var TOAST_MS=3000,GST_RATE=0.10,LS_KEY='defcost_basket_v2';
 var wb=null,basket=[],lastRemoved=null,lastAdded=null,uid=0;
 var tabs=document.getElementById("sheetTabs"),container=document.getElementById("sheetContainer"),toast=document.getElementById("toast");
@@ -218,9 +215,12 @@ function undoRemove(){if(lastRemoved){basket.splice(lastRemoved.i,0,lastRemoved.
 function renderBasket(){var cont=document.getElementById('basketContainer');var fab=document.getElementById('basketFab');if(!basket.length){cont.style.display='none'; if(fab) fab.style.display='none';} else { if(fab){ fab.textContent='Quote ('+basket.length+')'; if(cont.style.display==='none'){ fab.style.display='inline-block'; } else { fab.style.display='none'; } } }if(!basket.length){bBody.innerHTML='';bFoot.innerHTML='';saveBasket();return;}bBody.innerHTML='';var totEx=0,totGst=0;for(var i=0;i<basket.length;i++){(function(b,idx){var tr=document.createElement('tr');tr.className='main-row';tr.dataset.id=String(b.id||'');var tdHandle=document.createElement('td');tdHandle.className='sort-handle';tdHandle.textContent='≡';tr.appendChild(tdHandle);var tdItem=document.createElement('td');
     var itemInput=document.createElement('textarea'); itemInput.rows=2; itemInput.value=b.item||''; itemInput.className='editable item-input';
     itemInput.oninput=function(){ b.item=itemInput.value; saveBasket(); };
-    tdItem.appendChild(itemInput); tr.appendChild(tdItem);var tdQ=document.createElement('td');var qc=document.createElement('div');qc.className='qty-controls';var minus=document.createElement('button');minus.textContent='-';var inp=document.createElement('input');inp.type='number';inp.step='0.1';inp.className='qty-input';inp.value=b.qty||1;var plus=document.createElement('button');plus.textContent='+';minus.onclick=function(){b.qty=Math.max(1,(b.qty||1)-1);renderBasket();};plus.onclick=function(){b.qty=(b.qty||1)+1;renderBasket();};inp.onchange=function(){b.qty=Math.max(1,parseFloat(inp.value)||1);renderBasket();};qc.appendChild(minus);qc.appendChild(inp);qc.appendChild(plus);tdQ.appendChild(qc);tr.appendChild(tdQ);var tdEx=document.createElement('td');var exInput=document.createElement('input');exInput.type='number';exInput.step='0.01';exInput.className='editable price-input';exInput.value=isNaN(b.ex)?'':Number(b.ex).toFixed(2);exInput.onchange=function(){var v=parseFloat(exInput.value);b.ex=isFinite(v)?v:NaN;renderBasket();};tdEx.appendChild(exInput);tr.appendChild(tdEx);var tdGstApply=document.createElement('td');tdGstApply.className='gst-cell';var gstInput=document.createElement('input');gstInput.type='checkbox';gstInput.className='gst-input';gstInput.checked=!!b.gst;gstInput.onchange=function(){b.gst=gstInput.checked;renderBasket();};tdGstApply.appendChild(gstInput);tr.appendChild(tdGstApply);var le=isNaN(b.ex)?0:(b.qty||1)*b.ex;var gstAmt=b.gst?le*GST_RATE:0;var li=le+gstAmt;totEx+=le;totGst+=gstAmt;var tdLe=document.createElement('td');tdLe.textContent=isNaN(b.ex)?'N/A':le.toFixed(2);var tdG=document.createElement('td');tdG.textContent=isNaN(b.ex)?'N/A':gstAmt.toFixed(2);var tdLi=document.createElement('td');tdLi.textContent=isNaN(b.ex)?'N/A':li.toFixed(2);tr.appendChild(tdLe);tr.appendChild(tdG);tr.appendChild(tdLi);var tdRem=document.createElement('td');var x=document.createElement('span');x.className='remove-btn';x.textContent='X';x.onclick=function(){lastRemoved={b:b,i:idx};setTimeout(function(){basket.splice(idx,1);renderBasket();showToast('Item removed ↩',undoRemove);},150);};tdRem.appendChild(x);tr.appendChild(tdRem);bBody.appendChild(tr);})(basket[i],i);}var grand=totEx+totGst;bFoot.innerHTML='<tr><td colspan="5" style="text-align:right;font-weight:bold">Grand Totals:</td><td style="font-weight:bold">'+totEx.toFixed(2)+'</td><td style="font-weight:bold">'+totGst.toFixed(2)+'</td><td style="font-weight:bold">'+grand.toFixed(2)+'</td><td></td></tr>';if(window.Sortable&&!bBody.getAttribute('data-sortable')){Sortable.create(bBody,{handle:'.sort-handle',draggable:'tr.main-row',animation:150,onEnd:function(){var rows=bBody.querySelectorAll('tr.main-row');var order=[];for(var k=0;k<rows.length;k++){order.push(rows[k].dataset.id);}var newArr=[];for(var o=0;o<order.length;o++){for(var j=0;j<basket.length;j++){if(String(basket[j].id)===order[o]){newArr.push(basket[j]);break;}}}basket=newArr;saveBasket();updateBasketHeaderOffset();}});bBody.setAttribute('data-sortable','1');}saveBasket();updateBasketHeaderOffset();}
+    tdItem.appendChild(itemInput); tr.appendChild(tdItem);var tdQ=document.createElement('td');var qc=document.createElement('div');qc.className='qty-controls';var minus=document.createElement('button');minus.textContent='-';var inp=document.createElement('input');inp.type='number';inp.step='0.1';inp.className='qty-input';inp.value=b.qty||1;var plus=document.createElement('button');plus.textContent='+';minus.onclick=function(){b.qty=Math.max(1,(b.qty||1)-1);renderBasket();};plus.onclick=function(){b.qty=(b.qty||1)+1;renderBasket();};inp.onchange=function(){b.qty=Math.max(1,parseFloat(inp.value)||1);renderBasket();};qc.appendChild(minus);qc.appendChild(inp);qc.appendChild(plus);tdQ.appendChild(qc);tr.appendChild(tdQ);var tdEx=document.createElement('td');var exInput=document.createElement('input');exInput.type='number';exInput.step='0.01';exInput.className='editable price-input';exInput.value=isNaN(b.ex)?'':Number(b.ex).toFixed(2);exInput.onchange=function(){var v=parseFloat(exInput.value);b.ex=isFinite(v)?v:NaN;renderBasket();};tdEx.appendChild(exInput);tr.appendChild(tdEx);
+    var le=isNaN(b.ex)?0:(b.qty||1)*b.ex;
+    var gstAmt=le*GST_RATE;
+    var li=le+gstAmt;totEx+=le;totGst+=gstAmt;var tdLe=document.createElement('td');tdLe.textContent=isNaN(b.ex)?'N/A':le.toFixed(2);var tdG=document.createElement('td');tdG.textContent=isNaN(b.ex)?'N/A':gstAmt.toFixed(2);var tdLi=document.createElement('td');tdLi.textContent=isNaN(b.ex)?'N/A':li.toFixed(2);tr.appendChild(tdLe);tr.appendChild(tdG);tr.appendChild(tdLi);var tdRem=document.createElement('td');var x=document.createElement('span');x.className='remove-btn';x.textContent='X';x.onclick=function(){lastRemoved={b:b,i:idx};setTimeout(function(){basket.splice(idx,1);renderBasket();showToast('Item removed ↩',undoRemove);},150);};tdRem.appendChild(x);tr.appendChild(tdRem);bBody.appendChild(tr);})(basket[i],i);}var grand=totEx+totGst;bFoot.innerHTML='<tr><td colspan="4" style="text-align:right;font-weight:bold">Grand Totals:</td><td style="font-weight:bold">'+totEx.toFixed(2)+'</td><td style="font-weight:bold">'+totGst.toFixed(2)+'</td><td style="font-weight:bold">'+grand.toFixed(2)+'</td><td></td></tr>';if(window.Sortable&&!bBody.getAttribute('data-sortable')){Sortable.create(bBody,{handle:'.sort-handle',draggable:'tr.main-row',animation:150,onEnd:function(){var rows=bBody.querySelectorAll('tr.main-row');var order=[];for(var k=0;k<rows.length;k++){order.push(rows[k].dataset.id);}var newArr=[];for(var o=0;o<order.length;o++){for(var j=0;j<basket.length;j++){if(String(basket[j].id)===order[o]){newArr.push(basket[j]);break;}}}basket=newArr;saveBasket();updateBasketHeaderOffset();}});bBody.setAttribute('data-sortable','1');}saveBasket();updateBasketHeaderOffset();}
 var exportBtn=document.getElementById("exportCsvBtn");
-if(exportBtn){exportBtn.onclick=function(){if(!basket.length)return;var esc=function(v){return '"'+String(v).replace(/"/g,'""')+'"';};var lines=[["Item","Quantity","Price Ex. GST","GST Apply","Line Ex","GST","Line Total"]];var totEx=0,totGst=0;for(var i=0;i<basket.length;i++){var b=basket[i];var le=isNaN(b.ex)?0:(b.qty||1)*b.ex;totEx+=le;var gstAmt=b.gst?le*GST_RATE:0;totGst+=gstAmt;var li=le+gstAmt;lines.push([b.item,b.qty,isNaN(b.ex)?"N/A":Number(b.ex).toFixed(2),b.gst?"Yes":"No",isNaN(b.ex)?"N/A":le.toFixed(2),isNaN(b.ex)?"N/A":gstAmt.toFixed(2),isNaN(b.ex)?"N/A":li.toFixed(2)]);}var grand=(totEx+totGst).toFixed(2);lines.push(['','','','Totals:',totEx.toFixed(2),totGst.toFixed(2),grand]);var out=[];for(var r=0;r<lines.length;r++){var row=lines[r];for(var c=0;c<row.length;c++){row[c]=esc(row[c]);}out.push(row.join(','));}var csv=out.join("\n");var blob=new Blob([csv],{type:"text/csv"});var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="quote_basket.csv";document.body.appendChild(a);a.click();document.body.removeChild(a);}} 
+if(exportBtn){exportBtn.onclick=function(){if(!basket.length)return;var esc=function(v){return '"'+String(v).replace(/"/g,'""')+'"';};var lines=[["Item","Quantity","Price Ex. GST","Line Ex","GST","Line Total"]];var totEx=0,totGst=0;for(var i=0;i<basket.length;i++){var b=basket[i];var le=isNaN(b.ex)?0:(b.qty||1)*b.ex;totEx+=le;var gstAmt=le*GST_RATE;totGst+=gstAmt;var li=le+gstAmt;lines.push([b.item,b.qty,isNaN(b.ex)?"N/A":Number(b.ex).toFixed(2),isNaN(b.ex)?"N/A":le.toFixed(2),isNaN(b.ex)?"N/A":gstAmt.toFixed(2),isNaN(b.ex)?"N/A":li.toFixed(2)]);}var grand=(totEx+totGst).toFixed(2);lines.push(['','','','Totals:',totEx.toFixed(2),totGst.toFixed(2),grand]);var out=[];for(var r=0;r<lines.length;r++){var row=lines[r];for(var c=0;c<row.length;c++){row[c]=esc(row[c]);}out.push(row.join(','));}var csv=out.join("\n");var blob=new Blob([csv],{type:"text/csv"});var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="quote_basket.csv";document.body.appendChild(a);a.click();document.body.removeChild(a);}} 
 window.__wd_main_ok__=true;
 })();
 </script>
