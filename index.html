@@ -5,7 +5,7 @@
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
 <meta charset="UTF-8">
-<title>DefCost 1.0.1</title>
+<title>DefCost 1.0.2</title>
 <style>
 :root{--bg:#f7f7f7;--fg:#333;--header:#e0e0e0;--btn:#007bff;--btnh:#0056b3;--add:#28a745;--addh:#218838;--border:#aaa;--alt:#f9f9f9;--panel:#fff;--toast:#007bff;--toastfg:#fff;--rowHover:#e9f1ff}
 .dark-mode{--bg:#222;--fg:#eee;--header:#444;--btn:#0d6efd;--btnh:#0a58ca;--add:#198754;--addh:#157347;--border:#555;--alt:#2a2a2a;--panel:#333;--toast:#0d6efd;--toastfg:#fff;--rowHover:#383838}
@@ -54,11 +54,15 @@ summary:hover{background:var(--btn);color:#fff}
 .remove-btn{color:red;font-weight:bold;cursor:pointer}
 .sub-row td{background:var(--alt);font-size:.95em}
 .sub-row .item-input{min-height:1.6em}
-.sub-item-cell{position:relative;padding-left:1.25rem}
-.sub-item-cell::before{content:"↳";position:absolute;left:.45rem;top:.6rem;opacity:.6;font-weight:bold}
+.sub-item-cell{position:relative;padding-left:0}
+.sub-row td:first-child{position:relative}
+.sub-row td:first-child::before{content:"↳";position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.6;font-weight:bold}
 .sub-controls{display:inline-flex;gap:.25rem;margin-right:.25rem;vertical-align:middle}
 .subbtn{padding:.1rem .35rem;border:1px solid var(--border);background:var(--panel);cursor:pointer;border-radius:4px}
+.dark-mode .subbtn{background:#fff;color:#000;border-color:#888}
+.dark-mode .subbtn:hover{filter:brightness(.95)}
 .subbtn.active{background:var(--btn);color:#fff;border-color:var(--btn)}
+.dark-mode .subbtn.active{background:var(--btn);color:#fff;border-color:var(--btn)}
 #toast{margin-left:1rem;background:var(--toast);color:var(--toastfg);padding:.3rem .6rem;border-radius:4px;opacity:0;transition:.3s}
 #toast.show{opacity:1}
 .editable{background:#fff;border:1px solid var(--border);padding:.35rem .45rem;border-radius:6px;width:100%;box-sizing:border-box;display:block;margin:0}
@@ -85,7 +89,7 @@ input[type=number]{-moz-appearance:textfield}
 </style>
 </head>
 <body>
-<h1>DefCost 1.0.1</h1>
+<h1>DefCost 1.0.2</h1>
 <button id="darkModeToggle">Toggle Dark Mode</button>
 <div id="sheetTabs"></div>
 <div id="status" style="margin:.5rem 0;font-size:.9rem"></div>
