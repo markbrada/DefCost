@@ -167,6 +167,8 @@ function loadBasket(){try{var raw=localStorage.getItem(LS_KEY);if(raw){var arr=J
 }
 function showToast(msg,undo){var el=toast;el.textContent=msg;el.classList.add("show");if(undo){el.style.cursor="pointer";el.onclick=function(){undo();el.classList.remove("show");};}else{el.style.cursor="default";el.onclick=null;}setTimeout(function(){el.classList.remove("show");},TOAST_MS);} 
 function escapeHtml(s){s=String(s==null?'':s);return s.replace(/[&<>"']/g,function(m){switch(m){case'&':return'&amp;';case'<':return'&lt;';case'>':return'&gt;';case'"':return'&quot;';default:return'&#39;';}});} 
+function getDefaultSections(){return [{id:1,name:'Section 1'}];}
+function buildReportModel(basket,sections){sections=(sections&&sections.length)?sections:getDefaultSections();var sectionsById={};for(var i=0;i<sections.length;i++){sectionsById[sections[i].id]=sections[i];}var childMap={};for(var i2=0;i2<basket.length;i2++){var it=basket[i2];if(it&&it.pid){(childMap[it.pid]||(childMap[it.pid]=[])).push(it);}}var secMap={};function ensureSec(id){if(!secMap[id]){var name=sectionsById[id]?sectionsById[id].name:('Section '+id);secMap[id]={id:id,name:name,items:[],subtotalEx:0,subtotalGst:0,subtotalTotal:0};}return secMap[id];}function addAmounts(obj,qty,ex){var le=isNaN(ex)?0:(qty||1)*ex;var gst=le*GST_RATE;obj.subtotalEx+=le;obj.subtotalGst+=gst;obj.subtotalTotal+=le+gst;}for(var i3=0;i3<basket.length;i3++){var it2=basket[i3];if(!it2||it2.pid)continue;var sid=it2.sectionId||sections[0].id;var sec=ensureSec(sid);var subs=childMap[it2.id]||[];sec.items.push({parent:it2,subs:subs});addAmounts(sec,it2.qty,it2.ex);for(var k=0;k<subs.length;k++){addAmounts(sec,subs[k].qty,subs[k].ex);}}var orderedSections=[];for(var j=0;j<sections.length;j++){if(secMap[sections[j].id])orderedSections.push(secMap[sections[j].id]);}for(var id in secMap){if(secMap.hasOwnProperty(id)){var present=false;for(var j2=0;j2<orderedSections.length;j2++){if(orderedSections[j2].id==id){present=true;break;}}if(!present)orderedSections.push(secMap[id]);}}if(!orderedSections.length){orderedSections.push({id:sections[0].id,name:sections[0].name,items:[],subtotalEx:0,subtotalGst:0,subtotalTotal:0});}var grandEx=0,grandGst=0,grandTotal=0;for(var s=0;s<orderedSections.length;s++){grandEx+=orderedSections[s].subtotalEx;grandGst+=orderedSections[s].subtotalGst;grandTotal+=orderedSections[s].subtotalTotal;}return{sections:orderedSections,grandEx:grandEx,grandGst:grandGst,grandTotal:grandTotal};}
 loadBasket();
 document.getElementById("darkModeToggle").onclick=function(){document.body.classList.toggle("dark-mode")};
 var statusEl=document.getElementById('status');var pickerWrap=document.getElementById('manualLoad');var picker=document.getElementById('xlsxPicker');
@@ -335,6 +337,26 @@ if(exportBtn){
   exportBtn.onclick=function(){
     if(!basket.length) return;
     var esc=function(v){return '"'+String(v).replace(/"/g,'""')+'"';};
+    var report=buildReportModel(basket,null);
+    var lines=[["Section","Item","Quantity","Price Ex. GST","Line Ex","GST","Line Total"]];
+    for(var si=0;si<report.sections.length;si++){
+      var sec=report.sections[si];
+      for(var gi=0;gi<sec.items.length;gi++){
+        var grp=sec.items[gi];
+        var p=grp.parent; var le=isNaN(p.ex)?0:(p.qty||1)*p.ex; var gstAmt=le*GST_RATE; var li=le+gstAmt;
+        lines.push([sec.name,(p.item||''),(p.qty||1),isNaN(p.ex)?"N/A":Number(p.ex).toFixed(2),isNaN(p.ex)?"N/A":le.toFixed(2),isNaN(p.ex)?"N/A":gstAmt.toFixed(2),isNaN(p.ex)?"N/A":li.toFixed(2)]);
+        var subs=grp.subs||[];
+        for(var sj=0;sj<subs.length;sj++){
+          var s=subs[sj]; var sle=isNaN(s.ex)?0:(s.qty||1)*s.ex; var sg=sle*GST_RATE; var st=sle+sg;
+          lines.push([sec.name,' - '+(s.item||''),(s.qty||1),isNaN(s.ex)?"N/A":Number(s.ex).toFixed(2),isNaN(s.ex)?"N/A":sle.toFixed(2),isNaN(s.ex)?"N/A":sg.toFixed(2),isNaN(s.ex)?"N/A":st.toFixed(2)]);
+        }
+      }
+    }
+    lines.push(["Totals","","","",report.grandEx.toFixed(2),report.grandGst.toFixed(2),report.grandTotal.toFixed(2)]);
+    var out=[]; for(var r=0;r<lines.length;r++){ var row=lines[r]; for(var c=0;c<row.length;c++){ row[c]=esc(row[c]); } out.push(row.join(',')); }
+    var csv=out.join("
+"); var blob=new Blob([csv],{type:"text/csv"}); var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="quote_basket.csv"; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  };
     var lines=[["Item","Quantity","Price Ex. GST","Line Ex","GST","Line Total"]];
     var totEx=0,totGst=0;
     for(var i=0;i<basket.length;i++){
