@@ -39,22 +39,26 @@ summary:hover{background:var(--btn);color:#fff}
 .cat-brown summary{background:#f2e6d9}.cat-brown summary:hover{background:#e0cbb9;color:#000}
 .cat-red summary{background:#ffdede}.cat-red summary:hover{background:#ffb7b7;color:#000}
 .cat-yellow summary{background:#fff8d6}.cat-yellow summary:hover{background:#ffea9f;color:#000}
-#qbWindow{position:fixed;top:64px;right:32px;width:min(1100px,90vw);height:min(65vh,80vh);background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.35);display:flex;flex-direction:column;z-index:10000;overflow:hidden}
-#qbWindow.qb-full{top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;border-radius:0}
-#qbTitlebar{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.5rem .75rem;background:var(--header);border-bottom:1px solid var(--border);cursor:move;user-select:none}
-#qbDots{display:flex;gap:.5rem}
-#qbDots button{width:12px;height:12px;border-radius:50%;border:0;cursor:pointer}
-#qbClose{background:#ff5f57}
-#qbMin{background:#ffbd2e}
-#qbZoom{background:#28c840}
-.dark-mode #qbClose,.dark-mode #qbMin,.dark-mode #qbZoom{box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
-#qbTitle{flex:1;font-weight:bold}
-#qbActions{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:flex-end}
-#qbActions button{background:var(--btn);color:#fff;border:none;padding:.3rem .6rem;border-radius:4px;cursor:pointer}
-#qbActions button:hover{background:var(--btnh)}
-#qbBody{flex:1;overflow:auto;scrollbar-gutter:stable both-edges;padding:0 1rem 1rem}
-#qbDockIcon{position:fixed;left:16px;bottom:16px;display:none;border-radius:999px;padding:.5rem .8rem;background:var(--btn);color:#fff;border:none;cursor:pointer;z-index:10001}
-#qbDockIcon:hover{background:var(--btnh)}
+#quoteBuilderMain{margin-top:1.5rem;background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 16px 40px rgba(0,0,0,.18);padding:1rem 1.25rem 1.5rem;display:flex;flex-direction:column;gap:1rem}
+#quoteHeader{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:.75rem}
+.quote-header-left{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+#quoteHeader #qbTitle{margin:0;font-size:1.75rem;font-weight:bold}
+#quoteActions{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:flex-end}
+#quoteActions button{background:var(--btn);color:#fff;border:none;padding:.4rem .75rem;border-radius:6px;cursor:pointer;font-weight:600}
+#quoteActions button:hover{background:var(--btnh)}
+#catalogWindow{position:fixed;top:64px;right:32px;width:min(1100px,90vw);height:min(65vh,80vh);background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.35);display:flex;flex-direction:column;z-index:10000;overflow:hidden}
+#catalogWindow.qb-full{top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;border-radius:0}
+#catalogTitlebar{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.5rem .75rem;background:var(--header);border-bottom:1px solid var(--border);cursor:move;user-select:none}
+#catalogDots{display:flex;gap:.5rem}
+#catalogDots button{width:12px;height:12px;border-radius:50%;border:0;cursor:pointer}
+#catalogClose{background:#ff5f57}
+#catalogMin{background:#ffbd2e}
+#catalogZoom{background:#28c840}
+.dark-mode #catalogClose,.dark-mode #catalogMin,.dark-mode #catalogZoom{box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
+#catalogTitle{flex:1;font-weight:bold}
+#catalogBody{flex:1;overflow:auto;scrollbar-gutter:stable both-edges;padding:0 1rem 1rem}
+#catalogDockIcon{position:fixed;left:16px;bottom:16px;display:none;border-radius:999px;padding:.5rem .8rem;background:var(--btn);color:#fff;border:none;cursor:pointer;z-index:10001}
+#catalogDockIcon:hover{background:var(--btnh)}
 .qb-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:10002;padding:1rem}
 .qb-modal{background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.35);max-width:420px;width:100%;padding:1.25rem;display:flex;flex-direction:column;gap:1rem}
 .qb-modal h4{margin:0;font-size:1.1rem}
@@ -67,8 +71,6 @@ summary:hover{background:var(--btn);color:#fff}
 .qb-modal-buttons .neutral{background:var(--header);color:var(--fg)}
 .qb-modal-buttons .neutral:hover{filter:brightness(.95)}
 #basketContainer{display:flex;flex-direction:column;min-height:100%;gap:0}
-#basketHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
-#basketHeader h3{margin:0}
 #sectionTabsBar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;padding:.35rem .5rem;background:var(--header);border:1px solid var(--border);border-top:0}
 #sectionTabs{display:flex;flex-wrap:wrap;gap:.25rem}
 .section-tab{display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .6rem;border:1px solid var(--border);border-radius:6px;background:var(--panel);color:var(--fg);cursor:pointer;transition:.2s}
@@ -127,55 +129,26 @@ input[type=number]{-moz-appearance:textfield}
 <body>
 <h1>DefCost 1.2.0</h1>
 <button id="darkModeToggle">Toggle Dark Mode</button>
-<div id="sheetTabs"></div>
-<div id="status" style="margin:.5rem 0;font-size:.9rem"></div>
-<div id="manualLoad" style="display:none;margin:.5rem 0"><label class="search-label">Load workbook:</label><input type="file" id="xlsxPicker" accept=".xlsx"></div>
-<div id="sheetContainer"></div>
-<div id="qbWindow" aria-label="Quote Builder window" role="dialog" aria-modal="false">
-  <div id="qbTitlebar">
-    <div id="qbDots">
-      <button id="qbClose" aria-label="Delete quote" title="Delete quote"></button>
-      <button id="qbMin" aria-label="Minimize" title="Minimize"></button>
-      <button id="qbZoom" aria-label="Full screen" title="Full screen"></button>
+<div id="quoteBuilderMain" aria-label="Quote Builder" role="region">
+  <div id="quoteHeader">
+    <div class="quote-header-left">
+      <h2 id="qbTitle">Quote Builder</h2>
+      <span id="toast"></span>
     </div>
-    <div id="qbTitle">Quote Builder</div>
-    <div id="qbActions">
-      <button id="addCustomBtn">Add custom line</button>
+    <div id="quoteActions">
+      <button id="clearQuoteBtn" type="button" aria-label="Delete quote">Delete quote</button>
+      <button id="addCustomBtn" type="button">Add custom line</button>
       <button id="addSectionBtn" type="button">+ Section</button>
-      <button id="exportCsvBtn">Export quote CSV</button>
+      <button id="exportCsvBtn" type="button">Export quote CSV</button>
     </div>
   </div>
-  <div id="qbBody">
-    <div id="basketContainer">
-      <div id="basketSticky">
-        <div id="basketHeader">
-          <div style="display:flex;align-items:center;gap:.5rem"><h3>Quote Builder</h3><span id="toast"></span></div>
-        </div>
-        <div id="sectionTabsBar">
-          <div id="sectionTabs"></div>
-        </div>
-        <div id="basketStickyHead">
-          <table id="basketHead">
-            <colgroup>
-              <col style="width:36px">
-              <col id="col-item">
-              <col style="width:120px">
-              <col style="width:100px">
-              <col style="width:110px">
-              <col style="width:90px">
-              <col style="width:120px">
-              <col style="width:50px">
-            </colgroup>
-            <thead><tr>
-              <th class="sort-handle">≡</th><th>Item</th><th>Quantity</th>
-              <th>Price Ex. GST</th>
-              <th>Line Total Ex. GST</th><th>GST</th><th>Line Total</th><th></th>
-            </tr></thead>
-          </table>
-        </div>
-      </div>
-      <div id="basketContent">
-        <table id="basketTable">
+  <div id="sectionTabsBar">
+    <div id="sectionTabs"></div>
+  </div>
+  <div id="basketContainer">
+    <div id="basketSticky">
+      <div id="basketStickyHead">
+        <table id="basketHead">
           <colgroup>
             <col style="width:36px">
             <col id="col-item">
@@ -191,14 +164,49 @@ input[type=number]{-moz-appearance:textfield}
             <th>Price Ex. GST</th>
             <th>Line Total Ex. GST</th><th>GST</th><th>Line Total</th><th></th>
           </tr></thead>
-          <tbody></tbody><tfoot></tfoot>
         </table>
-        <div id="grandTotals" style="display:none"></div>
       </div>
+    </div>
+    <div id="basketContent">
+      <table id="basketTable">
+        <colgroup>
+          <col style="width:36px">
+          <col id="col-item">
+          <col style="width:120px">
+          <col style="width:100px">
+          <col style="width:110px">
+          <col style="width:90px">
+          <col style="width:120px">
+          <col style="width:50px">
+        </colgroup>
+        <thead><tr>
+          <th class="sort-handle">≡</th><th>Item</th><th>Quantity</th>
+          <th>Price Ex. GST</th>
+          <th>Line Total Ex. GST</th><th>GST</th><th>Line Total</th><th></th>
+        </tr></thead>
+        <tbody></tbody><tfoot></tfoot>
+      </table>
+      <div id="grandTotals" style="display:none"></div>
     </div>
   </div>
 </div>
-<button id="qbDockIcon" title="Open Quote Builder" aria-label="Open Quote Builder">Quote</button>
+<div id="catalogWindow" aria-label="Catalogue window" role="dialog" aria-modal="false">
+  <div id="catalogTitlebar">
+    <div id="catalogDots">
+      <button id="catalogClose" aria-label="Hide catalogue" title="Hide catalogue"></button>
+      <button id="catalogMin" aria-label="Minimize" title="Minimize"></button>
+      <button id="catalogZoom" aria-label="Full screen" title="Full screen"></button>
+    </div>
+    <div id="catalogTitle">Catalogue</div>
+  </div>
+  <div id="catalogBody">
+    <div id="sheetTabs"></div>
+    <div id="status" style="margin:.5rem 0;font-size:.9rem"></div>
+    <div id="manualLoad" style="display:none;margin:.5rem 0"><label class="search-label">Load workbook:</label><input type="file" id="xlsxPicker" accept=".xlsx"></div>
+    <div id="sheetContainer"></div>
+  </div>
+</div>
+<button id="catalogDockIcon" title="Open catalogue" aria-label="Open catalogue">Catalogue</button>
 <script src="xlsx.full.min.js"></script>
 <script>if(!window.XLSX){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js';s.setAttribute('data-sheetjs','1');document.head.appendChild(s);}</script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -211,8 +219,8 @@ var PRICE_EX=["Rate Ex. GST","Price Ex. GST","Price","Price Ex Tax","Price ex GS
 var TOAST_MS=3000,GST_RATE=0.10,LS_KEY='defcost_basket_v2',UI_KEY='defcost_qb_ui_v1';
 var wb=null,basket=[],sections=getDefaultSections(),uid=0,sectionSeq=1,activeSectionId=sections[0].id,captureParentId=null;
 var tabs=document.getElementById("sheetTabs"),container=document.getElementById("sheetContainer"),toast=document.getElementById("toast"),sectionTabsEl=document.getElementById("sectionTabs"),grandTotalsEl=document.getElementById("grandTotals");
-var qbWindow=document.getElementById('qbWindow'),qbTitlebar=document.getElementById('qbTitlebar'),qbDockIcon=document.getElementById('qbDockIcon'),qbMin=document.getElementById('qbMin'),qbClose=document.getElementById('qbClose'),qbZoom=document.getElementById('qbZoom');
-var addSectionBtn=document.getElementById("addSectionBtn"),qbTitle=document.getElementById('qbTitle');
+var qbWindow=document.getElementById('catalogWindow'),qbTitlebar=document.getElementById('catalogTitlebar'),qbDockIcon=document.getElementById('catalogDockIcon'),qbMin=document.getElementById('catalogMin'),qbClose=document.getElementById('catalogClose'),qbZoom=document.getElementById('catalogZoom');
+var addSectionBtn=document.getElementById("addSectionBtn"),qbTitle=document.getElementById('qbTitle'),clearQuoteBtn=document.getElementById('clearQuoteBtn');
 var qbState=loadUiState();
 var lastFreeRect=cloneRect(qbState);
 if(!lastFreeRect.w||!lastFreeRect.h){lastFreeRect=cloneRect(defaultUiState());}
@@ -222,8 +230,9 @@ ensureWindowWithinViewport(true);
 if(qbTitlebar){qbTitlebar.addEventListener('mousedown',startDrag);qbTitlebar.addEventListener('touchstart',startDrag,{passive:false});}
 if(qbMin){qbMin.addEventListener('click',function(){setMinimized(true);});}
 if(qbDockIcon){qbDockIcon.addEventListener('click',restoreFromDock);}
-if(qbClose){qbClose.addEventListener('click',showDeleteDialog);}
+if(qbClose){qbClose.addEventListener('click',function(){setMinimized(true);});}
 if(qbZoom){qbZoom.addEventListener('click',toggleFull);}
+if(clearQuoteBtn){clearQuoteBtn.addEventListener('click',showDeleteDialog);}
 window.addEventListener('resize',function(){ensureWindowWithinViewport();});
 document.addEventListener('keydown',function(ev){if(ev.key==='Escape'||ev.key==='Esc'){if(qbState.full){toggleFull();}else if(!qbState.minimized){setMinimized(true);}}});
 function active(n){if(!tabs)return;var kids=tabs.children;for(var i=0;i<kids.length;i++){var b=kids[i];b.classList.toggle('active',b.dataset&&b.dataset.sheet===n);}}
@@ -266,7 +275,7 @@ function setMinimized(minimize){if(minimize){if(qbState.full){qbState.full=false
 function restoreFromDock(){setMinimized(false);}
 function toggleFull(){if(qbState.full){qbState.full=false;if(lastFreeRect&&lastFreeRect.w){assignRect(lastFreeRect);}applyQBState();saveUiState();return;}rememberCurrentRect();qbState.full=true;qbState.minimized=false;applyQBState();saveUiState();}
 function getPointerCoords(ev){if(ev.touches&&ev.touches.length){return{clientX:ev.touches[0].clientX,clientY:ev.touches[0].clientY};}if(ev.changedTouches&&ev.changedTouches.length){return{clientX:ev.changedTouches[0].clientX,clientY:ev.changedTouches[0].clientY};}return{clientX:ev.clientX,clientY:ev.clientY};}
-function isDragHandleTarget(target){if(!target)return true;var node=target;if(node.closest){if(node.closest('#qbDots')||node.closest('#qbActions'))return false;}while(node&&node!==qbTitlebar){var tag=node.tagName;if(tag&&(tag==='BUTTON'||tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||tag==='LABEL'))return false;node=node.parentNode;}return true;}
+function isDragHandleTarget(target){if(!target)return true;var node=target;if(node.closest){if(node.closest('#catalogDots'))return false;}while(node&&node!==qbTitlebar){var tag=node.tagName;if(tag&&(tag==='BUTTON'||tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||tag==='LABEL'))return false;node=node.parentNode;}return true;}
 function startDrag(ev){if(!qbWindow||qbState.full||qbState.minimized)return;var target=ev.target||ev.srcElement;if(!isDragHandleTarget(target))return;var coords=getPointerCoords(ev);if(typeof coords.clientX==='undefined')return;if(ev.cancelable)ev.preventDefault();rememberCurrentRect();var rect=qbWindow.getBoundingClientRect();dragInfo={offsetX:coords.clientX-rect.left,offsetY:coords.clientY-rect.top,width:rect.width,height:rect.height};prevUserSelect=document.body.style.userSelect;document.body.style.userSelect='none';document.addEventListener('mousemove',handleDragMove);document.addEventListener('mouseup',endDrag);document.addEventListener('touchmove',handleDragMove,{passive:false});document.addEventListener('touchend',endDrag);document.addEventListener('touchcancel',endDrag);}
 function handleDragMove(ev){if(!dragInfo)return;var coords=getPointerCoords(ev);if(typeof coords.clientX==='undefined')return;if(ev.cancelable)ev.preventDefault();var winW=window.innerWidth||dragInfo.width||800;var winH=window.innerHeight||dragInfo.height||600;var width=Math.min(Math.max(320,dragInfo.width||320),winW);var height=Math.min(Math.max(280,dragInfo.height||280),winH);var x=coords.clientX-dragInfo.offsetX;var y=coords.clientY-dragInfo.offsetY;var maxX=Math.max(0,winW-width);var maxY=Math.max(0,winH-height);if(x<0)x=0;if(y<0)y=0;if(x>maxX)x=maxX;if(y>maxY)y=maxY;qbWindow.classList.remove('qb-full');qbState.full=false;qbState.minimized=false;qbState.x=x;qbState.y=y;qbState.w=width;qbState.h=height;qbWindow.style.left=x+'px';qbWindow.style.top=y+'px';qbWindow.style.right='auto';qbWindow.style.bottom='auto';qbWindow.style.display='flex';}
 function endDrag(){if(!dragInfo)return;document.body.style.userSelect=prevUserSelect||'';document.removeEventListener('mousemove',handleDragMove);document.removeEventListener('mouseup',endDrag);document.removeEventListener('touchmove',handleDragMove);document.removeEventListener('touchend',endDrag);document.removeEventListener('touchcancel',endDrag);dragInfo=null;saveUiState();rememberCurrentRect();}
@@ -474,7 +483,7 @@ function renderBasket(){
   ensureSectionState();
   var cont=document.getElementById('basketContainer');
   if(!cont||!bBody||!bFoot){ saveBasket(); return; }
-  if(qbDockIcon){ qbDockIcon.textContent=basket.length?'Quote ('+basket.length+')':'Quote'; }
+  if(qbDockIcon){ qbDockIcon.textContent='Catalogue'; }
   if(qbTitle){ qbTitle.textContent=basket.length?'Quote Builder ('+basket.length+')':'Quote Builder'; }
   renderSectionTabs();
   if(!basket.length){
@@ -721,7 +730,7 @@ function showDeleteDialog(){
   buttons.appendChild(saveBtn); buttons.appendChild(deleteBtn); buttons.appendChild(cancelBtn);
   modal.appendChild(title); modal.appendChild(message); modal.appendChild(buttons); overlay.appendChild(modal);
   document.body.appendChild(overlay);
-  function closeDialog(){ document.removeEventListener('keydown',handleKey,true); if(overlay&&overlay.parentNode){ overlay.parentNode.removeChild(overlay); } if(qbClose){ try{qbClose.focus();}catch(e){} } }
+  function closeDialog(){ document.removeEventListener('keydown',handleKey,true); if(overlay&&overlay.parentNode){ overlay.parentNode.removeChild(overlay); } if(clearQuoteBtn){ try{clearQuoteBtn.focus();}catch(e){} } }
   function handleKey(ev){ if(ev.key==='Escape'||ev.key==='Esc'){ ev.preventDefault(); ev.stopPropagation(); closeDialog(); } }
   document.addEventListener('keydown',handleKey,true);
   overlay.addEventListener('click',function(ev){ if(ev.target===overlay){ closeDialog(); }});
