@@ -29,7 +29,7 @@ It loads an Excel workbook of products/services and lets estimators build quotes
 - **Section notes**: dedicated notes field stored alongside each section in localStorage
 - **Reorder**: drag-and-drop for items (and keep sub-items with their parent)
 - **Totals**:
-  - Compact sidebar summarises **Total (Ex. GST)**, **Discount %**, **Grand Total (Ex. GST)**, **GST (10%)**, **Grand Total (Incl. GST)**
+  - Right-aligned summary table (beneath the active section) lists **Total (Ex. GST)**, **Discount %**, **Grand Total (Ex. GST)**, **GST (10%)**, **Grand Total (Incl. GST)**
   - Discount % and Grand Total inputs stay in sync
 - **CSV export**: section-aware, includes grand totals
 - **Clipboard**: click any non-input cell to copy its text
@@ -84,6 +84,7 @@ Defender Price List.xlsx   # Workbook loaded by the app
 
 ## Versioning
 
+- **2.0.2** – Repositioned the quote totals into a dedicated table beneath the sections
 - **2.0.1** – Fixed merge regression that duplicated the totals sidebar and broke the main script bootstrap
 - **2.0.0** – Added per-section notes, Ex. GST line totals, and redesigned totals sidebar with synced discount logic
 - **1.2.0** – Quote Builder moved to the main page; Catalogue lives in the floating window with macOS-style controls
