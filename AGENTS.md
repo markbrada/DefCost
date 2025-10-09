@@ -13,10 +13,11 @@ Implement and optimise the front-end quoting interface, including:
 **Focus Areas:**  
 HTML, TailwindCSS, and JavaScript logic directly related to quote building and catalogue display.
 
-**Constraints:**  
-- Preserve existing localStorage keys (`defcost_basket_v2`, `defcost_catalogue_state`)  
-- Maintain responsive layout and dark-mode compatibility  
-- Keep export logic (`exportCSV`, PDF preparation) untouched unless requested  
+**Constraints:**
+- Preserve existing localStorage keys (`defcost_basket_v2`, `defcost_catalogue_state`)
+- Maintain responsive layout and dark-mode compatibility
+- Keep export logic (`exportCSV`, PDF preparation) untouched unless requested
+- Maintain section note persistence (the `notes` field on each section stored in `defcost_basket_v2`)
 
 ---
 
@@ -45,4 +46,4 @@ DefCost 2.0.0 (major rework)
 ---
 
 ## Current Version
-DefCost **v1.2.0** — Section-Based Quote Builder, floating catalogue.
+DefCost **v2.0.0** — Section notes and redesigned totals sidebar.
