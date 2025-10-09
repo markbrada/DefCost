@@ -21,7 +21,7 @@ It loads an Excel workbook of products/services and lets estimators build quotes
 
 ## Core Features
 
-### Quote Builder (replaces old “Quote Basket”)
+### Quote Builder (primary workspace)
 - **Sections**: create, rename, delete; one **active** section at a time
 - **Items**: add from catalog or custom; qty, unit price, totals
 - **Sub-items**: optional nested lines that roll up into the parent and section totals
@@ -32,6 +32,14 @@ It loads an Excel workbook of products/services and lets estimators build quotes
 - **CSV export**: section-aware, includes grand totals
 - **Clipboard**: click any non-input cell to copy its text
 - **Sticky header**: stable sizing with `scrollbar-gutter: stable`
+
+### Catalogue (floating utility window)
+- **Excel-driven** data rendered from the included workbook tabs
+- **Search**: keyword filtering per sheet with highlight on matches
+- **Click-to-copy**: quickly copies values for use in the Quote Builder
+- **Add buttons**: send catalogue items straight into the active section
+- **Window controls**: drag, minimise to dock icon, or toggle full-screen view
+- **Dark mode aware** so the window matches the active theme
 
 ---
 
@@ -66,18 +74,17 @@ Defender Price List.xlsx   # Workbook loaded by the app
 ## Current Status
 
 - Implemented: **Sections + section totals + sub-items**
-- In progress (design): **Floating “Quote Builder” window** with macOS-style controls  
-  - 🔴 Delete quote (with optional CSV save)  
-  - 🟡 Minimise to dock icon  
-  - 🟢 Full-screen quote view
+- Implemented: **Quote Builder** promoted to the main workspace
+- Implemented: **Catalogue** running in the floating macOS-style window
+- Implemented: **Window controls** – delete quote modal, minimise, dock icon, full-screen toggle
 
 ---
 
 ## Versioning
 
+- **1.2.0** – Quote Builder moved to the main page; Catalogue lives in the floating window with macOS-style controls
 - **1.1.1** – Sections UI refinements, bug fixes
 - **1.1.0** – Introduced Sections and section totals
-- Planned: **1.2.0** – Floating Quote Builder window with macOS-style controls
 
 ---
 
