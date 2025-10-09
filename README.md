@@ -84,6 +84,7 @@ Defender Price List.xlsx   # Workbook loaded by the app
 
 ## Versioning
 
+- **2.0.1** – Fixed merge regression that duplicated the totals sidebar and broke the main script bootstrap
 - **2.0.0** – Added per-section notes, Ex. GST line totals, and redesigned totals sidebar with synced discount logic
 - **1.2.0** – Quote Builder moved to the main page; Catalogue lives in the floating window with macOS-style controls
 - **1.1.1** – Sections UI refinements, bug fixes
