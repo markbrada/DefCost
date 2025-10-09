@@ -42,6 +42,7 @@ DefCost 2.0.0 (major rework)
 - Reflect every visual or behavioural change in `README.md` under the changelog.  
 - Maintain semantic version consistency between displayed version (UI header) and repo tags/releases.  
 - Document all localStorage or data structure key updates.  
+- Codex should always pull latest main before editing index.html
 
 ---
 
