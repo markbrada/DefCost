@@ -1,7 +1,7 @@
 # DefCost – Workplace Defender Pricing Tool
 
-DefCost is a browser-based estimating and quoting tool for Workplace Defender.  
-It loads an Excel workbook of products/services and lets estimators build quotes structured into **Sections**, with support for **sub-items**, drag-reorder, and CSV export.
+DefCost is a browser-based estimating and quoting tool for Workplace Defender.
+It loads an Excel workbook of products/services and lets estimators build quotes structured into **Sections**, with support for **sub-items**, drag-reorder, per-section notes, and CSV export.
 
 ---
 
@@ -22,13 +22,15 @@ It loads an Excel workbook of products/services and lets estimators build quotes
 ## Core Features
 
 ### Quote Builder (primary workspace)
+
 - **Sections**: create, rename, delete; one **active** section at a time
-- **Items**: add from catalog or custom; qty, unit price, totals
+- **Items**: add from catalog or custom; qty, unit price, line totals (Ex. GST)
 - **Sub-items**: optional nested lines that roll up into the parent and section totals
+- **Section notes**: dedicated notes field stored alongside each section in localStorage
 - **Reorder**: drag-and-drop for items (and keep sub-items with their parent)
 - **Totals**:
-  - Each section shows **Ex. GST**, **GST**, and **Total**
-  - Footer shows **grand totals** (Ex. GST, GST, Total)
+  - Compact sidebar summarises **Total (Ex. GST)**, **Discount %**, **Grand Total (Ex. GST)**, **GST (10%)**, **Grand Total (Incl. GST)**
+  - Discount % and Grand Total inputs stay in sync
 - **CSV export**: section-aware, includes grand totals
 - **Clipboard**: click any non-input cell to copy its text
 - **Sticky header**: stable sizing with `scrollbar-gutter: stable`
@@ -45,11 +47,11 @@ It loads an Excel workbook of products/services and lets estimators build quotes
 
 ## Totals Logic
 
-- Line Ex. GST = `qty × price`
-- Line GST = `Line Ex. GST × 0.10`
-- Line Total = `Line Ex. GST + Line GST`
-- Section subtotals = sum of **parent items + sub-items** in that section
-- Grand totals = sum of all section subtotals
+- Line Total (displayed) = `qty × price` (Ex. GST)
+- Section Ex. GST subtotal = sum of **parent items + sub-items** in that section
+- Discounted Grand Total (Ex. GST) = `Section Ex. GST subtotal × (1 - Discount %)`
+- GST (10%) = `Discounted Grand Total × 0.10`
+- Grand Total (Incl. GST) = `Discounted Grand Total + GST`
 
 ---
 
@@ -73,7 +75,7 @@ Defender Price List.xlsx   # Workbook loaded by the app
 
 ## Current Status
 
-- Implemented: **Sections + section totals + sub-items**
+- Implemented: **Sections, sub-items, and per-section notes** with persistence
 - Implemented: **Quote Builder** promoted to the main workspace
 - Implemented: **Catalogue** running in the floating macOS-style window
 - Implemented: **Window controls** – delete quote modal, minimise, dock icon, full-screen toggle
@@ -82,6 +84,7 @@ Defender Price List.xlsx   # Workbook loaded by the app
 
 ## Versioning
 
+- **2.0.0** – Added per-section notes, Ex. GST line totals, and redesigned totals sidebar with synced discount logic
 - **1.2.0** – Quote Builder moved to the main page; Catalogue lives in the floating window with macOS-style controls
 - **1.1.1** – Sections UI refinements, bug fixes
 - **1.1.0** – Introduced Sections and section totals

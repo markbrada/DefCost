@@ -5,7 +5,7 @@
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
 <meta charset="UTF-8">
-<title>DefCost 1.2.0</title>
+<title>DefCost 2.0.0</title>
 <style>
 :root{--bg:#f7f7f7;--fg:#333;--header:#e0e0e0;--btn:#007bff;--btnh:#0056b3;--add:#28a745;--addh:#218838;--border:#aaa;--alt:#f9f9f9;--panel:#fff;--toast:#007bff;--toastfg:#fff;--rowHover:#e9f1ff}
 .dark-mode{--bg:#222;--fg:#eee;--header:#444;--btn:#0d6efd;--btnh:#0a58ca;--add:#198754;--addh:#157347;--border:#555;--alt:#2a2a2a;--panel:#333;--toast:#0d6efd;--toastfg:#fff;--rowHover:#383838}
@@ -83,6 +83,11 @@ summary:hover{background:var(--btn);color:#fff}
 .qb-modal-buttons .neutral{background:var(--header);color:var(--fg)}
 .qb-modal-buttons .neutral:hover{filter:brightness(.95)}
 #basketContainer{display:flex;flex-direction:column;min-height:100%;gap:0}
+#basketContent{display:flex;flex-direction:column;gap:1rem}
+.basket-table-area{flex:1 1 auto;min-width:0}
+.quote-totals-row{display:flex;justify-content:flex-end;margin-top:1rem}
+#grandTotals{padding:.75rem;border:1px solid var(--border);border-radius:8px;background:var(--panel);display:none;font-weight:600;width:100%;max-width:320px;margin-left:auto}
+@media(min-width:960px){#basketContent{flex-direction:column}#grandTotals{max-width:340px}}
 #sectionTabsBar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;padding:.35rem .5rem;background:var(--header);border:1px solid var(--border);border-top:0}
 #sectionTabs{display:flex;flex-wrap:wrap;gap:.25rem}
 .section-tab{display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .6rem;border:1px solid var(--border);border-radius:6px;background:var(--panel);color:var(--fg);cursor:pointer;transition:.2s}
@@ -122,16 +127,20 @@ summary:hover{background:var(--btn);color:#fff}
 #basketTable th:nth-child(5),#basketTable td:nth-child(5){width:150px}
 #basketTable th:nth-child(6),#basketTable td:nth-child(6){width:50px}
 #basketTable col#col-item,#basketHead col#col-item{width:auto}
-#grandTotals{margin-top:.6rem;padding:.5rem .75rem;border:1px solid var(--border);border-radius:6px;background:var(--panel);display:none;font-weight:bold}
 .grand-totals-table{width:100%;border-collapse:collapse}
-.grand-totals-table th,.grand-totals-table td{padding:.4rem .5rem;border-bottom:1px solid var(--border);text-align:left;font-weight:normal}
+.grand-totals-table th,.grand-totals-table td{padding:.35rem .45rem;border-bottom:1px solid var(--border);text-align:left;font-weight:600}
 .grand-totals-table tr:last-child th,.grand-totals-table tr:last-child td{border-bottom:0}
-.grand-totals-table th{font-weight:bold;white-space:nowrap}
+.grand-totals-table th{font-weight:700;white-space:nowrap}
+.grand-totals-table td{font-weight:600}
 .grand-totals-table .totals-value{text-align:right;font-variant-numeric:tabular-nums}
-.grand-totals-table .totals-note{font-size:.9rem;opacity:.75}
-.grand-totals-input{display:flex;align-items:center;gap:.35rem}
-.grand-totals-input input{width:100%;padding:.35rem .45rem;border:1px solid var(--border);border-radius:6px;background:var(--panel);color:var(--fg)}
-.grand-totals-input span{opacity:.75}
+.grand-totals-table .grand-totals-input{display:flex;align-items:center;gap:.35rem}
+.grand-totals-table .grand-totals-input input{width:100%;padding:.35rem .45rem;border:1px solid var(--border);border-radius:6px;background:var(--panel);color:var(--fg)}
+.grand-totals-table .grand-totals-input span{opacity:.75}
+.section-notes-cell{padding:0!important}
+.section-notes-wrapper{display:flex;flex-direction:column;gap:.35rem;padding:.6rem .75rem}
+.section-notes-wrapper label{font-weight:600}
+.section-notes-wrapper textarea{width:100%;min-height:80px;padding:.45rem;border:1px solid var(--border);border-radius:6px;background:var(--panel);color:var(--fg);resize:vertical;font-family:inherit;font-size:.95rem}
+.dark-mode .section-notes-wrapper textarea{background:#2c2c2c;color:#fff;border-color:#555}
 .qty-controls{display:flex;align-items:center;gap:.25rem}
 .qty-controls button{padding:.2rem .45rem;line-height:1}
 .section-select{margin-left:.35rem;padding:.2rem .3rem;border:1px solid var(--border);border-radius:4px;background:var(--panel);color:var(--fg);font-size:.85rem}
@@ -141,13 +150,12 @@ summary:hover{background:var(--btn);color:#fff}
 #basketStickyHead table{width:100%;table-layout:fixed;border-collapse:collapse}
 #basketStickyHead thead th{background:var(--header);border:1px solid var(--border);padding:.28rem;text-align:center}
 #basketTable thead{display:none}
-#basketTable tfoot .section-total-cell{text-align:right;font-weight:bold}
 input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 input[type=number]{-moz-appearance:textfield}
 </style>
 </head>
 <body>
-<h1>DefCost 1.2.0</h1>
+<h1>DefCost 2.0.0</h1>
 <button id="darkModeToggle">Toggle Dark Mode</button>
 <div id="quoteBuilderMain" aria-label="Quote Builder" role="region">
   <div id="quoteHeader">
@@ -180,12 +188,13 @@ input[type=number]{-moz-appearance:textfield}
           <thead><tr>
             <th class="sort-handle">≡</th><th>Item</th><th>Quantity</th>
             <th>Price</th>
-            <th>Line Total</th><th></th>
+            <th>Line Total (Ex. GST)</th><th></th>
           </tr></thead>
         </table>
       </div>
     </div>
     <div id="basketContent">
+      <div class="basket-table-area">
       <table id="basketTable">
         <colgroup>
           <col style="width:36px">
@@ -198,12 +207,15 @@ input[type=number]{-moz-appearance:textfield}
         <thead><tr>
           <th class="sort-handle">≡</th><th>Item</th><th>Quantity</th>
           <th>Price</th>
-          <th>Line Total</th><th></th>
+          <th>Line Total (Ex. GST)</th><th></th>
         </tr></thead>
         <tbody></tbody><tfoot></tfoot>
       </table>
-      <div id="grandTotals" style="display:none"></div>
+      </div>
     </div>
+  </div>
+  <div class="quote-totals-row">
+    <aside id="grandTotals"></aside>
   </div>
 </div>
 <div id="catalogWindow" aria-label="Catalogue window" role="dialog" aria-modal="false">
@@ -330,7 +342,7 @@ function startResize(ev){if(!qbWindow||qbState.full||qbState.minimized||qbState.
 function handleResizeMove(ev){if(!resizeInfo)return;var coords=getPointerCoords(ev);if(typeof coords.clientX==='undefined')return;if(ev.cancelable)ev.preventDefault();var winW=window.innerWidth||resizeInfo.startW||800;var winH=window.innerHeight||resizeInfo.startH||600;var deltaX=coords.clientX-resizeInfo.startX;var deltaY=coords.clientY-resizeInfo.startY;var minW=320;var minH=280;var maxW=winW-(isFinite(qbState.x)?qbState.x:0);var maxH=winH-(isFinite(qbState.y)?qbState.y:0);if(!isFinite(maxW)||maxW<minW)maxW=winW;if(!isFinite(maxH)||maxH<minH)maxH=winH;var newW=(resizeInfo.startW||minW)+deltaX;var newH=(resizeInfo.startH||minH)+deltaY;if(newW<minW)newW=minW;if(newH<minH)newH=minH;if(newW>maxW)newW=maxW;if(newH>maxH)newH=maxH;qbState.w=newW;qbState.h=newH;qbWindow.classList.add('qb-floating');qbWindow.classList.remove('qb-full');qbWindow.style.width=newW+'px';qbWindow.style.height=newH+'px';applyQBState(true);}
 function endResize(){if(!resizeInfo)return;document.body.style.userSelect=prevUserSelect||'';document.removeEventListener('mousemove',handleResizeMove);document.removeEventListener('mouseup',endResize);document.removeEventListener('touchmove',handleResizeMove);document.removeEventListener('touchend',endResize);document.removeEventListener('touchcancel',endResize);resizeInfo=null;ensureWindowWithinViewport(true);saveUiState();rememberCurrentRect();}
 function escapeHtml(s){s=String(s==null?'':s);return s.replace(/[&<>"']/g,function(m){switch(m){case'&':return'&amp;';case'<':return'&lt;';case'>':return'&gt;';case'"':return'&quot;';default:return'&#39;';}});}
-function getDefaultSections(){return [{id:1,name:'Section 1'}];}
+function getDefaultSections(){return [{id:1,name:'Section 1',notes:''}];}
 function ensureSectionState(){
   if(!Array.isArray(sections)||!sections.length){
     sections=getDefaultSections();
@@ -353,6 +365,9 @@ function ensureSectionState(){
       sec.name='Section '+sid;
     }else{
       sec.name=sec.name.trim();
+    }
+    if(typeof sec.notes!=='string'){
+      sec.notes='';
     }
   }
   if(!sections.length){
@@ -390,7 +405,7 @@ function formatCurrency(val){return roundCurrency(isFinite(val)?val:0).toFixed(2
 function formatPercent(val){return roundCurrency(isFinite(val)?val:0).toFixed(2);}
 function recalcGrandTotal(base,discount){var b=isFinite(base)?base:0;var d=isFinite(discount)?discount:0;var computed=b*(1-d/100);if(!isFinite(computed))computed=0;return roundCurrency(computed<0?0:computed);}
 function calculateGst(amount){var base=isFinite(amount)?amount:0;return roundCurrency(base*GST_RATE);}
-function ensureGrandTotalsUi(){if(!grandTotalsEl||grandTotalsUi)return;if(!grandTotalsEl)return;grandTotalsEl.innerHTML='<table class="grand-totals-table"><tbody><tr><th scope="row">Total</th><td class="totals-value" data-role="total-value">0.00</td><td class="totals-note">Non-editable</td></tr><tr><th scope="row">Discount</th><td class="totals-field"><div class="grand-totals-input"><input type="number" step="0.01" inputmode="decimal" aria-label="Discount percentage" data-role="discount-input"><span>%</span></div></td><td class="totals-note">User can input a percentage</td></tr><tr><th scope="row">Grand Total</th><td class="totals-field"><div class="grand-totals-input"><input type="number" min="0" step="0.01" inputmode="decimal" aria-label="Grand total after discount" data-role="grand-total-input"></div></td><td class="totals-note">Editable text box (Displays total after discount)</td></tr><tr><th scope="row">GST</th><td class="totals-value" data-role="gst-value">0.00</td><td class="totals-note">Auto-calculated (10% of Grand Total). Non-editable</td></tr><tr><th scope="row">Grand Total (Incl. GST)</th><td class="totals-value" data-role="grand-incl-value">0.00</td><td class="totals-note">Auto-calculated (Grand Total + GST). Non-editable</td></tr></tbody></table>';
+function ensureGrandTotalsUi(){if(!grandTotalsEl||grandTotalsUi)return;if(!grandTotalsEl)return;grandTotalsEl.innerHTML='<table class="grand-totals-table"><tbody><tr><th scope="row">Total</th><td class="totals-value" data-role="total-value">0.00</td></tr><tr><th scope="row">Discount (%)</th><td><div class="grand-totals-input"><input type="number" step="0.01" inputmode="decimal" aria-label="Discount percentage" data-role="discount-input"><span>%</span></div></td></tr><tr><th scope="row">Grand Total</th><td><div class="grand-totals-input"><input type="number" min="0" step="0.01" inputmode="decimal" aria-label="Grand total after discount" data-role="grand-total-input"></div></td></tr><tr><th scope="row">GST (10%)</th><td class="totals-value" data-role="gst-value">0.00</td></tr><tr><th scope="row">Grand Total (Incl. GST)</th><td class="totals-value" data-role="grand-incl-value">0.00</td></tr></tbody></table>';
   var discountInput=grandTotalsEl.querySelector('[data-role="discount-input"]');
   var grandTotalInput=grandTotalsEl.querySelector('[data-role="grand-total-input"]');
   grandTotalsUi={container:grandTotalsEl,totalValue:grandTotalsEl.querySelector('[data-role="total-value"]'),discountInput:discountInput,grandTotalInput:grandTotalInput,gstValue:grandTotalsEl.querySelector('[data-role="gst-value"]'),grandInclValue:grandTotalsEl.querySelector('[data-role="grand-incl-value"]')};
@@ -450,11 +465,15 @@ function updateGrandTotals(report,opts){
   if(grandTotalsUi.gstValue)grandTotalsUi.gstValue.textContent=formatCurrency(gstAmount);
   if(grandTotalsUi.grandInclValue)grandTotalsUi.grandInclValue.textContent=formatCurrency(incl);
 }
-function getSectionNameById(id){
+function getSectionById(id){
   for(var i=0;i<sections.length;i++){
-    if(sections[i].id===id) return sections[i].name;
+    if(sections[i].id===id) return sections[i];
   }
-  return 'Section '+id;
+  return null;
+}
+function getSectionNameById(id){
+  var sec=getSectionById(id);
+  return sec?sec.name:('Section '+id);
 }
 function renderSectionTabs(){
   if(!sectionTabsEl) return;
@@ -557,7 +576,7 @@ if(bFootEl){
     navigator.clipboard.writeText(text).then(function(){ td.classList.add('copied-cell'); void td.offsetWidth; setTimeout(function(){ td.classList.remove('copied-cell'); },150); }).catch(function(){});
   });
 }
-if(addSectionBtn){addSectionBtn.addEventListener('click',function(){ensureSectionState();var suggestion='Section '+(sectionSeq+1);var name=prompt('Section name',suggestion);if(name===null)return;name=name.trim();if(!name){showToast('Section name is required');return;}var newId=sectionSeq+1;sections.push({id:newId,name:name});sectionSeq=newId;activeSectionId=newId;captureParentId=null;renderBasket();showToast('Section added');});}
+if(addSectionBtn){addSectionBtn.addEventListener('click',function(){ensureSectionState();var suggestion='Section '+(sectionSeq+1);var name=prompt('Section name',suggestion);if(name===null)return;name=name.trim();if(!name){showToast('Section name is required');return;}var newId=sectionSeq+1;sections.push({id:newId,name:name,notes:''});sectionSeq=newId;activeSectionId=newId;captureParentId=null;renderBasket();showToast('Section added');});}
 var addCustomBtn=document.getElementById('addCustomBtn');
 if(addCustomBtn){addCustomBtn.addEventListener('click',function(){var nl;if(captureParentId){nl={id:++uid,pid:captureParentId,kind:'sub',item:'Sub item',qty:1,ex:0};}else{nl={id:++uid,pid:null,kind:'line',collapsed:false,sectionId:activeSectionId,item:'Custom item',qty:1,ex:0};}basket.push(nl);renderBasket();try{var rows=bBody.querySelectorAll('tr.main-row');if(rows.length){var last=rows[rows.length-1].querySelector('.item-input');if(last)last.focus();}}catch(_){}});}
 function updateBasketHeaderOffset(){
@@ -662,8 +681,8 @@ function renderBasket(){
     var tdEx=document.createElement('td'); var exInput=document.createElement('input'); exInput.type='number'; exInput.step='0.01'; exInput.className='editable price-input'; exInput.value=isNaN(b.ex)?'':Number(b.ex).toFixed(2);
     exInput.onchange=function(){ var v=parseFloat(exInput.value); b.ex=isFinite(v)?v:NaN; renderBasket(); };
     tdEx.appendChild(exInput); tr.appendChild(tdEx);
-    var le=isNaN(b.ex)?0:(b.qty||1)*b.ex; var gstAmt=le*GST_RATE; var li=le+gstAmt;
-    var tdLi=document.createElement('td'); tdLi.textContent=isNaN(b.ex)?'N/A':li.toFixed(2);
+    var lineTotal=isNaN(b.ex)?NaN:(b.qty||1)*b.ex;
+    var tdLi=document.createElement('td'); tdLi.textContent=isNaN(lineTotal)?'N/A':lineTotal.toFixed(2);
     tr.appendChild(tdLi);
     var tdRem=document.createElement('td'); var x=document.createElement('span'); x.className='remove-btn'; x.textContent='X';
     x.onclick=function(){ var id=b.id; var nb=[]; for(var r=0;r<basket.length;r++){ var it=basket[r]; if(!it) continue; if(it.id===id||it.pid===id) continue; nb.push(it);} basket=nb; if(captureParentId===id) captureParentId=null; renderBasket(); };
@@ -688,8 +707,8 @@ function renderBasket(){
         var c4=document.createElement('td'); var exInput=document.createElement('input'); exInput.type='number'; exInput.step='0.01'; exInput.className='editable price-input'; exInput.value=isNaN(s.ex)?'':Number(s.ex).toFixed(2);
         exInput.onchange=function(){ var v=parseFloat(exInput.value); s.ex=isFinite(v)?v:NaN; renderBasket(); };
         c4.appendChild(exInput); sr.appendChild(c4);
-        var sle=isNaN(s.ex)?0:(s.qty||1)*s.ex; var sg=sle*GST_RATE; var st=sle+sg;
-        var c5=document.createElement('td'); c5.textContent=isNaN(s.ex)?'N/A':st.toFixed(2); sr.appendChild(c5);
+        var lineSubTotal=isNaN(s.ex)?NaN:(s.qty||1)*s.ex;
+        var c5=document.createElement('td'); c5.textContent=isNaN(lineSubTotal)?'N/A':lineSubTotal.toFixed(2); sr.appendChild(c5);
         var c6=document.createElement('td'); var rx=document.createElement('span'); rx.className='remove-btn'; rx.textContent='X';
         rx.onclick=function(){ for(var r=basket.length-1;r>=0;r--){ if(basket[r].id===s.id){ basket.splice(r,1); break; } } renderBasket(); };
         c6.appendChild(rx); sr.appendChild(c6);
@@ -713,17 +732,23 @@ function renderBasket(){
     captureParentId=null;
   }
   var report=buildReportModel(basket,sections);
-  var sectionTotals={subtotalEx:0,subtotalGst:0,subtotalTotal:0,name:getSectionNameById(activeSectionId)};
-  if(report.sections&&report.sections.length){
-    for(var ri=0;ri<report.sections.length;ri++){
-      if(report.sections[ri].id===activeSectionId){
-        sectionTotals=report.sections[ri];
-        break;
-      }
-    }
-  }
-  var sectionSummary='Section Totals ('+escapeHtml(sectionTotals.name)+'): Ex. GST '+(sectionTotals.subtotalEx||0).toFixed(2)+' | GST '+(sectionTotals.subtotalGst||0).toFixed(2)+' | Incl. GST '+(sectionTotals.subtotalTotal||0).toFixed(2);
-  bFoot.innerHTML='<tr><td colspan="5" class="section-total-cell">'+sectionSummary+'</td><td></td></tr>';
+  var sectionRef=getSectionById(activeSectionId);
+  bFoot.innerHTML='';
+  var notesRow=document.createElement('tr');
+  var notesCell=document.createElement('td');
+  notesCell.colSpan=6;
+  notesCell.className='section-notes-cell';
+  var wrapper=document.createElement('div'); wrapper.className='section-notes-wrapper';
+  var notesId='section-notes-'+activeSectionId;
+  var label=document.createElement('label'); label.setAttribute('for',notesId); label.textContent='Notes:';
+  var textarea=document.createElement('textarea'); textarea.id=notesId; textarea.placeholder='Add notes for this section';
+  textarea.value=sectionRef&&typeof sectionRef.notes==='string'?sectionRef.notes:'';
+  textarea.oninput=function(){ if(sectionRef){ sectionRef.notes=textarea.value; saveBasket(); } };
+  wrapper.appendChild(label);
+  wrapper.appendChild(textarea);
+  notesCell.appendChild(wrapper);
+  notesRow.appendChild(notesCell);
+  bFoot.appendChild(notesRow);
   updateGrandTotals(report);
   if(window.Sortable && !bBody.getAttribute('data-sortable')){
     Sortable.create(bBody,{handle:'.sort-handle',draggable:'tr.main-row',animation:150,onEnd:function(){
@@ -795,17 +820,17 @@ function exportBasketToCsv(opts){
   if(!basket.length) return false;
   var esc=function(v){return '"'+String(v).replace(/"/g,'""')+'"';};
   var report=buildReportModel(basket,sections);
-  var lines=[["Section","Item","Quantity","Price","Line Total"]];
+  var lines=[["Section","Item","Quantity","Price","Line Total (Ex. GST)"]];
   for(var si=0;si<report.sections.length;si++){
     var sec=report.sections[si];
     for(var gi=0;gi<sec.items.length;gi++){
       var grp=sec.items[gi];
-      var p=grp.parent; var le=isNaN(p.ex)?0:(p.qty||1)*p.ex; var gstAmt=le*GST_RATE; var li=le+gstAmt;
-      lines.push([sec.name,(p.item||''),(p.qty||1),isNaN(p.ex)?"N/A":Number(p.ex).toFixed(2),isNaN(p.ex)?"N/A":li.toFixed(2)]);
+      var p=grp.parent; var le=isNaN(p.ex)?NaN:(p.qty||1)*p.ex;
+      lines.push([sec.name,(p.item||''),(p.qty||1),isNaN(p.ex)?"N/A":Number(p.ex).toFixed(2),isNaN(le)?"N/A":le.toFixed(2)]);
       var subs=grp.subs||[];
       for(var sj=0;sj<subs.length;sj++){
-        var s=subs[sj]; var sle=isNaN(s.ex)?0:(s.qty||1)*s.ex; var sg=sle*GST_RATE; var st=sle+sg;
-        lines.push([sec.name,' - '+(s.item||''),(s.qty||1),isNaN(s.ex)?"N/A":Number(s.ex).toFixed(2),isNaN(s.ex)?"N/A":st.toFixed(2)]);
+        var s=subs[sj]; var sle=isNaN(s.ex)?NaN:(s.qty||1)*s.ex;
+        lines.push([sec.name,' - '+(s.item||''),(s.qty||1),isNaN(s.ex)?"N/A":Number(s.ex).toFixed(2),isNaN(sle)?"N/A":sle.toFixed(2)]);
       }
     }
   }
