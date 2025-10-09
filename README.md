@@ -84,7 +84,6 @@ Defender Price List.xlsx   # Workbook loaded by the app
 
 ## Versioning
 
-- **2.0.4** – Smoothed table layouts, added Tailwind utility cleanup, and unified totals recalculation logic
 - **2.0.3** – Hardened the dark mode toggle binding and bumped the displayed version
 - **2.0.2** – Repositioned the quote totals into a dedicated table beneath the sections
 - **2.0.1** – Fixed merge regression that duplicated the totals sidebar and broke the main script bootstrap

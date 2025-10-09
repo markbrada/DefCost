@@ -5,13 +5,7 @@
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
 <meta charset="UTF-8">
-<title>DefCost 2.0.4</title>
-<script>
-  tailwind.config = {
-    darkMode: ['class', '.dark-mode']
-  };
-</script>
-<script src="https://cdn.tailwindcss.com"></script>
+<title>DefCost 2.0.3</title>
 <style>
 :root{--bg:#f7f7f7;--fg:#333;--header:#e0e0e0;--btn:#007bff;--btnh:#0056b3;--add:#28a745;--addh:#218838;--border:#aaa;--alt:#f9f9f9;--panel:#fff;--toast:#007bff;--toastfg:#fff;--rowHover:#e9f1ff}
 .dark-mode{--bg:#222;--fg:#eee;--header:#444;--btn:#0d6efd;--btnh:#0a58ca;--add:#198754;--addh:#157347;--border:#555;--alt:#2a2a2a;--panel:#333;--toast:#0d6efd;--toastfg:#fff;--rowHover:#383838}
@@ -30,16 +24,11 @@ h1{margin:.2rem 0}p{margin:0 0 2rem}
 .search-cancel:hover{filter:brightness(.96)}
 .search-cancel.visible{display:inline-flex}
 .highlight{background:yellow}
-table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
-thead th{position:sticky;top:0;background:var(--header);border:1px solid var(--border);padding:.5rem .75rem;text-align:center;z-index:2;transition:background-color .2s ease,color .2s ease}
-tbody td{border:1px solid var(--border);padding:.5rem .75rem;vertical-align:middle}
-tbody tr{background:var(--panel);transition:background-color .2s ease}
+table{border-collapse:collapse;width:100%}
+thead th{position:sticky;top:0;background:var(--header);border:1px solid var(--border);padding:.5rem;text-align:center;z-index:2}
+tbody td{border:1px solid var(--border);padding:.5rem}
+tbody tr{background:var(--panel)}
 tbody tr:hover{background:var(--rowHover)}
-.catalog-table{margin-top:.5rem;border-collapse:collapse}
-.catalog-table thead th{position:static;text-align:left}
-.catalog-table th,.catalog-table td{border:1px solid var(--border);padding:.45rem .6rem;vertical-align:middle}
-.catalog-table tbody tr:nth-child(even){background:var(--alt)}
-.dark-mode .catalog-table tbody tr:nth-child(even){background:#2b2b2b}
 .add-button{background:var(--add);color:#fff;border:none;padding:.3rem .6rem;border-radius:4px;font-weight:bold;cursor:pointer}
 .add-button:hover{background:var(--addh)}
 .copied-cell{background:#c8e6c9!important;transition:.15s}
@@ -61,7 +50,7 @@ summary:hover{background:var(--btn);color:#fff}
 #quoteActions{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:flex-end}
 #quoteActions button{background:var(--btn);color:#fff;border:none;padding:.4rem .75rem;border-radius:6px;cursor:pointer;font-weight:600}
 #quoteActions button:hover{background:var(--btnh)}
-#catalogWindow{position:fixed;top:64px;right:32px;width:min(1100px,90vw);height:min(65vh,80vh);background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.35);display:flex;flex-direction:column;z-index:10000;overflow:hidden;transition:box-shadow .3s ease,transform .25s ease}
+#catalogWindow{position:fixed;top:64px;right:32px;width:min(1100px,90vw);height:min(65vh,80vh);background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.35);display:flex;flex-direction:column;z-index:10000;overflow:hidden}
 #catalogWindow.qb-full{top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;border-radius:0}
 #catalogWindow.qb-docked{left:16px;right:16px;bottom:16px;width:auto;max-width:none;border-radius:12px 12px 0 0}
 #catalogWindow.qb-floating{cursor:auto}
@@ -110,7 +99,7 @@ summary:hover{background:var(--btn);color:#fff}
 #addSectionBtn:hover{background:var(--addh)}
 #basketTable{table-layout:fixed;background:var(--panel)}
 #basketContent{background:var(--panel)}
-#basketHead th,#basketHead td,#basketTable th,#basketTable td{border:1px solid var(--border);padding:.45rem .6rem;box-sizing:border-box;vertical-align:middle;overflow:hidden;word-break:break-word}
+#basketTable th,#basketTable td{border:1px solid var(--border);padding:.28rem;box-sizing:border-box;vertical-align:middle;overflow:hidden}
 #basketContainer thead th{position:static}
 #basketTable tbody tr:hover{background:var(--rowHover)}
 .sort-handle{cursor:move;user-select:none;text-align:left;font-size:1.1rem;min-width:2em}
@@ -132,11 +121,12 @@ summary:hover{background:var(--btn);color:#fff}
 .editable{background:#fff;border:1px solid var(--border);padding:.35rem .45rem;border-radius:6px;width:100%;box-sizing:border-box;display:block;margin:0}
 .item-input{display:block;width:100%;min-height:2.2em;max-height:8em;resize:vertical;overflow:auto;white-space:pre-wrap;line-height:1.22}
 .price-input{width:100%;height:2.2em;max-width:none;text-align:right;box-sizing:border-box;margin:0}
-#basketHead th:nth-child(1),#basketHead td:nth-child(1),#basketTable th:nth-child(1),#basketTable td:nth-child(1){width:36px}
-#basketHead th:nth-child(3),#basketHead td:nth-child(3),#basketTable th:nth-child(3),#basketTable td:nth-child(3){width:140px}
-#basketHead th:nth-child(4),#basketHead td:nth-child(4),#basketTable th:nth-child(4),#basketTable td:nth-child(4){width:120px}
-#basketHead th:nth-child(5),#basketHead td:nth-child(5),#basketTable th:nth-child(5),#basketTable td:nth-child(5){width:150px}
-#basketHead th:nth-child(6),#basketHead td:nth-child(6),#basketTable th:nth-child(6),#basketTable td:nth-child(6){width:50px}
+#basketTable th:nth-child(1),#basketTable td:nth-child(1){width:36px}
+#basketTable th:nth-child(3),#basketTable td:nth-child(3){width:140px}
+#basketTable th:nth-child(4),#basketTable td:nth-child(4){width:120px}
+#basketTable th:nth-child(5),#basketTable td:nth-child(5){width:150px}
+#basketTable th:nth-child(6),#basketTable td:nth-child(6){width:50px}
+#basketTable col#col-item,#basketHead col#col-item{width:auto}
 .grand-totals-table{width:100%;border-collapse:collapse}
 .grand-totals-table th,.grand-totals-table td{padding:.35rem .45rem;border-bottom:1px solid var(--border);text-align:left;font-weight:600}
 .grand-totals-table tr:last-child th,.grand-totals-table tr:last-child td{border-bottom:0}
@@ -165,7 +155,7 @@ input[type=number]{-moz-appearance:textfield}
 </style>
 </head>
 <body>
-<h1>DefCost 2.0.4</h1>
+<h1>DefCost 2.0.3</h1>
 <button id="darkModeToggle">Toggle Dark Mode</button>
 <div id="quoteBuilderMain" aria-label="Quote Builder" role="region">
   <div id="quoteHeader">
@@ -188,12 +178,12 @@ input[type=number]{-moz-appearance:textfield}
       <div id="basketStickyHead">
         <table id="basketHead">
           <colgroup>
-            <col class="w-9">
-            <col class="w-auto">
-            <col class="w-[120px]">
-            <col class="w-[110px]">
-            <col class="w-[140px]">
-            <col class="w-[50px]">
+            <col style="width:36px">
+            <col id="col-item">
+            <col style="width:120px">
+            <col style="width:110px">
+            <col style="width:140px">
+            <col style="width:50px">
           </colgroup>
           <thead><tr>
             <th class="sort-handle">≡</th><th>Item</th><th>Quantity</th>
@@ -207,12 +197,12 @@ input[type=number]{-moz-appearance:textfield}
       <div class="basket-table-area">
       <table id="basketTable">
         <colgroup>
-          <col class="w-9">
-          <col class="w-auto">
-          <col class="w-[120px]">
-          <col class="w-[110px]">
-          <col class="w-[140px]">
-          <col class="w-[50px]">
+          <col style="width:36px">
+          <col id="col-item">
+          <col style="width:120px">
+          <col style="width:110px">
+          <col style="width:140px">
+          <col style="width:50px">
         </colgroup>
         <thead><tr>
           <th class="sort-handle">≡</th><th>Item</th><th>Quantity</th>
@@ -239,8 +229,8 @@ input[type=number]{-moz-appearance:textfield}
   </div>
   <div id="catalogBody">
     <div id="sheetTabs"></div>
-    <div id="status" class="mt-2 text-sm text-slate-600 opacity-0 transition-colors transition-opacity duration-200 dark:text-slate-300" aria-live="polite"></div>
-    <div id="manualLoad" class="mt-2 hidden flex flex-wrap items-center gap-3 text-sm"><label class="search-label">Load workbook:</label><input type="file" id="xlsxPicker" accept=".xlsx" class="text-sm"></div>
+    <div id="status" style="margin:.5rem 0;font-size:.9rem"></div>
+    <div id="manualLoad" style="display:none;margin:.5rem 0"><label class="search-label">Load workbook:</label><input type="file" id="xlsxPicker" accept=".xlsx"></div>
     <div id="sheetContainer"></div>
   </div>
   <div id="catalogResizeHandle" aria-hidden="true"></div>
@@ -415,7 +405,6 @@ function formatCurrency(val){return roundCurrency(isFinite(val)?val:0).toFixed(2
 function formatPercent(val){return roundCurrency(isFinite(val)?val:0).toFixed(2);}
 function recalcGrandTotal(base,discount){var b=isFinite(base)?base:0;var d=isFinite(discount)?discount:0;var computed=b*(1-d/100);if(!isFinite(computed))computed=0;return roundCurrency(computed<0?0:computed);}
 function calculateGst(amount){var base=isFinite(amount)?amount:0;return roundCurrency(base*GST_RATE);}
-function commitGrandTotals(base,overrides){var normalizedBase=isFinite(base)?base:0;var opts=overrides&&typeof overrides==='object'?overrides:{};var hasDiscount=Object.prototype.hasOwnProperty.call(opts,'discount');var proposedDiscount=hasDiscount&&isFinite(opts.discount)?opts.discount:discountPercent;var hasTotal=Object.prototype.hasOwnProperty.call(opts,'total');var overrideTotal=hasTotal&&isFinite(opts.total)?roundCurrency(Math.max(0,opts.total)):null;var resolvedTotal;if(overrideTotal!==null){resolvedTotal=overrideTotal;if(normalizedBase>0){proposedDiscount=roundCurrency((1-resolvedTotal/(normalizedBase||1))*100);}else{proposedDiscount=0;}}else{resolvedTotal=recalcGrandTotal(normalizedBase,proposedDiscount);}discountPercent=roundCurrency(isFinite(proposedDiscount)?proposedDiscount:0);currentGrandTotal=resolvedTotal;lastBaseTotal=normalizedBase;return{base:normalizedBase,total:currentGrandTotal,discount:discountPercent};}
 function ensureGrandTotalsUi(){if(!grandTotalsEl||grandTotalsUi)return;if(!grandTotalsEl)return;grandTotalsEl.innerHTML='<table class="grand-totals-table" aria-label="Quote totals"><tbody><tr><th scope="row">Total</th><td class="totals-value" data-role="total-value">0.00</td></tr><tr><th scope="row">Discount (%)</th><td><div class="grand-totals-input"><input type="number" step="0.01" inputmode="decimal" aria-label="Discount percentage" data-role="discount-input"><span>%</span></div></td></tr><tr><th scope="row">Grand Total</th><td><div class="grand-totals-input"><input type="number" min="0" step="0.01" inputmode="decimal" aria-label="Grand total after discount" data-role="grand-total-input"></div></td></tr><tr><th scope="row">GST (10%)</th><td class="totals-value" data-role="gst-value">0.00</td></tr><tr><th scope="row">Grand Total (Incl. GST)</th><td class="totals-value" data-role="grand-incl-value">0.00</td></tr></tbody></table>';
   var discountInput=grandTotalsEl.querySelector('[data-role="discount-input"]');
   var grandTotalInput=grandTotalsEl.querySelector('[data-role="grand-total-input"]');
@@ -423,8 +412,8 @@ function ensureGrandTotalsUi(){if(!grandTotalsEl||grandTotalsUi)return;if(!grand
   if(discountInput){discountInput.addEventListener('input',handleDiscountChange);}
   if(grandTotalInput){grandTotalInput.addEventListener('input',handleGrandTotalChange);}
 }
-function handleDiscountChange(){if(!grandTotalsUi)return;var base=latestReport&&isFinite(latestReport.grandEx)?latestReport.grandEx:0;var raw=parseFloat(grandTotalsUi.discountInput.value);if(!isFinite(raw))raw=0;commitGrandTotals(base,{discount:raw});updateGrandTotals(latestReport,{preserveGrandTotal:true,skipCommit:true});saveBasket();}
-function handleGrandTotalChange(){if(!grandTotalsUi)return;var base=latestReport&&isFinite(latestReport.grandEx)?latestReport.grandEx:0;var raw=parseFloat(grandTotalsUi.grandTotalInput.value);if(!isFinite(raw))raw=0;raw=Math.max(0,raw);commitGrandTotals(base,{total:raw});updateGrandTotals(latestReport,{preserveGrandTotal:true,skipCommit:true});saveBasket();}
+function handleDiscountChange(){if(!grandTotalsUi)return;var base=latestReport&&isFinite(latestReport.grandEx)?latestReport.grandEx:0;var raw=parseFloat(grandTotalsUi.discountInput.value);if(!isFinite(raw))raw=0;discountPercent=raw;currentGrandTotal=recalcGrandTotal(base,discountPercent);lastBaseTotal=base;updateGrandTotals(latestReport,{preserveGrandTotal:true});saveBasket();}
+function handleGrandTotalChange(){if(!grandTotalsUi)return;var base=latestReport&&isFinite(latestReport.grandEx)?latestReport.grandEx:0;var raw=parseFloat(grandTotalsUi.grandTotalInput.value);if(!isFinite(raw))raw=0;raw=Math.max(0,raw);currentGrandTotal=roundCurrency(raw);if(base>0){discountPercent=(1-currentGrandTotal/(base||1))*100;}else{discountPercent=0;}lastBaseTotal=base;updateGrandTotals(latestReport,{preserveGrandTotal:true});saveBasket();}
 function updateGrandTotals(report,opts){
   latestReport=report||null;
   if(!grandTotalsEl)return;
@@ -454,16 +443,12 @@ function updateGrandTotals(report,opts){
   }
   if(grandTotalsWrap) grandTotalsWrap.style.display='flex';
   grandTotalsEl.style.display='block';
-  if(!(opts&&opts.skipCommit)){
-    var shouldCommit=!(opts&&opts.preserveGrandTotal)&&Math.abs(base-lastBaseTotal)>0.005;
-    if(shouldCommit){
-      commitGrandTotals(base,{discount:discountPercent});
-    }else{
-      lastBaseTotal=base;
+  if(!(opts&&opts.preserveGrandTotal)){
+    if(Math.abs(base-lastBaseTotal)>0.005){
+      currentGrandTotal=recalcGrandTotal(base,discountPercent);
     }
-  }else{
-    lastBaseTotal=base;
   }
+  lastBaseTotal=base;
   if(grandTotalsUi.totalValue)grandTotalsUi.totalValue.textContent=formatCurrency(base);
   if(grandTotalsUi.discountInput){
     grandTotalsUi.discountInput.disabled=false;
@@ -569,20 +554,18 @@ if(darkModeToggle){
   });
 }
 var statusEl=document.getElementById('status');var pickerWrap=document.getElementById('manualLoad');var picker=document.getElementById('xlsxPicker');
-function showStatus(html){if(!statusEl)return;statusEl.innerHTML=html||'';statusEl.classList.toggle('opacity-0',!html);statusEl.setAttribute('role',html?'status':'presentation');}
-function toggleManualPicker(show){if(!pickerWrap)return;pickerWrap.classList.toggle('hidden',!show);}
-function showPicker(reason){var safe=escapeHtml(reason||'');showStatus('<span class="font-semibold text-rose-600 dark:text-rose-300">Couldn\'t load <code>Defender Price List.xlsx</code> ('+safe+').</span> <span class="text-slate-700 dark:text-slate-200">You can upload the workbook manually below.</span>');toggleManualPicker(true);}
+function showStatus(html){if(statusEl){statusEl.innerHTML=html;}}
+function showPicker(reason){showStatus('<span style="color:#b00">Couldn\'t load <code>Defender Price List.xlsx</code> ('+reason+').</span> You can upload the workbook manually below.');if(pickerWrap)pickerWrap.style.display='block';}
 function whenXLSXReady(cb){if(window.XLSX){cb();return;}var s=document.querySelector('script[data-sheetjs]');if(!s){s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js';s.setAttribute('data-sheetjs','1');s.onload=function(){cb()};s.onerror=function(){showPicker('SheetJS failed to load')};document.head.appendChild(s);}else{var tries=0;var t=setInterval(function(){if(window.XLSX){clearInterval(t);cb();}else if(++tries>50){clearInterval(t);showPicker('SheetJS failed to load');}},100);}}
-function parseAndBuild(buf){try{wb=XLSX.read(buf,{type:'array'});}catch(e){console.error(e);showPicker('invalid file');return;}var names=Object.keys(wb.Sheets||{});if(!names.length){showPicker('workbook has no sheets');return;}tabs.innerHTML='';container.innerHTML='';showStatus('');toggleManualPicker(false);for(var i=0;i<names.length;i++){(function(name,idx){var b=document.createElement('button');b.textContent=name;b.dataset.sheet=name;b.onclick=function(){active(name);draw(name)};if(idx===0){b.classList.add('active');draw(name);}tabs.appendChild(b);})(names[i],i);} }
-window.addEventListener('error',function(e){showStatus('<span class="font-semibold text-rose-600 dark:text-rose-300">Error:</span> '+escapeHtml(e.message||''))});
+function parseAndBuild(buf){try{wb=XLSX.read(buf,{type:'array'});}catch(e){console.error(e);showPicker('invalid file');return;}var names=Object.keys(wb.Sheets||{});if(!names.length){showPicker('workbook has no sheets');return;}tabs.innerHTML='';container.innerHTML='';showStatus('');if(pickerWrap)pickerWrap.style.display='none';for(var i=0;i<names.length;i++){(function(name,idx){var b=document.createElement('button');b.textContent=name;b.dataset.sheet=name;b.onclick=function(){active(name);draw(name)};if(idx===0){b.classList.add('active');draw(name);}tabs.appendChild(b);})(names[i],i);} }
+window.addEventListener('error',function(e){showStatus("<span style='color:#b00'>Error:</span> "+e.message)});
 showStatus('Loading <code>Defender Price List.xlsx</code>…');
 fetch('./Defender%20Price%20List.xlsx',{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer();}).then(function(buf){whenXLSXReady(function(){parseAndBuild(buf);});}).catch(function(err){console.error(err);showPicker(err.message||'network error');});
 if(picker){picker.addEventListener('change',function(e){var tgt=e&&e.target;var files=tgt&&tgt.files;var f=files&&files[0];if(!f)return;if(f.arrayBuffer){f.arrayBuffer().then(function(ab){whenXLSXReady(function(){parseAndBuild(ab);});});}else{var reader=new FileReader();reader.onload=function(ev){var ab=ev.target.result;whenXLSXReady(function(){parseAndBuild(ab);});};reader.readAsArrayBuffer(f);}});} 
-function draw(name){if(!wb||!wb.Sheets||!wb.Sheets[name]){container.textContent='No such sheet.';return;}var rows=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:""});if(!rows.length){container.textContent='Empty sheet.';return;}var header=rows[0].map(function(h){return String(h).trim();});var catIdx=header.indexOf("Category");if(catIdx===-1){container.textContent='No "Category" column in this sheet.';return;}var body=rows.slice(1);container.innerHTML="";var sDiv=document.createElement("div");sDiv.className="search-container";var label=document.createElement("label");label.className="search-label";var searchId='catalogSearch_'+Date.now();label.setAttribute('for',searchId);label.textContent='Search items:';var control=document.createElement("div");control.className="search-control";var inp=document.createElement("input");inp.className="search-input";inp.type='search';inp.id=searchId;inp.placeholder='Type to filter...';var cancelBtn=document.createElement("button");cancelBtn.type='button';cancelBtn.className='search-cancel';cancelBtn.textContent='Cancel';control.appendChild(inp);control.appendChild(cancelBtn);sDiv.appendChild(label);sDiv.appendChild(control);container.appendChild(sDiv);var wrap=document.createElement("div");container.appendChild(wrap);currentSearchInput=inp;function updateCancel(){if(!cancelBtn)return;var hasValue=!!inp.value;cancelBtn.classList.toggle('visible',hasValue);}function handleInput(){updateCancel();render();}inp.addEventListener('input',handleInput);inp.addEventListener('keydown',function(e){if(e.key==='Escape'||e.key==='Esc'){if(inp.value){inp.value='';updateCancel();render();}e.stopPropagation();}});cancelBtn.addEventListener('click',function(){inp.value='';updateCancel();render();try{inp.focus({preventScroll:true});}catch(e){inp.focus();}});updateCancel();render();function render(){updateCancel();var term=(inp.value||"").toLowerCase();wrap.innerHTML="";var groups={};for(var i=0;i<body.length;i++){var r=body[i];if(term){var match=false;for(var j=0;j<r.length;j++){if(String(r[j]).toLowerCase().indexOf(term)>-1){match=true;break;}}if(!match)continue;}var cat=(r[catIdx]||"Uncategorised").toString().trim();if(!groups[cat])groups[cat]=[];groups[cat].push(r);}var cats=Object.keys(groups).sort(function(a,b){var A=(META[a.toLowerCase()]||FALL).idx;var B=(META[b.toLowerCase()]||FALL).idx;return A-B;});for(var c=0;c<cats.length;c++){(function(cat){var cls=(META[cat.toLowerCase()]||FALL).cls;var det=document.createElement("details");det.open=!!term;det.className=cls;var sum=document.createElement("summary");sum.textContent=cat;det.appendChild(sum);var tbl=document.createElement("table");tbl.className="catalog-table";var ths=header.filter(function(_,i){return i!==catIdx;}).map(function(h){return '<th>'+h+'</th>';}).join("");tbl.innerHTML='<thead><tr><th></th>'+ths+'</tr></thead>';var tbody=document.createElement("tbody");tbl.appendChild(tbody);var items=groups[cat];for(var r=0;r<items.length;r++){(function(row){var tr=document.createElement("tr");var tdAdd=document.createElement("td");var btn=document.createElement("button");btn.className="add-button";btn.textContent="+";btn.onclick=function(){addItem(row,header);};tdAdd.appendChild(btn);tr.appendChild(tdAdd);for(var i2=0;i2<row.length;i2++){if(i2===catIdx)continue;var td=document.createElement("td");var h=(header[i2]||"").toLowerCase();var txt=/price|gst|rate/.test(h)&&!isNaN(row[i2])?(+row[i2]).toFixed(2):row[i2];if(term){try{td.innerHTML=String(txt).replace(new RegExp('('+term+')','gi'),'<span class="highlight">$1</span>');}catch(e){td.textContent=String(txt);}}else{td.textContent=String(txt);}if(/price|gst|rate/.test(h))td.classList.add("font-semibold");td.onclick=function(e){if(e.target&&e.target.tagName==='BUTTON')return;var el=e.currentTarget;navigator.clipboard.writeText(el.textContent).then(function(){el.classList.add("copied-cell");void el.offsetWidth;setTimeout(function(){el.classList.remove("copied-cell");},150);}).catch(function(){});};tr.appendChild(td);}tbody.appendChild(tr);})(items[r]);}det.appendChild(tbl);wrap.appendChild(det);})(cats[c]);}}}
+function draw(name){if(!wb||!wb.Sheets||!wb.Sheets[name]){container.textContent='No such sheet.';return;}var rows=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:""});if(!rows.length){container.textContent='Empty sheet.';return;}var header=rows[0].map(function(h){return String(h).trim();});var catIdx=header.indexOf("Category");if(catIdx===-1){container.textContent='No "Category" column in this sheet.';return;}var body=rows.slice(1);container.innerHTML="";var sDiv=document.createElement("div");sDiv.className="search-container";var label=document.createElement("label");label.className="search-label";var searchId='catalogSearch_'+Date.now();label.setAttribute('for',searchId);label.textContent='Search items:';var control=document.createElement("div");control.className="search-control";var inp=document.createElement("input");inp.className="search-input";inp.type='search';inp.id=searchId;inp.placeholder='Type to filter...';var cancelBtn=document.createElement("button");cancelBtn.type='button';cancelBtn.className='search-cancel';cancelBtn.textContent='Cancel';control.appendChild(inp);control.appendChild(cancelBtn);sDiv.appendChild(label);sDiv.appendChild(control);container.appendChild(sDiv);var wrap=document.createElement("div");container.appendChild(wrap);currentSearchInput=inp;function updateCancel(){if(!cancelBtn)return;var hasValue=!!inp.value;cancelBtn.classList.toggle('visible',hasValue);}function handleInput(){updateCancel();render();}inp.addEventListener('input',handleInput);inp.addEventListener('keydown',function(e){if(e.key==='Escape'||e.key==='Esc'){if(inp.value){inp.value='';updateCancel();render();}e.stopPropagation();}});cancelBtn.addEventListener('click',function(){inp.value='';updateCancel();render();try{inp.focus({preventScroll:true});}catch(e){inp.focus();}});updateCancel();render();function render(){updateCancel();var term=(inp.value||"").toLowerCase();wrap.innerHTML="";var groups={};for(var i=0;i<body.length;i++){var r=body[i];if(term){var match=false;for(var j=0;j<r.length;j++){if(String(r[j]).toLowerCase().indexOf(term)>-1){match=true;break;}}if(!match)continue;}var cat=(r[catIdx]||"Uncategorised").toString().trim();if(!groups[cat])groups[cat]=[];groups[cat].push(r);}var cats=Object.keys(groups).sort(function(a,b){var A=(META[a.toLowerCase()]||FALL).idx;var B=(META[b.toLowerCase()]||FALL).idx;return A-B;});for(var c=0;c<cats.length;c++){(function(cat){var cls=(META[cat.toLowerCase()]||FALL).cls;var det=document.createElement("details");det.open=!!term;det.className=cls;var sum=document.createElement("summary");sum.textContent=cat;det.appendChild(sum);var tbl=document.createElement("table");var ths=header.filter(function(_,i){return i!==catIdx;}).map(function(h){return '<th>'+h+'</th>';}).join("");tbl.innerHTML='<thead><tr><th></th>'+ths+'</tr></thead>';var tbody=document.createElement("tbody");tbl.appendChild(tbody);var items=groups[cat];for(var r=0;r<items.length;r++){(function(row){var tr=document.createElement("tr");var tdAdd=document.createElement("td");var btn=document.createElement("button");btn.className="add-button";btn.textContent="+";btn.onclick=function(){addItem(row,header);};tdAdd.appendChild(btn);tr.appendChild(tdAdd);for(var i2=0;i2<row.length;i2++){if(i2===catIdx)continue;var td=document.createElement("td");var h=(header[i2]||"").toLowerCase();var txt=/price|gst|rate/.test(h)&&!isNaN(row[i2])?(+row[i2]).toFixed(2):row[i2];if(term){try{td.innerHTML=String(txt).replace(new RegExp('('+term+')','gi'),'<span class="highlight">$1</span>');}catch(e){td.textContent=String(txt);}}else{td.textContent=String(txt);}if(/price|gst|rate/.test(h))td.style.fontWeight="bold";td.onclick=function(e){if(e.target&&e.target.tagName==='BUTTON')return;var el=e.currentTarget;navigator.clipboard.writeText(el.textContent).then(function(){el.classList.add("copied-cell");void el.offsetWidth;setTimeout(function(){el.classList.remove("copied-cell");},150);}).catch(function(){});};tr.appendChild(td);}tbody.appendChild(tr);})(items[r]);}det.appendChild(tbl);wrap.appendChild(det);})(cats[c]);}}}
 var bBody=document.querySelector('#basketTable tbody'),bFoot=document.querySelector('#basketTable tfoot');
-function enableCellCopy(target){
-  if(!target) return;
-  target.addEventListener('click',function(e){
+if(bBody){
+  bBody.addEventListener('click',function(e){
     var t=e.target; if(!t) return;
     if(/^(BUTTON|INPUT|TEXTAREA|SELECT|LABEL)$/i.test(t.tagName)) return;
     var td=t.closest ? t.closest('td') : (function(n){while(n&&n.tagName!=='TD'){n=n.parentNode;}return n;})(t);
@@ -590,8 +573,16 @@ function enableCellCopy(target){
     navigator.clipboard.writeText(text).then(function(){ td.classList.add('copied-cell'); void td.offsetWidth; setTimeout(function(){ td.classList.remove('copied-cell'); },150); }).catch(function(){});
   });
 }
-enableCellCopy(bBody);
-enableCellCopy(bFoot);
+var bFootEl=document.querySelector('#basketTable tfoot');
+if(bFootEl){
+  bFootEl.addEventListener('click',function(e){
+    var t=e.target; if(!t) return;
+    if(/^(BUTTON|INPUT|TEXTAREA|SELECT|LABEL)$/i.test(t.tagName)) return;
+    var td=t.closest ? t.closest('td') : (function(n){while(n&&n.tagName!=='TD'){n=n.parentNode;}return n;})(t);
+    if(!td) return; var text=(td.textContent||'').trim(); if(!text) return;
+    navigator.clipboard.writeText(text).then(function(){ td.classList.add('copied-cell'); void td.offsetWidth; setTimeout(function(){ td.classList.remove('copied-cell'); },150); }).catch(function(){});
+  });
+}
 if(addSectionBtn){addSectionBtn.addEventListener('click',function(){ensureSectionState();var suggestion='Section '+(sectionSeq+1);var name=prompt('Section name',suggestion);if(name===null)return;name=name.trim();if(!name){showToast('Section name is required');return;}var newId=sectionSeq+1;sections.push({id:newId,name:name,notes:''});sectionSeq=newId;activeSectionId=newId;captureParentId=null;renderBasket();showToast('Section added');});}
 var addCustomBtn=document.getElementById('addCustomBtn');
 if(addCustomBtn){addCustomBtn.addEventListener('click',function(){var nl;if(captureParentId){nl={id:++uid,pid:captureParentId,kind:'sub',item:'Sub item',qty:1,ex:0};}else{nl={id:++uid,pid:null,kind:'line',collapsed:false,sectionId:activeSectionId,item:'Custom item',qty:1,ex:0};}basket.push(nl);renderBasket();try{var rows=bBody.querySelectorAll('tr.main-row');if(rows.length){var last=rows[rows.length-1].querySelector('.item-input');if(last)last.focus();}}catch(_){}});}
@@ -910,7 +901,7 @@ window.__wd_main_ok__=true;
 (function(){try{
   if(!window.__wd_main_ok__){
     var status=document.getElementById('status');
-    if(status){status.innerHTML='<span class="font-semibold text-rose-600 dark:text-rose-300">Main script did not finish loading.</span> <span class="text-slate-700 dark:text-slate-200">Check Console for the first error above.</span>';status.classList.remove('opacity-0');status.setAttribute('role','status');}
+    if(status){status.innerHTML='<span style="color:#b00">Main script did not finish loading. Check Console for the first error above.</span>';}
     if(window.XLSX){
       fetch('./Defender%20Price%20List.xlsx',{cache:'no-store'}).then(function(r){return r.arrayBuffer();}).then(function(buf){
         var wb=XLSX.read(buf,{type:'array'});var names=Object.keys(wb.Sheets||{});if(!names.length)return;
