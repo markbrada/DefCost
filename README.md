@@ -84,6 +84,7 @@ Defender Price List.xlsx   # Workbook loaded by the app
 
 ## Versioning
 
+- **3.0.0** – Added CSV Import: restores sections, items, children ('- ' prefix), and per-section notes ('Section X Notes' rows). Includes backup/undo and strict header validation.
 - **2.0.7** – Fixed CSV header ('Line Total' label) and added Notes rows under each section in CSV export.
 - **2.0.6** – Section selector moved to its own column; children inherit section (read-only)
 - **2.0.5** – Simplified line total header copy and reduced Quote Builder title size
