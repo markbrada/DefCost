@@ -1,7 +1,6 @@
 import {
   roundCurrency,
   formatCurrency,
-  formatCurrencyWithSymbol,
   formatPercent,
   recalcGrandTotal,
   calculateGst,
@@ -18,8 +17,6 @@ export const SUMMARY_ROWS = {
   'GST': 1,
   'Grand Total (Incl. GST)': 1
 };
-
-let importSummaryState = null;
 
 export function saveBasket({
   basket,
@@ -131,17 +128,21 @@ export function restoreBackup({
 }
 
 export function closeImportSummaryModal() {
-  if (!importSummaryState) {
+  const root = (window.DefCost = window.DefCost || {});
+  const state = (root.state = root.state || {});
+  const modalState = state.importSummaryState;
+  if (!modalState) {
+    state.importSummaryState = null;
     return;
   }
-  document.removeEventListener('focus', importSummaryState.focusHandler, true);
-  document.removeEventListener('keydown', importSummaryState.keyHandler, true);
-  if (importSummaryState.overlay && importSummaryState.overlay.parentNode) {
-    importSummaryState.overlay.parentNode.removeChild(importSummaryState.overlay);
+  document.removeEventListener('focus', modalState.focusHandler, true);
+  document.removeEventListener('keydown', modalState.keyHandler, true);
+  if (modalState.overlay && modalState.overlay.parentNode) {
+    modalState.overlay.parentNode.removeChild(modalState.overlay);
   }
-  document.body.style.overflow = importSummaryState.bodyOverflow || '';
-  const lastFocus = importSummaryState.previousFocus;
-  importSummaryState = null;
+  document.body.style.overflow = modalState.bodyOverflow || '';
+  const lastFocus = modalState.previousFocus;
+  state.importSummaryState = null;
   if (lastFocus && typeof lastFocus.focus === 'function') {
     try {
       lastFocus.focus();
@@ -149,165 +150,6 @@ export function closeImportSummaryModal() {
       // ignore focus errors
     }
   }
-}
-
-export function showImportSummaryModal(summary, { onUndo } = {}) {
-  if (!summary) {
-    return;
-  }
-  closeImportSummaryModal();
-  const overlay = document.createElement('div');
-  overlay.className = 'import-summary-backdrop';
-  overlay.setAttribute('role', 'presentation');
-
-  const card = document.createElement('div');
-  card.className = 'import-summary-card';
-  card.setAttribute('role', 'dialog');
-  card.setAttribute('aria-modal', 'true');
-  card.setAttribute('tabindex', '-1');
-
-  const title = document.createElement('h2');
-  title.className = 'import-summary-title';
-  title.id = 'import-summary-title';
-  title.textContent = 'Import Summary';
-  card.setAttribute('aria-labelledby', 'import-summary-title');
-
-  const subtitle = document.createElement('p');
-  subtitle.className = 'import-summary-subtitle';
-  subtitle.id = 'import-summary-subtitle';
-  subtitle.textContent = 'Your quote has been successfully imported.';
-  card.setAttribute('aria-describedby', 'import-summary-subtitle');
-
-  const table = document.createElement('table');
-  table.className = 'import-summary-table';
-  const tbody = document.createElement('tbody');
-  const rows = [
-    ['Imported Sections', String(summary.sections || 0)],
-    ['Parent Items', String(summary.parents || 0)],
-    ['Child Items', String(summary.children || 0)],
-    ['Notes', String(summary.notes || 0)],
-    ['Quote Total (Ex. GST)', formatCurrencyWithSymbol(summary.totalEx)]
-  ];
-  for (let i = 0; i < rows.length; i++) {
-    const tr = document.createElement('tr');
-    const labelTd = document.createElement('td');
-    labelTd.textContent = rows[i][0];
-    const valueTd = document.createElement('td');
-    valueTd.textContent = rows[i][1];
-    tr.appendChild(labelTd);
-    tr.appendChild(valueTd);
-    tbody.appendChild(tr);
-  }
-  table.appendChild(tbody);
-
-  const divider = document.createElement('div');
-  divider.className = 'import-summary-divider';
-
-  const actions = document.createElement('div');
-  actions.className = 'import-summary-actions';
-
-  const viewBtn = document.createElement('button');
-  viewBtn.type = 'button';
-  viewBtn.className = 'import-summary-view-btn';
-  viewBtn.textContent = 'View Quote';
-
-  const undoBtn = document.createElement('button');
-  undoBtn.type = 'button';
-  undoBtn.className = 'import-summary-undo-btn';
-  undoBtn.textContent = 'Undo Import';
-
-  actions.appendChild(viewBtn);
-  actions.appendChild(undoBtn);
-
-  card.appendChild(title);
-  card.appendChild(subtitle);
-  card.appendChild(table);
-  card.appendChild(divider);
-  card.appendChild(actions);
-
-  overlay.appendChild(card);
-
-  const previousFocus = document.activeElement;
-  const previousOverflow = document.body.style.overflow;
-
-  document.body.appendChild(overlay);
-  document.body.style.overflow = 'hidden';
-
-  const focusables = Array.prototype.slice.call(
-    card.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')
-  );
-
-  const keyHandler = function (ev) {
-    if (!importSummaryState) {
-      return;
-    }
-    if (ev.key === 'Escape' || ev.key === 'Esc') {
-      ev.preventDefault();
-      closeImportSummaryModal();
-      return;
-    }
-    if (ev.key === 'Tab') {
-      if (!focusables.length) {
-        return;
-      }
-      const active = document.activeElement;
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-      if (ev.shiftKey) {
-        if (!card.contains(active) || active === first) {
-          ev.preventDefault();
-          last.focus();
-        }
-      } else if (active === last) {
-        ev.preventDefault();
-        first.focus();
-      }
-    }
-  };
-
-  const focusHandler = function (ev) {
-    if (!importSummaryState) {
-      return;
-    }
-    if (!overlay.contains(ev.target)) {
-      ev.stopPropagation();
-      if (focusables.length) {
-        focusables[0].focus();
-      } else {
-        card.focus();
-      }
-    }
-  };
-
-  importSummaryState = {
-    overlay: overlay,
-    keyHandler: keyHandler,
-    focusHandler: focusHandler,
-    previousFocus: previousFocus,
-    bodyOverflow: previousOverflow
-  };
-
-  document.addEventListener('keydown', keyHandler, true);
-  document.addEventListener('focus', focusHandler, true);
-
-  setTimeout(() => {
-    try {
-      viewBtn.focus();
-    } catch (err) {
-      // ignore focus errors
-    }
-  }, 0);
-
-  viewBtn.addEventListener('click', () => {
-    closeImportSummaryModal();
-  });
-
-  undoBtn.addEventListener('click', () => {
-    closeImportSummaryModal();
-    if (typeof onUndo === 'function') {
-      onUndo();
-    }
-  });
 }
 
 export function buildImportModel(rows) {
