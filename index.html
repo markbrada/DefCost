@@ -5,7 +5,7 @@
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
 <meta charset="UTF-8">
-<title>DefCost 2.0.4</title>
+<title>DefCost 2.0.5</title>
 <style>
 :root{--bg:#f7f7f7;--fg:#333;--header:#e0e0e0;--btn:#007bff;--btnh:#0056b3;--add:#28a745;--addh:#218838;--border:#aaa;--alt:#f9f9f9;--panel:#fff;--toast:#007bff;--toastfg:#fff;--rowHover:#e9f1ff}
 .dark-mode{--bg:#222;--fg:#eee;--header:#444;--btn:#0d6efd;--btnh:#0a58ca;--add:#198754;--addh:#157347;--border:#555;--alt:#2a2a2a;--panel:#333;--toast:#0d6efd;--toastfg:#fff;--rowHover:#383838}
@@ -46,7 +46,7 @@ summary:hover{background:var(--btn);color:#fff}
 #quoteBuilderMain{margin-top:1.5rem;background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 16px 40px rgba(0,0,0,.18);padding:1rem 1.25rem 1.5rem;display:flex;flex-direction:column;gap:1rem}
 #quoteHeader{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:.75rem}
 .quote-header-left{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
-#quoteHeader #qbTitle{margin:0;font-size:1.75rem;font-weight:bold}
+#quoteHeader #qbTitle{margin:0;font-size:1.55rem;font-weight:bold}
 #quoteActions{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:flex-end}
 #quoteActions button{background:var(--btn);color:#fff;border:none;padding:.4rem .75rem;border-radius:6px;cursor:pointer;font-weight:600}
 #quoteActions button:hover{background:var(--btnh)}
@@ -156,7 +156,7 @@ input[type=number]{-moz-appearance:textfield}
 </style>
 </head>
 <body>
-<h1>DefCost 2.0.4</h1>
+<h1>DefCost 2.0.5</h1>
 <button id="darkModeToggle">Toggle Dark Mode</button>
 <div id="quoteBuilderMain" aria-label="Quote Builder" role="region">
   <div id="quoteHeader">
@@ -189,7 +189,7 @@ input[type=number]{-moz-appearance:textfield}
           <thead><tr>
             <th class="sort-handle">≡</th><th>Item</th><th>Quantity</th>
             <th>Price</th>
-            <th>Line Total (Ex. GST)</th><th></th>
+            <th>Line Total</th><th></th>
           </tr></thead>
         </table>
       </div>
@@ -205,11 +205,11 @@ input[type=number]{-moz-appearance:textfield}
           <col style="width:140px">
           <col style="width:50px">
         </colgroup>
-        <thead><tr>
-          <th class="sort-handle">≡</th><th>Item</th><th>Quantity</th>
-          <th>Price</th>
-          <th>Line Total (Ex. GST)</th><th></th>
-        </tr></thead>
+          <thead><tr>
+            <th class="sort-handle">≡</th><th>Item</th><th>Quantity</th>
+            <th>Price</th>
+            <th>Line Total</th><th></th>
+          </tr></thead>
         <tbody></tbody><tfoot></tfoot>
       </table>
       </div>
