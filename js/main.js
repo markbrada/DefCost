@@ -1,6 +1,7 @@
 import {
   roundCurrency,
   formatCurrency,
+  formatCurrencyWithSymbol,
   formatPercent,
   recalcGrandTotal,
   buildReportModel,
@@ -13,18 +14,35 @@ import {
   restoreBackup,
   exportBasketToCsv,
   closeImportSummaryModal,
-  showImportSummaryModal,
   handleImportInputChange
 } from './storage.js';
+import './ui.js';
+
+window.DefCost = window.DefCost || {};
+window.DefCost.state = window.DefCost.state || {};
+window.DefCost.api = window.DefCost.api || {};
+
+window.DefCost.api.restoreBackup = restoreBackup;
+window.DefCost.api.closeImportSummaryModal = closeImportSummaryModal;
+window.DefCost.api.formatCurrency = formatCurrency;
+window.DefCost.api.formatCurrencyWithSymbol = formatCurrencyWithSymbol;
+
+const uiNamespace = window.DefCost.ui || {};
+const showImportSummaryModal = typeof uiNamespace.showImportSummaryModal === 'function'
+  ? uiNamespace.showImportSummaryModal
+  : function () {};
+const showToast = typeof uiNamespace.showToast === 'function'
+  ? uiNamespace.showToast
+  : function () {};
 
 (function(){
 var ORDER=[["bannister rail","cat-orange"],["stainless steel grabrail","cat-orange"],["aluminium grabrail, powder coated","cat-orange"],["shower parts","cat-blue"],["plumbing","cat-blue"],["door components","cat-brown"],["fire safety","cat-red"],["anti slip solutions","cat-yellow"],["uncategorised","cat-yellow"]];
 var META=(function(){var o={};for(var i=0;i<ORDER.length;i++){o[ORDER[i][0]]={idx:i,cls:ORDER[i][1]};}return o;})();
 var FALL=META["uncategorised"];
 var PRICE_EX=["Rate Ex. GST","Price Ex. GST","Price","Price Ex Tax","Price ex GST"];
-var TOAST_MS=3000,UNDO_TOAST_MS=60000,UI_KEY='defcost_qb_ui_v1';
-var wb=null,basket=[],sections=getDefaultSections(),uid=0,sectionSeq=1,activeSectionId=sections[0].id,captureParentId=null,toastTimer=null;
-var tabs=document.getElementById("sheetTabs"),container=document.getElementById("sheetContainer"),toast=document.getElementById("toast"),sectionTabsEl=document.getElementById("sectionTabs"),grandTotalsEl=document.getElementById("grandTotals"),grandTotalsWrap=document.querySelector('.grand-totals-wrapper');
+var UNDO_TOAST_MS=60000,UI_KEY='defcost_qb_ui_v1';
+var wb=null,basket=[],sections=getDefaultSections(),uid=0,sectionSeq=1,activeSectionId=sections[0].id,captureParentId=null;
+var tabs=document.getElementById("sheetTabs"),container=document.getElementById("sheetContainer"),sectionTabsEl=document.getElementById("sectionTabs"),grandTotalsEl=document.getElementById("grandTotals"),grandTotalsWrap=document.querySelector('.grand-totals-wrapper');
 var discountPercent=0,currentGrandTotal=0,lastBaseTotal=0,grandTotalsUi=null,latestReport=null;
 var qbWindow=document.getElementById('catalogWindow'),qbTitlebar=document.getElementById('catalogTitlebar'),qbDockIcon=document.getElementById('catalogDockIcon'),qbMin=document.getElementById('catalogMin'),qbClose=document.getElementById('catalogClose'),qbZoom=document.getElementById('catalogZoom'),qbResizeHandle=document.getElementById('catalogResizeHandle');
 var addSectionBtn=document.getElementById("addSectionBtn"),importBtn=document.getElementById('importCsvBtn'),importInput=document.getElementById('importCsvInput'),qbTitle=document.getElementById('qbTitle'),clearQuoteBtn=document.getElementById('clearQuoteBtn');
@@ -97,7 +115,11 @@ function hydrateFromStorage(){
 }
 
 function restoreQuoteFromBackup(){
-  closeImportSummaryModal();
+  if(window.DefCost&&window.DefCost.api&&typeof window.DefCost.api.closeImportSummaryModal==='function'){
+    window.DefCost.api.closeImportSummaryModal();
+  }else{
+    closeImportSummaryModal();
+  }
   var result=restoreBackup();
   if(!result||!result.success){
     var errorMessage=result&&result.error?result.error:'Unable to restore backup';
@@ -119,40 +141,6 @@ function restoreQuoteFromBackup(){
   ensureSectionState();
   renderBasket();
   showToast('Quote restored from backup');
-}
-function showToast(msg,undo,duration){
-  var el=toast;
-  if(!el) return;
-  if(toastTimer){
-    clearTimeout(toastTimer);
-    toastTimer=null;
-  }
-  el.textContent=msg;
-  el.classList.add("show");
-  var clear=function(){
-    el.classList.remove("show");
-    el.style.cursor="default";
-    el.onclick=null;
-    if(toastTimer){
-      clearTimeout(toastTimer);
-      toastTimer=null;
-    }
-  };
-  if(undo){
-    el.style.cursor="pointer";
-    el.onclick=function(ev){
-      if(ev){ev.preventDefault();}
-      undo();
-      clear();
-    };
-  }else{
-    el.style.cursor="default";
-    el.onclick=null;
-  }
-  var timeout=isFinite(duration)?duration:TOAST_MS;
-  toastTimer=setTimeout(function(){
-    clear();
-  },timeout);
 }
 function showIssuesModal(title,messages){
   if(!Array.isArray(messages)||!messages.length) return;
@@ -267,8 +255,8 @@ function applyImportedModel(model){
     var fallbackReport=buildReportModel(basket,sections);
     summaryData.totalEx=fallbackReport&&isFinite(fallbackReport.grandEx)?fallbackReport.grandEx:0;
   }
-  showImportSummaryModal(summaryData);
-  showToast('✅ Quote imported. Undo?',function(){restoreQuoteFromBackup();},UNDO_TOAST_MS);
+  showImportSummaryModal(summaryData,{onUndo:restoreQuoteFromBackup});
+  showToast('✅ Quote imported. Undo?',{onClick:restoreQuoteFromBackup,duration:UNDO_TOAST_MS});
 }
 function cloneRect(state){if(!state||typeof state!=='object')return{x:0,y:0,w:0,h:0,dockHeight:0};return{x:isFinite(state.x)?+state.x:0,y:isFinite(state.y)?+state.y:0,w:isFinite(state.w)?+state.w:0,h:isFinite(state.h)?+state.h:0,dockHeight:isFinite(state.dockHeight)?+state.dockHeight:0};}
 function getDefaultDockHeight(){var winH=window.innerHeight||800;var minDock=240;var base=Math.round((winH||800)*0.35)||minDock;if(!isFinite(base)||base<=0)base=320;var maxDock=Math.max(minDock,winH-96);if(!isFinite(maxDock)||maxDock<minDock)maxDock=Math.max(minDock,480);return Math.min(Math.max(minDock,base),maxDock);}
