@@ -154,6 +154,9 @@ export function closeImportSummaryModal() {
 
 export function buildImportModel(rows) {
   const issues = [];
+  const duplicateTitles = [];
+  const seenNormalizedTitles = new Map();
+  const duplicateNormalized = new Set();
   if (!rows || !rows.length) {
     issues.push('Row 1: Header must be "' + IMPORT_HEADER.join(',') + '"');
     return { issues };
@@ -235,6 +238,19 @@ export function buildImportModel(rows) {
       sectionMap[sectionCell] = section;
       sectionsModel.push(section);
       lastParentBySection[sectionCell] = null;
+
+      const normalizedTitle = sectionCell.trim().toLowerCase();
+      if (normalizedTitle) {
+        if (seenNormalizedTitles.has(normalizedTitle)) {
+          if (!duplicateNormalized.has(normalizedTitle)) {
+            duplicateTitles.push(seenNormalizedTitles.get(normalizedTitle));
+            duplicateNormalized.add(normalizedTitle);
+          }
+          duplicateTitles.push(sectionCell);
+        } else {
+          seenNormalizedTitles.set(normalizedTitle, sectionCell);
+        }
+      }
     }
 
     const rawItem = row[1] == null ? '' : String(row[1]);
@@ -285,7 +301,12 @@ export function buildImportModel(rows) {
     issues.push('No section data found in CSV');
   }
 
-  return { sections: sectionsModel, discount: discountPercentValue, issues: issues };
+  return {
+    sections: sectionsModel,
+    discount: discountPercentValue,
+    issues: issues,
+    duplicates: duplicateTitles
+  };
 }
 
 function parseNumericCell(raw, rowNumber, label, issues) {
@@ -361,6 +382,16 @@ export function handleImportInputChange(event, {
       if (combinedIssues.length) {
         if (typeof showIssuesModal === 'function') {
           showIssuesModal('Import failed', combinedIssues.slice(0, 5));
+        }
+        return;
+      }
+      if (model && Array.isArray(model.duplicates) && model.duplicates.length) {
+        const message =
+          '\u26a0\ufe0f Duplicate section names detected in CSV: ' +
+          model.duplicates.join(', ') +
+          '. Please rename sections to unique titles and re-upload.';
+        if (typeof showIssuesModal === 'function') {
+          showIssuesModal('Import blocked', [message]);
         }
         return;
       }
