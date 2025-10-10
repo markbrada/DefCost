@@ -31,7 +31,7 @@ It loads an Excel workbook of products/services and lets estimators build quotes
 - **Totals**:
   - Right-aligned summary table (beneath the active section) lists **Total (Ex. GST)**, **Discount %**, **Grand Total (Ex. GST)**, **GST (10%)**, **Grand Total (Incl. GST)**
   - Discount % and Grand Total inputs stay in sync
-- **Excel export**: branded multi-sheet workbook with quote summary, details, and totals (legacy CSV export still available)
+- **CSV export**: section-aware, includes grand totals
 - **Clipboard**: click any non-input cell to copy its text
 - **Sticky header**: stable sizing with `scrollbar-gutter: stable`
 
@@ -84,7 +84,6 @@ Defender Price List.xlsx   # Workbook loaded by the app
 
 ## Versioning
 
-- **3.1.0** – Added branded Excel export (.xlsx) with multi-sheet layout styled to Workplace Defender brand palette and import-compatible structure.
 - **3.0.0** – Added CSV Import: restores sections, items, children ('- ' prefix), and per-section notes ('Section X Notes' rows). Includes backup/undo and strict header validation.
 - **2.0.7** – Fixed CSV header ('Line Total' label) and added Notes rows under each section in CSV export.
 - **2.0.6** – Section selector moved to its own column; children inherit section (read-only)
