@@ -5,7 +5,7 @@
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
 <meta charset="UTF-8">
-  <title>DefCost 3.0.6</title>
+  <title>DefCost 3.0.7</title>
 <style>
 :root{--bg:#f7f7f7;--fg:#333;--header:#e0e0e0;--btn:#007bff;--btnh:#0056b3;--add:#28a745;--addh:#218838;--border:#aaa;--alt:#f9f9f9;--panel:#fff;--toast:#007bff;--toastfg:#fff;--rowHover:#e9f1ff}
 .dark-mode{--bg:#222;--fg:#eee;--header:#444;--btn:#0d6efd;--btnh:#0a58ca;--add:#198754;--addh:#157347;--border:#555;--alt:#2a2a2a;--panel:#333;--toast:#0d6efd;--toastfg:#fff;--rowHover:#383838}
@@ -20,9 +20,11 @@ h1{margin:.2rem 0}p{margin:0 0 2rem}
 .search-label{font-weight:bold}
 .search-control{display:flex;align-items:center;gap:.5rem;flex:1 1 220px}
 .search-input{padding:.4rem .5rem;border:1px solid var(--border);border-radius:4px;flex:1 1 auto;background:var(--panel);color:var(--fg)}
-.search-cancel{display:none;padding:.35rem .75rem;border-radius:4px;border:1px solid var(--border);background:var(--header);color:var(--fg);cursor:pointer;font-weight:600;white-space:nowrap}
-.search-cancel:hover{filter:brightness(.96)}
-.search-cancel.visible{display:inline-flex}
+.search-clear{display:none;align-items:center;justify-content:center;width:2rem;height:2rem;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--fg);cursor:pointer;transition:.2s ease}
+.search-clear span{pointer-events:none;font-size:1rem;line-height:1}
+.search-clear:hover{background:var(--header)}
+.dark-mode .search-clear:hover{background:#3f3f46}
+.search-clear.visible{display:inline-flex}
 .highlight{background:yellow}
 table{border-collapse:collapse;width:100%}
 thead th{position:sticky;top:0;background:var(--header);border:1px solid var(--border);padding:.5rem;text-align:center;z-index:2}
@@ -50,7 +52,9 @@ summary:hover{background:var(--btn);color:#fff}
 #quoteActions{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:flex-end}
 #quoteActions button{background:var(--btn);color:#fff;border:none;padding:.4rem .75rem;border-radius:6px;cursor:pointer;font-weight:600}
 #quoteActions button:hover{background:var(--btnh)}
-#catalogWindow{position:fixed;top:64px;right:32px;width:min(1100px,90vw);height:min(65vh,80vh);background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.35);display:flex;flex-direction:column;z-index:10000;overflow:hidden}
+#catalogWindow{position:fixed;top:64px;right:32px;width:min(1100px,90vw);height:min(65vh,80vh);background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.35);display:flex;flex-direction:column;z-index:10000;overflow:hidden;transition:box-shadow .2s ease,border-color .2s ease,transform .2s ease}
+#catalogWindow.catalogue-active{box-shadow:0 36px 110px rgba(15,23,42,.4);border-color:rgba(148,163,184,.6);transform:scale(1.01)}
+.dark-mode #catalogWindow.catalogue-active{box-shadow:0 40px 120px rgba(0,0,0,.55);border-color:rgba(148,163,184,.75)}
 #catalogWindow.qb-full{top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;border-radius:0}
 #catalogWindow.qb-docked{left:16px;right:16px;bottom:16px;width:auto;max-width:none;border-radius:12px 12px 0 0}
 #catalogWindow.qb-floating{cursor:auto}
@@ -186,7 +190,7 @@ input[type=number]{-moz-appearance:textfield}
 </style>
 </head>
 <body>
-        <h1>DefCost 3.0.6</h1>
+        <h1>DefCost 3.0.7</h1>
 <button id="darkModeToggle">Toggle Dark Mode</button>
 <div id="quoteBuilderMain" aria-label="Quote Builder" role="region">
   <div id="quoteHeader">
