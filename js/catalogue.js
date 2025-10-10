@@ -611,16 +611,8 @@
   }
 
   api.setupSearch = setupSearch;
-
-  api.filter = function(query, opts){
-    if(!searchBinding || !searchBinding.input) return '';
-    var value = typeof query === 'string' ? query : '';
-    searchBinding.input.value = value;
-    searchBinding.updateClear();
-    var immediate = !(opts && opts.debounce === false);
-    searchBinding.triggerSearch(immediate);
-    return value;
-  };
+  api.getDefaultState = getDefaultState;
+  api.ensureWithinViewport = ensureWithinViewport;
 
   api.focusSearch = function(){
     if(!searchBinding || !searchBinding.input) return;
@@ -685,11 +677,6 @@
 
   api.close = function(opts){
     return setOpenState(false, opts);
-  };
-
-  api.toggle = function(opts){
-    var normalized = syncState(state);
-    return setOpenState(!(normalized.isOpen === false), opts);
   };
 
   api.init = function(opts){

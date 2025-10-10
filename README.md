@@ -17,7 +17,7 @@ It loads an Excel price list (catalogue), lets you build sectioned quotes with p
 
 ---
 
-## Architecture (v3.1.1+)
+## Architecture (v3.1.2+)
 
 Modules (ES6):
 
@@ -126,6 +126,7 @@ Always update:
 2) Changelog below
 
 Changelog:
+- **3.1.2** – Lean Pass A: removed unused helpers and duplicate logic; unified section-title normalisation and window sizing; reduced catalogue API surface. No functional changes.
 - **3.1.1** – Enforced unique section names. CSV import now rejects duplicate titles; in-app create/rename prevents duplicate section names (case-insensitive).
 - **3.1.0-B** – Optimised renderBasket(): now debounced per animation frame to reduce redundant DOM rebuilds on edits. No functional change.
 - **3.0.7** – Completed catalogue module; added debounce search + drag/resize polish.
