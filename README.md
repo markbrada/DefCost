@@ -84,6 +84,7 @@ Defender Price List.xlsx   # Workbook loaded by the app
 
 ## Versioning
 
+- **2.0.6** – Section selector moved to its own column; children inherit section (read-only)
 - **2.0.5** – Simplified line total header copy and reduced Quote Builder title size
 - **2.0.4** – Refined section tabs, tightened quote row spacing, refreshed notes + totals styling
 - **2.0.3** – Hardened the dark mode toggle binding and bumped the displayed version
