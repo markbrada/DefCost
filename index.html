@@ -5,7 +5,7 @@
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
 <meta charset="UTF-8">
-<title>DefCost 2.0.6</title>
+<title>DefCost 2.0.7</title>
 <style>
 :root{--bg:#f7f7f7;--fg:#333;--header:#e0e0e0;--btn:#007bff;--btnh:#0056b3;--add:#28a745;--addh:#218838;--border:#aaa;--alt:#f9f9f9;--panel:#fff;--toast:#007bff;--toastfg:#fff;--rowHover:#e9f1ff}
 .dark-mode{--bg:#222;--fg:#eee;--header:#444;--btn:#0d6efd;--btnh:#0a58ca;--add:#198754;--addh:#157347;--border:#555;--alt:#2a2a2a;--panel:#333;--toast:#0d6efd;--toastfg:#fff;--rowHover:#383838}
@@ -159,7 +159,7 @@ input[type=number]{-moz-appearance:textfield}
 </style>
 </head>
 <body>
-<h1>DefCost 2.0.6</h1>
+<h1>DefCost 2.0.7</h1>
 <button id="darkModeToggle">Toggle Dark Mode</button>
 <div id="quoteBuilderMain" aria-label="Quote Builder" role="region">
   <div id="quoteHeader">
@@ -421,7 +421,7 @@ function normalizeBasketItems(){
     }
   }
 }
-function buildReportModel(basket,sections){sections=(sections&&sections.length)?sections:getDefaultSections();var sectionsById={};for(var i=0;i<sections.length;i++){sectionsById[sections[i].id]=sections[i];}var childMap={};for(var i2=0;i2<basket.length;i2++){var it=basket[i2];if(it&&it.pid){(childMap[it.pid]||(childMap[it.pid]=[])).push(it);}}var secMap={};function ensureSec(id){if(!secMap[id]){var name=sectionsById[id]?sectionsById[id].name:('Section '+id);secMap[id]={id:id,name:name,items:[],subtotalEx:0,subtotalGst:0,subtotalTotal:0};}return secMap[id];}function addAmounts(obj,qty,ex){var le=isNaN(ex)?0:(qty||1)*ex;var gst=le*GST_RATE;obj.subtotalEx+=le;obj.subtotalGst+=gst;obj.subtotalTotal+=le+gst;}for(var i3=0;i3<basket.length;i3++){var it2=basket[i3];if(!it2||it2.pid)continue;var sid=it2.sectionId||sections[0].id;var sec=ensureSec(sid);var subs=childMap[it2.id]||[];sec.items.push({parent:it2,subs:subs});addAmounts(sec,it2.qty,it2.ex);for(var k=0;k<subs.length;k++){addAmounts(sec,subs[k].qty,subs[k].ex);}}var orderedSections=[];var seenSections={};for(var j=0;j<sections.length;j++){var entry=ensureSec(sections[j].id);orderedSections.push(entry);seenSections[entry.id]=true;}for(var id in secMap){if(secMap.hasOwnProperty(id)&&!seenSections[id]){orderedSections.push(secMap[id]);}}if(!orderedSections.length){var base=sections[0];orderedSections.push({id:base.id,name:base.name,items:[],subtotalEx:0,subtotalGst:0,subtotalTotal:0});}var grandEx=0,grandGst=0,grandTotal=0;for(var s=0;s<orderedSections.length;s++){grandEx+=orderedSections[s].subtotalEx;grandGst+=orderedSections[s].subtotalGst;grandTotal+=orderedSections[s].subtotalTotal;}return{sections:orderedSections,grandEx:grandEx,grandGst:grandGst,grandTotal:grandTotal};}
+function buildReportModel(basket,sections){sections=(sections&&sections.length)?sections:getDefaultSections();var sectionsById={};for(var i=0;i<sections.length;i++){sectionsById[sections[i].id]=sections[i];}var childMap={};for(var i2=0;i2<basket.length;i2++){var it=basket[i2];if(it&&it.pid){(childMap[it.pid]||(childMap[it.pid]=[])).push(it);}}var secMap={};function ensureSec(id){var source=sectionsById[id];if(secMap[id]){secMap[id].notes=source&&typeof source.notes==='string'?source.notes:'';return secMap[id];}var name=source?source.name:('Section '+id);secMap[id]={id:id,name:name,items:[],subtotalEx:0,subtotalGst:0,subtotalTotal:0,notes:source&&typeof source.notes==='string'?source.notes:''};return secMap[id];}function addAmounts(obj,qty,ex){var le=isNaN(ex)?0:(qty||1)*ex;var gst=le*GST_RATE;obj.subtotalEx+=le;obj.subtotalGst+=gst;obj.subtotalTotal+=le+gst;}for(var i3=0;i3<basket.length;i3++){var it2=basket[i3];if(!it2||it2.pid)continue;var sid=it2.sectionId||sections[0].id;var sec=ensureSec(sid);var subs=childMap[it2.id]||[];sec.items.push({parent:it2,subs:subs});addAmounts(sec,it2.qty,it2.ex);for(var k=0;k<subs.length;k++){addAmounts(sec,subs[k].qty,subs[k].ex);}}var orderedSections=[];var seenSections={};for(var j=0;j<sections.length;j++){var entry=ensureSec(sections[j].id);orderedSections.push(entry);seenSections[entry.id]=true;}for(var id in secMap){if(secMap.hasOwnProperty(id)&&!seenSections[id]){orderedSections.push(secMap[id]);}}if(!orderedSections.length){var base=sections[0];orderedSections.push({id:base.id,name:base.name,items:[],subtotalEx:0,subtotalGst:0,subtotalTotal:0,notes:base&&typeof base.notes==='string'?base.notes:''});}var grandEx=0,grandGst=0,grandTotal=0;for(var s=0;s<orderedSections.length;s++){grandEx+=orderedSections[s].subtotalEx;grandGst+=orderedSections[s].subtotalGst;grandTotal+=orderedSections[s].subtotalTotal;}return{sections:orderedSections,grandEx:grandEx,grandGst:grandGst,grandTotal:grandTotal};}
 function roundCurrency(val){if(!isFinite(val))return 0;return Math.round(val*100)/100;}
 function formatCurrency(val){return roundCurrency(isFinite(val)?val:0).toFixed(2);}
 function formatPercent(val){return roundCurrency(isFinite(val)?val:0).toFixed(2);}
@@ -947,7 +947,7 @@ function exportBasketToCsv(opts){
   if(!basket.length) return false;
   var esc=function(v){return '"'+String(v).replace(/"/g,'""')+'"';};
   var report=buildReportModel(basket,sections);
-  var lines=[["Section","Item","Quantity","Price","Line Total (Ex. GST)"]];
+  var lines=[["Section","Item","Quantity","Price","Line Total"]];
   for(var si=0;si<report.sections.length;si++){
     var sec=report.sections[si];
     for(var gi=0;gi<sec.items.length;gi++){
@@ -959,6 +959,10 @@ function exportBasketToCsv(opts){
         var s=subs[sj]; var sle=isNaN(s.ex)?NaN:(s.qty||1)*s.ex;
         lines.push([sec.name,' - '+(s.item||''),(s.qty||1),isNaN(s.ex)?"N/A":Number(s.ex).toFixed(2),isNaN(sle)?"N/A":sle.toFixed(2)]);
       }
+    }
+    var notes=(sec.notes||'').trim();
+    if(notes){
+      lines.push(['Section '+(si+1)+' Notes',notes,'','','']);
     }
   }
   var discountedEx=recalcGrandTotal(report.grandEx,discountPercent);
