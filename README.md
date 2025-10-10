@@ -84,6 +84,7 @@ Defender Price List.xlsx   # Workbook loaded by the app
 
 ## Versioning
 
+- **3.0.3** – Split calculation and storage logic into dedicated modules (calc.js and storage.js). No behavioural changes.
 - **3.0.2** – Extracted inline JavaScript from index.html into /js/main.js — no logic changes.
 - **3.0.1** – Added Import Summary modal after CSV import — shows counts of sections, items, notes, and total value with Undo option.
 - **3.0.0** – Added CSV Import: restores sections, items, children ('- ' prefix), and per-section notes ('Section X Notes' rows). Includes backup/undo and strict header validation.

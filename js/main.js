@@ -1,14 +1,31 @@
+import {
+  roundCurrency,
+  formatCurrency,
+  formatPercent,
+  recalcGrandTotal,
+  buildReportModel,
+  computeGrandTotalsState
+} from './calc.js';
+import {
+  saveBasket,
+  loadBasket,
+  backupCurrentQuote,
+  restoreBackup,
+  exportBasketToCsv,
+  closeImportSummaryModal,
+  showImportSummaryModal,
+  handleImportInputChange
+} from './storage.js';
+
 (function(){
 var ORDER=[["bannister rail","cat-orange"],["stainless steel grabrail","cat-orange"],["aluminium grabrail, powder coated","cat-orange"],["shower parts","cat-blue"],["plumbing","cat-blue"],["door components","cat-brown"],["fire safety","cat-red"],["anti slip solutions","cat-yellow"],["uncategorised","cat-yellow"]];
 var META=(function(){var o={};for(var i=0;i<ORDER.length;i++){o[ORDER[i][0]]={idx:i,cls:ORDER[i][1]};}return o;})();
 var FALL=META["uncategorised"];
 var PRICE_EX=["Rate Ex. GST","Price Ex. GST","Price","Price Ex Tax","Price ex GST"];
-var TOAST_MS=3000,UNDO_TOAST_MS=60000,GST_RATE=0.10,LS_KEY='defcost_basket_v2',BACKUP_KEY='defcost_basket_backup',UI_KEY='defcost_qb_ui_v1',IMPORT_HEADER=['Section','Item','Quantity','Price','Line Total'],SUMMARY_ROWS={'Total (Ex GST)':1,'Discount (%)':2,'Grand Total (Ex GST)':1,'GST':1,'Grand Total (Incl. GST)':1};
+var TOAST_MS=3000,UNDO_TOAST_MS=60000,UI_KEY='defcost_qb_ui_v1';
 var wb=null,basket=[],sections=getDefaultSections(),uid=0,sectionSeq=1,activeSectionId=sections[0].id,captureParentId=null,toastTimer=null;
 var tabs=document.getElementById("sheetTabs"),container=document.getElementById("sheetContainer"),toast=document.getElementById("toast"),sectionTabsEl=document.getElementById("sectionTabs"),grandTotalsEl=document.getElementById("grandTotals"),grandTotalsWrap=document.querySelector('.grand-totals-wrapper');
 var discountPercent=0,currentGrandTotal=0,lastBaseTotal=0,grandTotalsUi=null,latestReport=null;
-var currencyFormatter=(function(){try{return new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD',minimumFractionDigits:2,maximumFractionDigits:2});}catch(e){return null;}})();
-var importSummaryState=null;
 var qbWindow=document.getElementById('catalogWindow'),qbTitlebar=document.getElementById('catalogTitlebar'),qbDockIcon=document.getElementById('catalogDockIcon'),qbMin=document.getElementById('catalogMin'),qbClose=document.getElementById('catalogClose'),qbZoom=document.getElementById('catalogZoom'),qbResizeHandle=document.getElementById('catalogResizeHandle');
 var addSectionBtn=document.getElementById("addSectionBtn"),importBtn=document.getElementById('importCsvBtn'),importInput=document.getElementById('importCsvInput'),qbTitle=document.getElementById('qbTitle'),clearQuoteBtn=document.getElementById('clearQuoteBtn');
 var qbState=loadUiState();
@@ -16,6 +33,24 @@ var lastFreeRect=cloneRect(qbState);
 if(!lastFreeRect.w||!lastFreeRect.h){lastFreeRect=cloneRect(defaultUiState());}
 var dragInfo=null,resizeInfo=null,prevUserSelect='';
 var currentSearchInput=null;
+
+function persistBasket(){
+  saveBasket({basket:basket,sections:sections,activeSectionId:activeSectionId,discountPercent:discountPercent});
+}
+
+function persistBackup(){
+  backupCurrentQuote({basket:basket,sections:sections,activeSectionId:activeSectionId,discountPercent:discountPercent});
+}
+
+function exportQuoteToCsv(opts){
+  return exportBasketToCsv({
+    basket:basket,
+    sections:sections,
+    discountPercent:discountPercent,
+    showToast:showToast,
+    silent:opts&&opts.silent
+  });
+}
 applyQBState(true);
 ensureWindowWithinViewport(true);
 renderSectionTabs();
@@ -38,32 +73,52 @@ window.addEventListener('resize',function(){ensureWindowWithinViewport();});
    }
  });
 function active(n){if(!tabs)return;var kids=tabs.children;for(var i=0;i<kids.length;i++){var b=kids[i];b.classList.toggle('active',b.dataset&&b.dataset.sheet===n);}}
-function saveBasket(){
-  try{
-    var payload={items:basket,sections:sections,activeSectionId:activeSectionId,discountPercent:isFinite(discountPercent)?discountPercent:0};
-    localStorage.setItem(LS_KEY,JSON.stringify(payload));
-  }catch(e){}
-}
-function loadBasket(){
-  try{
-    var raw=localStorage.getItem(LS_KEY);
-    if(raw){
-      var data=JSON.parse(raw);
-      if(Array.isArray(data)){
-        basket=data;
-      }else if(data&&typeof data==='object'){
-        basket=Array.isArray(data.items)?data.items:[];
-        if(Array.isArray(data.sections)&&data.sections.length){sections=data.sections;}
-        if(data.activeSectionId){activeSectionId=data.activeSectionId;}
-        if(typeof data.discountPercent!=='undefined'&&isFinite(data.discountPercent)){discountPercent=+data.discountPercent;}
-      }
+function hydrateFromStorage(){
+  var stored=loadBasket();
+  if(stored){
+    if(Array.isArray(stored.basket)){
+      basket=stored.basket;
     }
-  }catch(e){}
+    if(Array.isArray(stored.sections)&&stored.sections.length){
+      sections=stored.sections;
+    }
+    if(stored.activeSectionId){
+      activeSectionId=stored.activeSectionId;
+    }
+    if(typeof stored.discountPercent!=='undefined'&&isFinite(stored.discountPercent)){
+      discountPercent=+stored.discountPercent;
+    }
+  }
   currentGrandTotal=0;
   lastBaseTotal=0;
   ensureSectionState();
   normalizeBasketItems();
   renderBasket();
+}
+
+function restoreQuoteFromBackup(){
+  closeImportSummaryModal();
+  var result=restoreBackup();
+  if(!result||!result.success){
+    var errorMessage=result&&result.error?result.error:'Unable to restore backup';
+    showToast(errorMessage);
+    return;
+  }
+  var data=result.data||{};
+  basket=Array.isArray(data.basket)?data.basket:[];
+  sections=Array.isArray(data.sections)&&data.sections.length?data.sections:getDefaultSections();
+  activeSectionId=data.activeSectionId;
+  if(!sections.some(function(sec){return sec.id===activeSectionId;})){
+    activeSectionId=sections[0]?sections[0].id:1;
+  }
+  discountPercent=isFinite(data.discountPercent)?+data.discountPercent:0;
+  captureParentId=null;
+  currentGrandTotal=0;
+  lastBaseTotal=0;
+  normalizeBasketItems();
+  ensureSectionState();
+  renderBasket();
+  showToast('Quote restored from backup');
 }
 function showToast(msg,undo,duration){
   var el=toast;
@@ -98,48 +153,6 @@ function showToast(msg,undo,duration){
   toastTimer=setTimeout(function(){
     clear();
   },timeout);
-}
-function backupCurrentQuote(){
-  try{
-    var payload={
-      items:basket,
-      sections:sections,
-      activeSectionId:activeSectionId,
-      discountPercent:isFinite(discountPercent)?discountPercent:0
-    };
-    localStorage.setItem(BACKUP_KEY,JSON.stringify(payload));
-  }catch(e){}
-}
-function restoreBackup(){
-  closeImportSummaryModal();
-  try{
-    var raw=localStorage.getItem(BACKUP_KEY);
-    if(!raw){
-      showToast('No backup available');
-      return;
-    }
-    var data=JSON.parse(raw);
-    if(!data||typeof data!=='object'){
-      showToast('No backup available');
-      return;
-    }
-    basket=Array.isArray(data.items)?data.items:[];
-    sections=Array.isArray(data.sections)&&data.sections.length?data.sections:getDefaultSections();
-    activeSectionId=data.activeSectionId;
-    if(!sections.some(function(sec){return sec.id===activeSectionId;})){
-      activeSectionId=sections[0]?sections[0].id:1;
-    }
-    discountPercent=isFinite(data.discountPercent)?+data.discountPercent:0;
-    captureParentId=null;
-    currentGrandTotal=0;
-    lastBaseTotal=0;
-    normalizeBasketItems();
-    ensureSectionState();
-    renderBasket();
-    showToast('Quote restored from backup');
-  }catch(e){
-    showToast('Unable to restore backup');
-  }
 }
 function showIssuesModal(title,messages){
   if(!Array.isArray(messages)||!messages.length) return;
@@ -199,280 +212,6 @@ function showIssuesModal(title,messages){
     try{closeBtn.focus();}catch(e){}
   },0);
 }
-function closeImportSummaryModal(){
-  if(!importSummaryState) return;
-  document.removeEventListener('focus',importSummaryState.focusHandler,true);
-  document.removeEventListener('keydown',importSummaryState.keyHandler,true);
-  if(importSummaryState.overlay&&importSummaryState.overlay.parentNode){
-    importSummaryState.overlay.parentNode.removeChild(importSummaryState.overlay);
-  }
-  document.body.style.overflow=importSummaryState.bodyOverflow||'';
-  var lastFocus=importSummaryState.previousFocus;
-  importSummaryState=null;
-  if(lastFocus&&typeof lastFocus.focus==='function'){
-    try{lastFocus.focus();}catch(e){}
-  }
-}
-function showImportSummaryModal(summary){
-  if(!summary) return;
-  closeImportSummaryModal();
-  var overlay=document.createElement('div');
-  overlay.className='import-summary-backdrop';
-  overlay.setAttribute('role','presentation');
-  var card=document.createElement('div');
-  card.className='import-summary-card';
-  card.setAttribute('role','dialog');
-  card.setAttribute('aria-modal','true');
-  card.setAttribute('tabindex','-1');
-  var title=document.createElement('h2');
-  title.className='import-summary-title';
-  title.id='import-summary-title';
-  title.textContent='Import Summary';
-  card.setAttribute('aria-labelledby','import-summary-title');
-  var subtitle=document.createElement('p');
-  subtitle.className='import-summary-subtitle';
-  subtitle.id='import-summary-subtitle';
-  subtitle.textContent='Your quote has been successfully imported.';
-  card.setAttribute('aria-describedby','import-summary-subtitle');
-  var table=document.createElement('table');
-  table.className='import-summary-table';
-  var tbody=document.createElement('tbody');
-  var rows=[
-    ['Imported Sections',String(summary.sections||0)],
-    ['Parent Items',String(summary.parents||0)],
-    ['Child Items',String(summary.children||0)],
-    ['Notes',String(summary.notes||0)],
-    ['Quote Total (Ex. GST)',formatCurrencyWithSymbol(summary.totalEx)]
-  ];
-  for(var i=0;i<rows.length;i++){
-    var tr=document.createElement('tr');
-    var labelTd=document.createElement('td');
-    labelTd.textContent=rows[i][0];
-    var valueTd=document.createElement('td');
-    valueTd.textContent=rows[i][1];
-    tr.appendChild(labelTd);
-    tr.appendChild(valueTd);
-    tbody.appendChild(tr);
-  }
-  table.appendChild(tbody);
-  var divider=document.createElement('div');
-  divider.className='import-summary-divider';
-  var actions=document.createElement('div');
-  actions.className='import-summary-actions';
-  var viewBtn=document.createElement('button');
-  viewBtn.type='button';
-  viewBtn.className='import-summary-view-btn';
-  viewBtn.textContent='View Quote';
-  var undoBtn=document.createElement('button');
-  undoBtn.type='button';
-  undoBtn.className='import-summary-undo-btn';
-  undoBtn.textContent='Undo Import';
-  actions.appendChild(viewBtn);
-  actions.appendChild(undoBtn);
-  card.appendChild(title);
-  card.appendChild(subtitle);
-  card.appendChild(table);
-  card.appendChild(divider);
-  card.appendChild(actions);
-  overlay.appendChild(card);
-  var previousFocus=document.activeElement;
-  var previousOverflow=document.body.style.overflow;
-  document.body.appendChild(overlay);
-  document.body.style.overflow='hidden';
-  var focusables=Array.prototype.slice.call(card.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])'));
-  var keyHandler=function(ev){
-    if(!importSummaryState) return;
-    if(ev.key==='Escape'||ev.key==='Esc'){
-      ev.preventDefault();
-      closeImportSummaryModal();
-      return;
-    }
-    if(ev.key==='Tab'){
-      if(!focusables.length) return;
-      var active=document.activeElement;
-      var first=focusables[0];
-      var last=focusables[focusables.length-1];
-      if(ev.shiftKey){
-        if(!card.contains(active)||active===first){
-          ev.preventDefault();
-          last.focus();
-        }
-      }else{
-        if(active===last){
-          ev.preventDefault();
-          first.focus();
-        }
-      }
-    }
-  };
-  var focusHandler=function(ev){
-    if(!importSummaryState) return;
-    if(!overlay.contains(ev.target)){
-      ev.stopPropagation();
-      if(focusables.length){
-        focusables[0].focus();
-      }else{
-        card.focus();
-      }
-    }
-  };
-  importSummaryState={
-    overlay:overlay,
-    keyHandler:keyHandler,
-    focusHandler:focusHandler,
-    previousFocus:previousFocus,
-    bodyOverflow:previousOverflow
-  };
-  document.addEventListener('keydown',keyHandler,true);
-  document.addEventListener('focus',focusHandler,true);
-  setTimeout(function(){
-    try{viewBtn.focus();}catch(e){}
-  },0);
-  viewBtn.addEventListener('click',function(){
-    closeImportSummaryModal();
-  });
-  undoBtn.addEventListener('click',function(){
-    closeImportSummaryModal();
-    restoreBackup();
-  });
-}
-function parseNumericCell(raw,rowNumber,label,issues){
-  var str=raw==null?'':String(raw).trim();
-  if(!str){
-    return {value:0};
-  }
-  var cleaned=str.replace(/[$,\s]/g,'');
-  if(!cleaned){
-    return {value:0};
-  }
-  var num=parseFloat(cleaned);
-  if(!isFinite(num)){
-    issues.push('Row '+rowNumber+': '+label+' is not a number');
-    return {value:0,invalid:true};
-  }
-  return {value:num};
-}
-function buildImportModel(rows){
-  var issues=[];
-  if(!rows||!rows.length){
-    issues.push('Row 1: Header must be "'+IMPORT_HEADER.join(',')+'"');
-    return {issues:issues};
-  }
-  var header=rows[0]?rows[0].slice(0):[];
-  if(header.length){
-    header[0]=String(header[0]==null?'':header[0]).replace(/^\ufeff/,'');
-  }
-  if(header.length!==IMPORT_HEADER.length){
-    issues.push('Row 1: Header must be "'+IMPORT_HEADER.join(',')+'"');
-    return {issues:issues};
-  }
-  for(var h=0;h<IMPORT_HEADER.length;h++){
-    var cell=header[h]==null?'':String(header[h]);
-    if(cell!==IMPORT_HEADER[h]){
-      issues.push('Row 1: Header must be "'+IMPORT_HEADER.join(',')+'"');
-      return {issues:issues};
-    }
-  }
-  var sectionsModel=[];
-  var sectionMap={};
-  var lastParentBySection={};
-  var pendingNotes={};
-  var discountPercentValue=null;
-  for(var i=1;i<rows.length;i++){
-    var row=rows[i];
-    var rowNumber=i+1;
-    if(!row){
-      continue;
-    }
-    var nonEmpty=false;
-    for(var c=0;c<IMPORT_HEADER.length;c++){
-      if(row[c]!=null&&String(row[c]).trim()!==''){
-        nonEmpty=true;
-        break;
-      }
-    }
-    if(!nonEmpty){
-      continue;
-    }
-    var sectionCell=row[0]==null?'':String(row[0]).trim();
-    if(SUMMARY_ROWS[sectionCell]){
-      if(sectionCell==='Discount (%)'){
-        var discStr=row[4]==null?'':String(row[4]).trim();
-        if(discStr){
-          var cleanedDisc=discStr.replace(/[$,\s]/g,'');
-          var parsedDisc=parseFloat(cleanedDisc);
-          if(isFinite(parsedDisc)){
-            discountPercentValue=parsedDisc;
-          }
-        }
-      }
-      continue;
-    }
-    var notesMatch=/^Section\s+(\d+)\s+Notes$/.exec(sectionCell);
-    if(notesMatch){
-      var noteIndex=parseInt(notesMatch[1],10);
-      if(isFinite(noteIndex)&&noteIndex>0){
-        var noteText=row[1]==null?'':String(row[1]).trim();
-        if(noteText){
-          pendingNotes[noteIndex]={text:noteText,row:rowNumber};
-        }
-      }
-      continue;
-    }
-    if(!sectionCell){
-      issues.push('Row '+rowNumber+': Section is required');
-      continue;
-    }
-    var section=sectionMap[sectionCell];
-    if(!section){
-      section={title:sectionCell,items:[],notes:''};
-      sectionMap[sectionCell]=section;
-      sectionsModel.push(section);
-      lastParentBySection[sectionCell]=null;
-    }
-    var rawItem=row[1]==null?'':String(row[1]);
-    var trimmedItem=rawItem.trim();
-    var escaped=false;
-    if(trimmedItem.indexOf('\\- ')==0){
-      escaped=true;
-      trimmedItem=trimmedItem.slice(1);
-    }
-    var isChild=false;
-    if(!escaped&&trimmedItem.indexOf('- ')==0){
-      isChild=true;
-      trimmedItem=trimmedItem.slice(2);
-    }
-    var qtyInfo=parseNumericCell(row[2],rowNumber,'Quantity',issues);
-    var priceInfo=parseNumericCell(row[3],rowNumber,'Price',issues);
-    var itemName=trimmedItem;
-    if(isChild){
-      var parent=lastParentBySection[sectionCell];
-      if(!parent){
-        issues.push('Row '+rowNumber+': Child row without a parent in section "'+sectionCell+'"');
-        continue;
-      }
-      parent.children.push({name:itemName,qty:qtyInfo.value,price:priceInfo.value});
-    }else{
-      var parentItem={name:itemName,qty:qtyInfo.value,price:priceInfo.value,children:[]};
-      section.items.push(parentItem);
-      lastParentBySection[sectionCell]=parentItem;
-    }
-  }
-  for(var key in pendingNotes){
-    if(!pendingNotes.hasOwnProperty(key)) continue;
-    var noteIndex=parseInt(key,10);
-    var targetSection=sectionsModel[noteIndex-1];
-    if(targetSection){
-      targetSection.notes=pendingNotes[key].text;
-    }else{
-      issues.push('Row '+pendingNotes[key].row+': Notes row references missing Section '+noteIndex);
-    }
-  }
-  if(!sectionsModel.length){
-    issues.push('No section data found in CSV');
-  }
-  return {sections:sectionsModel,discount:discountPercentValue,issues:issues};
-}
 function applyImportedModel(model){
   if(!model||!Array.isArray(model.sections)||!model.sections.length){
     showIssuesModal('Import failed',['No section data found in CSV']);
@@ -529,57 +268,7 @@ function applyImportedModel(model){
     summaryData.totalEx=fallbackReport&&isFinite(fallbackReport.grandEx)?fallbackReport.grandEx:0;
   }
   showImportSummaryModal(summaryData);
-  showToast('✅ Quote imported. Undo?',function(){restoreBackup();},UNDO_TOAST_MS);
-}
-function handleImportInputChange(){
-  if(!importInput) return;
-  var file=importInput.files&&importInput.files[0];
-  if(!file){
-    return;
-  }
-  if(!window.confirm('Importing will replace the current quote. Continue?')){
-    importInput.value='';
-    return;
-  }
-  if(!window.Papa){
-    importInput.value='';
-    showIssuesModal('Import failed',['Papa Parse library is unavailable.']);
-    return;
-  }
-  backupCurrentQuote();
-  Papa.parse(file,{
-    header:false,
-    dynamicTyping:false,
-    skipEmptyLines:false,
-    complete:function(results){
-      importInput.value='';
-      var parserIssues=[];
-      if(results&&Array.isArray(results.errors)){
-        for(var i=0;i<results.errors.length;i++){
-          var err=results.errors[i];
-          if(err&&err.message){
-            var rowNumber=(typeof err.row==='number'&&err.row>=0)?(err.row+1):'?';
-            parserIssues.push('Row '+rowNumber+': '+err.message);
-          }
-        }
-      }
-      var model=buildImportModel(results&&results.data?results.data:[]);
-      var combinedIssues=parserIssues.slice();
-      if(model&&Array.isArray(model.issues)&&model.issues.length){
-        combinedIssues=combinedIssues.concat(model.issues);
-      }
-      if(combinedIssues.length){
-        showIssuesModal('Import failed',combinedIssues.slice(0,5));
-        return;
-      }
-      applyImportedModel(model);
-    },
-    error:function(err){
-      importInput.value='';
-      var message=err&&err.message?err.message:'Unable to parse CSV file.';
-      showIssuesModal('Import failed',[message]);
-    }
-  });
+  showToast('✅ Quote imported. Undo?',function(){restoreQuoteFromBackup();},UNDO_TOAST_MS);
 }
 function cloneRect(state){if(!state||typeof state!=='object')return{x:0,y:0,w:0,h:0,dockHeight:0};return{x:isFinite(state.x)?+state.x:0,y:isFinite(state.y)?+state.y:0,w:isFinite(state.w)?+state.w:0,h:isFinite(state.h)?+state.h:0,dockHeight:isFinite(state.dockHeight)?+state.dockHeight:0};}
 function getDefaultDockHeight(){var winH=window.innerHeight||800;var minDock=240;var base=Math.round((winH||800)*0.35)||minDock;if(!isFinite(base)||base<=0)base=320;var maxDock=Math.max(minDock,winH-96);if(!isFinite(maxDock)||maxDock<minDock)maxDock=Math.max(minDock,480);return Math.min(Math.max(minDock,base),maxDock);}
@@ -690,21 +379,6 @@ function normalizeBasketItems(){
     }
   }
 }
-function buildReportModel(basket,sections){sections=(sections&&sections.length)?sections:getDefaultSections();var sectionsById={};for(var i=0;i<sections.length;i++){sectionsById[sections[i].id]=sections[i];}var childMap={};for(var i2=0;i2<basket.length;i2++){var it=basket[i2];if(it&&it.pid){(childMap[it.pid]||(childMap[it.pid]=[])).push(it);}}var secMap={};function ensureSec(id){var source=sectionsById[id];if(secMap[id]){secMap[id].notes=source&&typeof source.notes==='string'?source.notes:'';return secMap[id];}var name=source?source.name:('Section '+id);secMap[id]={id:id,name:name,items:[],subtotalEx:0,subtotalGst:0,subtotalTotal:0,notes:source&&typeof source.notes==='string'?source.notes:''};return secMap[id];}function addAmounts(obj,qty,ex){var le=isNaN(ex)?0:(qty||1)*ex;var gst=le*GST_RATE;obj.subtotalEx+=le;obj.subtotalGst+=gst;obj.subtotalTotal+=le+gst;}for(var i3=0;i3<basket.length;i3++){var it2=basket[i3];if(!it2||it2.pid)continue;var sid=it2.sectionId||sections[0].id;var sec=ensureSec(sid);var subs=childMap[it2.id]||[];sec.items.push({parent:it2,subs:subs});addAmounts(sec,it2.qty,it2.ex);for(var k=0;k<subs.length;k++){addAmounts(sec,subs[k].qty,subs[k].ex);}}var orderedSections=[];var seenSections={};for(var j=0;j<sections.length;j++){var entry=ensureSec(sections[j].id);orderedSections.push(entry);seenSections[entry.id]=true;}for(var id in secMap){if(secMap.hasOwnProperty(id)&&!seenSections[id]){orderedSections.push(secMap[id]);}}if(!orderedSections.length){var base=sections[0];orderedSections.push({id:base.id,name:base.name,items:[],subtotalEx:0,subtotalGst:0,subtotalTotal:0,notes:base&&typeof base.notes==='string'?base.notes:''});}var grandEx=0,grandGst=0,grandTotal=0;for(var s=0;s<orderedSections.length;s++){grandEx+=orderedSections[s].subtotalEx;grandGst+=orderedSections[s].subtotalGst;grandTotal+=orderedSections[s].subtotalTotal;}return{sections:orderedSections,grandEx:grandEx,grandGst:grandGst,grandTotal:grandTotal};}
-function roundCurrency(val){if(!isFinite(val))return 0;return Math.round(val*100)/100;}
-function formatCurrency(val){return roundCurrency(isFinite(val)?val:0).toFixed(2);}
-function formatCurrencyWithSymbol(val){
-  var safe=roundCurrency(isFinite(val)?val:0);
-  if(currencyFormatter){
-    try{return currencyFormatter.format(safe);}catch(e){}
-  }
-  var parts=safe.toFixed(2).split('.');
-  parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');
-  return '$'+parts.join('.');
-}
-function formatPercent(val){return roundCurrency(isFinite(val)?val:0).toFixed(2);}
-function recalcGrandTotal(base,discount){var b=isFinite(base)?base:0;var d=isFinite(discount)?discount:0;var computed=b*(1-d/100);if(!isFinite(computed))computed=0;return roundCurrency(computed<0?0:computed);}
-function calculateGst(amount){var base=isFinite(amount)?amount:0;return roundCurrency(base*GST_RATE);}
 function ensureGrandTotalsUi(){if(!grandTotalsEl||grandTotalsUi)return;if(!grandTotalsEl)return;grandTotalsEl.innerHTML='<table class="grand-totals-table" aria-label="Quote totals"><tbody><tr><th scope="row">Total</th><td class="totals-value" data-role="total-value">0.00</td></tr><tr><th scope="row">Discount (%)</th><td><div class="grand-totals-input"><input type="number" step="0.01" inputmode="decimal" aria-label="Discount percentage" data-role="discount-input"><span>%</span></div></td></tr><tr><th scope="row">Grand Total</th><td><div class="grand-totals-input"><input type="number" min="0" step="0.01" inputmode="decimal" aria-label="Grand total after discount" data-role="grand-total-input"></div></td></tr><tr><th scope="row">GST (10%)</th><td class="totals-value" data-role="gst-value">0.00</td></tr><tr><th scope="row">Grand Total (Incl. GST)</th><td class="totals-value" data-role="grand-incl-value">0.00</td></tr></tbody></table>';
   var discountInput=grandTotalsEl.querySelector('[data-role="discount-input"]');
   var grandTotalInput=grandTotalsEl.querySelector('[data-role="grand-total-input"]');
@@ -712,16 +386,22 @@ function ensureGrandTotalsUi(){if(!grandTotalsEl||grandTotalsUi)return;if(!grand
   if(discountInput){discountInput.addEventListener('input',handleDiscountChange);}
   if(grandTotalInput){grandTotalInput.addEventListener('input',handleGrandTotalChange);}
 }
-function handleDiscountChange(){if(!grandTotalsUi)return;var base=latestReport&&isFinite(latestReport.grandEx)?latestReport.grandEx:0;var raw=parseFloat(grandTotalsUi.discountInput.value);if(!isFinite(raw))raw=0;discountPercent=raw;currentGrandTotal=recalcGrandTotal(base,discountPercent);lastBaseTotal=base;updateGrandTotals(latestReport,{preserveGrandTotal:true});saveBasket();}
-function handleGrandTotalChange(){if(!grandTotalsUi)return;var base=latestReport&&isFinite(latestReport.grandEx)?latestReport.grandEx:0;var raw=parseFloat(grandTotalsUi.grandTotalInput.value);if(!isFinite(raw))raw=0;raw=Math.max(0,raw);currentGrandTotal=roundCurrency(raw);if(base>0){discountPercent=(1-currentGrandTotal/(base||1))*100;}else{discountPercent=0;}lastBaseTotal=base;updateGrandTotals(latestReport,{preserveGrandTotal:true});saveBasket();}
+function handleDiscountChange(){if(!grandTotalsUi)return;var base=latestReport&&isFinite(latestReport.grandEx)?latestReport.grandEx:0;var raw=parseFloat(grandTotalsUi.discountInput.value);if(!isFinite(raw))raw=0;discountPercent=raw;currentGrandTotal=recalcGrandTotal(base,discountPercent);lastBaseTotal=base;updateGrandTotals(latestReport,{preserveGrandTotal:true});persistBasket();}
+function handleGrandTotalChange(){if(!grandTotalsUi)return;var base=latestReport&&isFinite(latestReport.grandEx)?latestReport.grandEx:0;var raw=parseFloat(grandTotalsUi.grandTotalInput.value);if(!isFinite(raw))raw=0;raw=Math.max(0,raw);currentGrandTotal=roundCurrency(raw);if(base>0){discountPercent=(1-currentGrandTotal/(base||1))*100;}else{discountPercent=0;}lastBaseTotal=base;updateGrandTotals(latestReport,{preserveGrandTotal:true});persistBasket();}
 function updateGrandTotals(report,opts){
   latestReport=report||null;
   if(!grandTotalsEl)return;
   ensureGrandTotalsUi();
   if(!grandTotalsUi)return;
-  var hasItems=basket&&basket.length>0;
-  var base=report&&isFinite(report.grandEx)?report.grandEx:0;
-  if(!hasItems){
+  var state=computeGrandTotalsState({
+    report:report,
+    basketCount:basket?basket.length:0,
+    discountPercent:discountPercent,
+    currentGrandTotal:currentGrandTotal,
+    lastBaseTotal:lastBaseTotal,
+    preserveGrandTotal:!!(opts&&opts.preserveGrandTotal)
+  });
+  if(!state.hasItems){
     if(grandTotalsWrap) grandTotalsWrap.style.display='none';
     grandTotalsEl.style.display='none';
     if(grandTotalsUi.totalValue)grandTotalsUi.totalValue.textContent=formatCurrency(0);
@@ -743,12 +423,9 @@ function updateGrandTotals(report,opts){
   }
   if(grandTotalsWrap) grandTotalsWrap.style.display='flex';
   grandTotalsEl.style.display='block';
-  if(!(opts&&opts.preserveGrandTotal)){
-    if(Math.abs(base-lastBaseTotal)>0.005){
-      currentGrandTotal=recalcGrandTotal(base,discountPercent);
-    }
-  }
-  lastBaseTotal=base;
+  currentGrandTotal=state.currentGrandTotal;
+  lastBaseTotal=state.lastBaseTotal;
+  var base=state.base;
   if(grandTotalsUi.totalValue)grandTotalsUi.totalValue.textContent=formatCurrency(base);
   if(grandTotalsUi.discountInput){
     grandTotalsUi.discountInput.disabled=false;
@@ -762,10 +439,8 @@ function updateGrandTotals(report,opts){
       grandTotalsUi.grandTotalInput.value=formatCurrency(currentGrandTotal);
     }
   }
-  var gstAmount=calculateGst(currentGrandTotal);
-  var incl=roundCurrency(currentGrandTotal+gstAmount);
-  if(grandTotalsUi.gstValue)grandTotalsUi.gstValue.textContent=formatCurrency(gstAmount);
-  if(grandTotalsUi.grandInclValue)grandTotalsUi.grandInclValue.textContent=formatCurrency(incl);
+  if(grandTotalsUi.gstValue)grandTotalsUi.gstValue.textContent=formatCurrency(state.gstAmount);
+  if(grandTotalsUi.grandInclValue)grandTotalsUi.grandInclValue.textContent=formatCurrency(state.grandIncl);
 }
 function getSectionById(id){
   for(var i=0;i<sections.length;i++){
@@ -851,7 +526,7 @@ function setParentSection(parentItem,newSectionId){
   parentItem.sectionId=newSectionId;
   cascadeSectionToChildren(parentItem.id,newSectionId);
   moveParentGroupToSection(parentItem.id,newSectionId);
-  saveBasket();
+  persistBasket();
 }
 function renderSectionTabs(){
   if(!sectionTabsEl) return;
@@ -922,7 +597,7 @@ function removeSection(sectionId){
   renderBasket();
   showToast('Deleted '+deletedName);
 }
-loadBasket();
+hydrateFromStorage();
 var darkModeToggle=document.getElementById('darkModeToggle');
 if(darkModeToggle){
   darkModeToggle.addEventListener('click',function(){
@@ -965,7 +640,15 @@ if(importBtn&&importInput){
     importInput.value='';
     importInput.click();
   });
-  importInput.addEventListener('change',handleImportInputChange);
+  importInput.addEventListener('change',function(ev){
+    handleImportInputChange(ev,{
+      importInput:importInput,
+      Papa:window.Papa,
+      backup:persistBackup,
+      showIssuesModal:showIssuesModal,
+      applyImportedModel:applyImportedModel
+    });
+  });
 }
 var addCustomBtn=document.getElementById('addCustomBtn');
 if(addCustomBtn){addCustomBtn.addEventListener('click',function(){var nl=null;if(captureParentId){var parent=getParentItemById(captureParentId);if(parent){var parentSection=sections.some(function(sec){return sec.id===parent.sectionId;})?parent.sectionId:activeSectionId;nl={id:++uid,pid:captureParentId,kind:'sub',sectionId:parentSection,item:'Sub item',qty:1,ex:0};}else{captureParentId=null;}}if(!nl){nl={id:++uid,pid:null,kind:'line',collapsed:false,sectionId:activeSectionId,item:'Custom item',qty:1,ex:0};}basket.push(nl);renderBasket();try{var rows=bBody.querySelectorAll('tr.main-row');if(rows.length){var last=rows[rows.length-1].querySelector('.item-input');if(last)last.focus();}}catch(_){}});}
@@ -1015,7 +698,7 @@ function addItem(row,header){
 function renderBasket(){
   ensureSectionState();
   var cont=document.getElementById('basketContainer');
-  if(!cont||!bBody||!bFoot){ saveBasket(); return; }
+  if(!cont||!bBody||!bFoot){ persistBasket(); return; }
   if(qbDockIcon){ qbDockIcon.textContent='Catalogue'; }
   if(qbTitle){ qbTitle.textContent=basket.length?'Quote Builder ('+basket.length+')':'Quote Builder'; }
   renderSectionTabs();
@@ -1023,7 +706,7 @@ function renderBasket(){
     bBody.innerHTML='';
     bFoot.innerHTML='';
     if(grandTotalsEl){ updateGrandTotals(null,{preserveGrandTotal:true}); }
-    saveBasket();
+    persistBasket();
     updateBasketHeaderOffset();
     return;
   }
@@ -1076,7 +759,7 @@ function renderBasket(){
     tog.onclick=function(){ b.collapsed=!b.collapsed; renderBasket(); };
     ctrl.appendChild(cap); ctrl.appendChild(addS); ctrl.appendChild(tog); tdItem.appendChild(ctrl);
     var itemInput=document.createElement('textarea'); itemInput.rows=1; itemInput.value=b.item||''; itemInput.className='editable item-input';
-    itemInput.oninput=function(){ b.item=itemInput.value; saveBasket(); };
+    itemInput.oninput=function(){ b.item=itemInput.value; persistBasket(); };
     tdItem.appendChild(itemInput); tr.appendChild(tdItem);
     var tdQ=document.createElement('td'); var qc=document.createElement('div'); qc.className='qty-controls';
     var minus=document.createElement('button'); minus.textContent='-';
@@ -1107,7 +790,7 @@ function renderBasket(){
         var sectionCell=document.createElement('td'); sectionCell.className='section-cell';
         var sectionLabel=document.createElement('span'); sectionLabel.className='section-readonly'; sectionLabel.textContent=parentSectionName;
         sectionCell.appendChild(sectionLabel); sr.appendChild(sectionCell);
-        var c2=document.createElement('td'); c2.className='sub-item-cell'; var t=document.createElement('textarea'); t.rows=1; t.className='editable item-input'; t.value=s.item||''; t.oninput=function(){ s.item=t.value; saveBasket(); }; c2.appendChild(t); sr.appendChild(c2);
+        var c2=document.createElement('td'); c2.className='sub-item-cell'; var t=document.createElement('textarea'); t.rows=1; t.className='editable item-input'; t.value=s.item||''; t.oninput=function(){ s.item=t.value; persistBasket(); }; c2.appendChild(t); sr.appendChild(c2);
         var c3=document.createElement('td'); var qc=document.createElement('div'); qc.className='qty-controls';
         var minus=document.createElement('button'); minus.textContent='-';
         var inp=document.createElement('input'); inp.type='number'; inp.step='0.1'; inp.className='qty-input'; inp.value=s.qty||1;
@@ -1155,7 +838,7 @@ function renderBasket(){
   var label=document.createElement('label'); label.setAttribute('for',notesId); label.textContent='Notes:';
   var textarea=document.createElement('textarea'); textarea.id=notesId; textarea.placeholder='Add notes for this section';
   textarea.value=sectionRef&&typeof sectionRef.notes==='string'?sectionRef.notes:'';
-  textarea.oninput=function(){ if(sectionRef){ sectionRef.notes=textarea.value; saveBasket(); } };
+  textarea.oninput=function(){ if(sectionRef){ sectionRef.notes=textarea.value; persistBasket(); } };
   wrapper.appendChild(label);
   wrapper.appendChild(textarea);
   notesCell.appendChild(wrapper);
@@ -1220,48 +903,13 @@ function renderBasket(){
         for(var kc=0;kc<kids.length;kc++){ sectionBlock.push(kids[kc]); }
       }
       basket=rest.slice(0,insertPos).concat(sectionBlock,rest.slice(insertPos));
-      saveBasket();
+      persistBasket();
       renderBasket();
     }});
     bBody.setAttribute('data-sortable','1');
   }
-  saveBasket();
+  persistBasket();
   updateBasketHeaderOffset();
-}
-function exportBasketToCsv(opts){
-  if(!basket.length) return false;
-  var esc=function(v){return '"'+String(v).replace(/"/g,'""')+'"';};
-  var report=buildReportModel(basket,sections);
-  var lines=[["Section","Item","Quantity","Price","Line Total"]];
-  for(var si=0;si<report.sections.length;si++){
-    var sec=report.sections[si];
-    for(var gi=0;gi<sec.items.length;gi++){
-      var grp=sec.items[gi];
-      var p=grp.parent; var le=isNaN(p.ex)?NaN:(p.qty||1)*p.ex;
-      lines.push([sec.name,(p.item||''),(p.qty||1),isNaN(p.ex)?"N/A":Number(p.ex).toFixed(2),isNaN(le)?"N/A":le.toFixed(2)]);
-      var subs=grp.subs||[];
-      for(var sj=0;sj<subs.length;sj++){
-        var s=subs[sj]; var sle=isNaN(s.ex)?NaN:(s.qty||1)*s.ex;
-        lines.push([sec.name,' - '+(s.item||''),(s.qty||1),isNaN(s.ex)?"N/A":Number(s.ex).toFixed(2),isNaN(sle)?"N/A":sle.toFixed(2)]);
-      }
-    }
-    var notes=(sec.notes||'').trim();
-    if(notes){
-      lines.push(['Section '+(si+1)+' Notes',notes,'','','']);
-    }
-  }
-  var discountedEx=recalcGrandTotal(report.grandEx,discountPercent);
-  var gstAfter=calculateGst(discountedEx);
-  var grandIncl=roundCurrency(discountedEx+gstAfter);
-  lines.push(["Total (Ex GST)","","","",formatCurrency(report.grandEx)]);
-  lines.push(["Discount (%)","","","",formatPercent(discountPercent)]);
-  lines.push(["Grand Total (Ex GST)","","","",formatCurrency(discountedEx)]);
-  lines.push(["GST","","","",formatCurrency(gstAfter)]);
-  lines.push(["Grand Total (Incl. GST)","","","",formatCurrency(grandIncl)]);
-  var out=[]; for(var r=0;r<lines.length;r++){ var row=lines[r]; for(var c=0;c<row.length;c++){ row[c]=esc(row[c]); } out.push(row.join(',')); }
-  var csv=out.join("\n"); var blob=new Blob([csv],{type:"text/csv"}); var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="quote_basket.csv"; document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  if(!(opts&&opts.silent)){ showToast('Quote CSV exported'); }
-  return true;
 }
 function resetQuote(toastMessage){
   basket=[];
@@ -1295,13 +943,13 @@ function showDeleteDialog(){
   document.addEventListener('keydown',handleKey,true);
   overlay.addEventListener('click',function(ev){ if(ev.target===overlay){ closeDialog(); }});
   cancelBtn.addEventListener('click',closeDialog);
-  saveBtn.addEventListener('click',function(){ var exported=exportBasketToCsv({silent:true}); resetQuote(exported?'Quote exported and deleted':'Quote deleted'); closeDialog(); });
+  saveBtn.addEventListener('click',function(){ var exported=exportQuoteToCsv({silent:true}); resetQuote(exported?'Quote exported and deleted':'Quote deleted'); closeDialog(); });
   deleteBtn.addEventListener('click',function(){ resetQuote('Quote deleted'); closeDialog(); });
   setTimeout(function(){ try{saveBtn.focus();}catch(e){} },0);
 }
 var exportBtn=document.getElementById("exportCsvBtn");
 if(exportBtn){
-  exportBtn.onclick=function(){ exportBasketToCsv(); };
+  exportBtn.onclick=function(){ exportQuoteToCsv(); };
 }
 window.__wd_main_ok__=true;
 })();
