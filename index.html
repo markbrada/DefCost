@@ -5,7 +5,7 @@
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
 <meta charset="UTF-8">
-<title>DefCost 2.0.7</title>
+<title>DefCost 3.0.0</title>
 <style>
 :root{--bg:#f7f7f7;--fg:#333;--header:#e0e0e0;--btn:#007bff;--btnh:#0056b3;--add:#28a745;--addh:#218838;--border:#aaa;--alt:#f9f9f9;--panel:#fff;--toast:#007bff;--toastfg:#fff;--rowHover:#e9f1ff}
 .dark-mode{--bg:#222;--fg:#eee;--header:#444;--btn:#0d6efd;--btnh:#0a58ca;--add:#198754;--addh:#157347;--border:#555;--alt:#2a2a2a;--panel:#333;--toast:#0d6efd;--toastfg:#fff;--rowHover:#383838}
@@ -159,7 +159,7 @@ input[type=number]{-moz-appearance:textfield}
 </style>
 </head>
 <body>
-<h1>DefCost 2.0.7</h1>
+<h1>DefCost 3.0.0</h1>
 <button id="darkModeToggle">Toggle Dark Mode</button>
 <div id="quoteBuilderMain" aria-label="Quote Builder" role="region">
   <div id="quoteHeader">
@@ -171,7 +171,9 @@ input[type=number]{-moz-appearance:textfield}
       <button id="clearQuoteBtn" type="button" aria-label="Delete quote">Delete quote</button>
       <button id="addCustomBtn" type="button">Add custom line</button>
       <button id="addSectionBtn" type="button">+ Section</button>
+      <button id="importCsvBtn" type="button">Import CSV</button>
       <button id="exportCsvBtn" type="button">Export quote CSV</button>
+      <input id="importCsvInput" type="file" accept=".csv" style="display:none">
     </div>
   </div>
   <div id="sectionTabsBar">
@@ -245,18 +247,19 @@ input[type=number]{-moz-appearance:textfield}
 <script src="xlsx.full.min.js"></script>
 <script>if(!window.XLSX){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js';s.setAttribute('data-sheetjs','1');document.head.appendChild(s);}</script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script>
 (function(){
 var ORDER=[["bannister rail","cat-orange"],["stainless steel grabrail","cat-orange"],["aluminium grabrail, powder coated","cat-orange"],["shower parts","cat-blue"],["plumbing","cat-blue"],["door components","cat-brown"],["fire safety","cat-red"],["anti slip solutions","cat-yellow"],["uncategorised","cat-yellow"]];
 var META=(function(){var o={};for(var i=0;i<ORDER.length;i++){o[ORDER[i][0]]={idx:i,cls:ORDER[i][1]};}return o;})();
 var FALL=META["uncategorised"];
 var PRICE_EX=["Rate Ex. GST","Price Ex. GST","Price","Price Ex Tax","Price ex GST"];
-var TOAST_MS=3000,GST_RATE=0.10,LS_KEY='defcost_basket_v2',UI_KEY='defcost_qb_ui_v1';
-var wb=null,basket=[],sections=getDefaultSections(),uid=0,sectionSeq=1,activeSectionId=sections[0].id,captureParentId=null;
+var TOAST_MS=3000,UNDO_TOAST_MS=60000,GST_RATE=0.10,LS_KEY='defcost_basket_v2',BACKUP_KEY='defcost_basket_backup',UI_KEY='defcost_qb_ui_v1',IMPORT_HEADER=['Section','Item','Quantity','Price','Line Total'],SUMMARY_ROWS={'Total (Ex GST)':1,'Discount (%)':2,'Grand Total (Ex GST)':1,'GST':1,'Grand Total (Incl. GST)':1};
+var wb=null,basket=[],sections=getDefaultSections(),uid=0,sectionSeq=1,activeSectionId=sections[0].id,captureParentId=null,toastTimer=null;
 var tabs=document.getElementById("sheetTabs"),container=document.getElementById("sheetContainer"),toast=document.getElementById("toast"),sectionTabsEl=document.getElementById("sectionTabs"),grandTotalsEl=document.getElementById("grandTotals"),grandTotalsWrap=document.querySelector('.grand-totals-wrapper');
 var discountPercent=0,currentGrandTotal=0,lastBaseTotal=0,grandTotalsUi=null,latestReport=null;
 var qbWindow=document.getElementById('catalogWindow'),qbTitlebar=document.getElementById('catalogTitlebar'),qbDockIcon=document.getElementById('catalogDockIcon'),qbMin=document.getElementById('catalogMin'),qbClose=document.getElementById('catalogClose'),qbZoom=document.getElementById('catalogZoom'),qbResizeHandle=document.getElementById('catalogResizeHandle');
-var addSectionBtn=document.getElementById("addSectionBtn"),qbTitle=document.getElementById('qbTitle'),clearQuoteBtn=document.getElementById('clearQuoteBtn');
+var addSectionBtn=document.getElementById("addSectionBtn"),importBtn=document.getElementById('importCsvBtn'),importInput=document.getElementById('importCsvInput'),qbTitle=document.getElementById('qbTitle'),clearQuoteBtn=document.getElementById('clearQuoteBtn');
 var qbState=loadUiState();
 var lastFreeRect=cloneRect(qbState);
 if(!lastFreeRect.w||!lastFreeRect.h){lastFreeRect=cloneRect(defaultUiState());}
@@ -311,7 +314,369 @@ function loadBasket(){
   normalizeBasketItems();
   renderBasket();
 }
-function showToast(msg,undo){var el=toast;el.textContent=msg;el.classList.add("show");if(undo){el.style.cursor="pointer";el.onclick=function(){undo();el.classList.remove("show");};}else{el.style.cursor="default";el.onclick=null;}setTimeout(function(){el.classList.remove("show");},TOAST_MS);}
+function showToast(msg,undo,duration){
+  var el=toast;
+  if(!el) return;
+  if(toastTimer){
+    clearTimeout(toastTimer);
+    toastTimer=null;
+  }
+  el.textContent=msg;
+  el.classList.add("show");
+  var clear=function(){
+    el.classList.remove("show");
+    el.style.cursor="default";
+    el.onclick=null;
+    if(toastTimer){
+      clearTimeout(toastTimer);
+      toastTimer=null;
+    }
+  };
+  if(undo){
+    el.style.cursor="pointer";
+    el.onclick=function(ev){
+      if(ev){ev.preventDefault();}
+      undo();
+      clear();
+    };
+  }else{
+    el.style.cursor="default";
+    el.onclick=null;
+  }
+  var timeout=isFinite(duration)?duration:TOAST_MS;
+  toastTimer=setTimeout(function(){
+    clear();
+  },timeout);
+}
+function backupCurrentQuote(){
+  try{
+    var payload={
+      items:basket,
+      sections:sections,
+      activeSectionId:activeSectionId,
+      discountPercent:isFinite(discountPercent)?discountPercent:0
+    };
+    localStorage.setItem(BACKUP_KEY,JSON.stringify(payload));
+  }catch(e){}
+}
+function restoreBackup(){
+  try{
+    var raw=localStorage.getItem(BACKUP_KEY);
+    if(!raw){
+      showToast('No backup available');
+      return;
+    }
+    var data=JSON.parse(raw);
+    if(!data||typeof data!=='object'){
+      showToast('No backup available');
+      return;
+    }
+    basket=Array.isArray(data.items)?data.items:[];
+    sections=Array.isArray(data.sections)&&data.sections.length?data.sections:getDefaultSections();
+    activeSectionId=data.activeSectionId;
+    if(!sections.some(function(sec){return sec.id===activeSectionId;})){
+      activeSectionId=sections[0]?sections[0].id:1;
+    }
+    discountPercent=isFinite(data.discountPercent)?+data.discountPercent:0;
+    captureParentId=null;
+    currentGrandTotal=0;
+    lastBaseTotal=0;
+    normalizeBasketItems();
+    ensureSectionState();
+    renderBasket();
+    showToast('Quote restored from backup');
+  }catch(e){
+    showToast('Unable to restore backup');
+  }
+}
+function showIssuesModal(title,messages){
+  if(!Array.isArray(messages)||!messages.length) return;
+  var existing=document.querySelector('.import-error-modal');
+  if(existing&&existing.parentNode){
+    existing.parentNode.removeChild(existing);
+  }
+  var overlay=document.createElement('div');
+  overlay.className='qb-modal-backdrop import-error-modal';
+  var modal=document.createElement('div');
+  modal.className='qb-modal';
+  modal.setAttribute('role','dialog');
+  modal.setAttribute('aria-modal','true');
+  var heading=document.createElement('h4');
+  heading.textContent=title||'Import failed';
+  var intro=document.createElement('p');
+  intro.textContent='Resolve the following issues and try again:';
+  var list=document.createElement('ul');
+  for(var i=0;i<messages.length&&i<5;i++){
+    var li=document.createElement('li');
+    li.textContent=messages[i];
+    list.appendChild(li);
+  }
+  var buttons=document.createElement('div');
+  buttons.className='qb-modal-buttons';
+  var closeBtn=document.createElement('button');
+  closeBtn.type='button';
+  closeBtn.textContent='Close';
+  closeBtn.classList.add('neutral');
+  buttons.appendChild(closeBtn);
+  modal.appendChild(heading);
+  modal.appendChild(intro);
+  modal.appendChild(list);
+  modal.appendChild(buttons);
+  overlay.appendChild(modal);
+  function close(){
+    document.removeEventListener('keydown',handleKey,true);
+    if(overlay&&overlay.parentNode){
+      overlay.parentNode.removeChild(overlay);
+    }
+  }
+  function handleKey(ev){
+    if(ev.key==='Escape'||ev.key==='Esc'){
+      ev.preventDefault();
+      close();
+    }
+  }
+  document.addEventListener('keydown',handleKey,true);
+  overlay.addEventListener('click',function(ev){
+    if(ev.target===overlay){
+      close();
+    }
+  });
+  closeBtn.addEventListener('click',close);
+  document.body.appendChild(overlay);
+  setTimeout(function(){
+    try{closeBtn.focus();}catch(e){}
+  },0);
+}
+function parseNumericCell(raw,rowNumber,label,issues){
+  var str=raw==null?'':String(raw).trim();
+  if(!str){
+    return {value:0};
+  }
+  var cleaned=str.replace(/[$,\s]/g,'');
+  if(!cleaned){
+    return {value:0};
+  }
+  var num=parseFloat(cleaned);
+  if(!isFinite(num)){
+    issues.push('Row '+rowNumber+': '+label+' is not a number');
+    return {value:0,invalid:true};
+  }
+  return {value:num};
+}
+function buildImportModel(rows){
+  var issues=[];
+  if(!rows||!rows.length){
+    issues.push('Row 1: Header must be "'+IMPORT_HEADER.join(',')+'"');
+    return {issues:issues};
+  }
+  var header=rows[0]?rows[0].slice(0):[];
+  if(header.length){
+    header[0]=String(header[0]==null?'':header[0]).replace(/^\ufeff/,'');
+  }
+  if(header.length!==IMPORT_HEADER.length){
+    issues.push('Row 1: Header must be "'+IMPORT_HEADER.join(',')+'"');
+    return {issues:issues};
+  }
+  for(var h=0;h<IMPORT_HEADER.length;h++){
+    var cell=header[h]==null?'':String(header[h]);
+    if(cell!==IMPORT_HEADER[h]){
+      issues.push('Row 1: Header must be "'+IMPORT_HEADER.join(',')+'"');
+      return {issues:issues};
+    }
+  }
+  var sectionsModel=[];
+  var sectionMap={};
+  var lastParentBySection={};
+  var pendingNotes={};
+  var discountPercentValue=null;
+  for(var i=1;i<rows.length;i++){
+    var row=rows[i];
+    var rowNumber=i+1;
+    if(!row){
+      continue;
+    }
+    var nonEmpty=false;
+    for(var c=0;c<IMPORT_HEADER.length;c++){
+      if(row[c]!=null&&String(row[c]).trim()!==''){
+        nonEmpty=true;
+        break;
+      }
+    }
+    if(!nonEmpty){
+      continue;
+    }
+    var sectionCell=row[0]==null?'':String(row[0]).trim();
+    if(SUMMARY_ROWS[sectionCell]){
+      if(sectionCell==='Discount (%)'){
+        var discStr=row[4]==null?'':String(row[4]).trim();
+        if(discStr){
+          var cleanedDisc=discStr.replace(/[$,\s]/g,'');
+          var parsedDisc=parseFloat(cleanedDisc);
+          if(isFinite(parsedDisc)){
+            discountPercentValue=parsedDisc;
+          }
+        }
+      }
+      continue;
+    }
+    var notesMatch=/^Section\s+(\d+)\s+Notes$/.exec(sectionCell);
+    if(notesMatch){
+      var noteIndex=parseInt(notesMatch[1],10);
+      if(isFinite(noteIndex)&&noteIndex>0){
+        var noteText=row[1]==null?'':String(row[1]).trim();
+        if(noteText){
+          pendingNotes[noteIndex]={text:noteText,row:rowNumber};
+        }
+      }
+      continue;
+    }
+    if(!sectionCell){
+      issues.push('Row '+rowNumber+': Section is required');
+      continue;
+    }
+    var section=sectionMap[sectionCell];
+    if(!section){
+      section={title:sectionCell,items:[],notes:''};
+      sectionMap[sectionCell]=section;
+      sectionsModel.push(section);
+      lastParentBySection[sectionCell]=null;
+    }
+    var rawItem=row[1]==null?'':String(row[1]);
+    var trimmedItem=rawItem.trim();
+    var escaped=false;
+    if(trimmedItem.indexOf('\\- ')==0){
+      escaped=true;
+      trimmedItem=trimmedItem.slice(1);
+    }
+    var isChild=false;
+    if(!escaped&&trimmedItem.indexOf('- ')==0){
+      isChild=true;
+      trimmedItem=trimmedItem.slice(2);
+    }
+    var qtyInfo=parseNumericCell(row[2],rowNumber,'Quantity',issues);
+    var priceInfo=parseNumericCell(row[3],rowNumber,'Price',issues);
+    var itemName=trimmedItem;
+    if(isChild){
+      var parent=lastParentBySection[sectionCell];
+      if(!parent){
+        issues.push('Row '+rowNumber+': Child row without a parent in section "'+sectionCell+'"');
+        continue;
+      }
+      parent.children.push({name:itemName,qty:qtyInfo.value,price:priceInfo.value});
+    }else{
+      var parentItem={name:itemName,qty:qtyInfo.value,price:priceInfo.value,children:[]};
+      section.items.push(parentItem);
+      lastParentBySection[sectionCell]=parentItem;
+    }
+  }
+  for(var key in pendingNotes){
+    if(!pendingNotes.hasOwnProperty(key)) continue;
+    var noteIndex=parseInt(key,10);
+    var targetSection=sectionsModel[noteIndex-1];
+    if(targetSection){
+      targetSection.notes=pendingNotes[key].text;
+    }else{
+      issues.push('Row '+pendingNotes[key].row+': Notes row references missing Section '+noteIndex);
+    }
+  }
+  if(!sectionsModel.length){
+    issues.push('No section data found in CSV');
+  }
+  return {sections:sectionsModel,discount:discountPercentValue,issues:issues};
+}
+function applyImportedModel(model){
+  if(!model||!Array.isArray(model.sections)||!model.sections.length){
+    showIssuesModal('Import failed',['No section data found in CSV']);
+    return;
+  }
+  var parsedSections=model.sections;
+  var newSections=[];
+  var newBasket=[];
+  var newSectionId=0;
+  var newUid=0;
+  for(var i=0;i<parsedSections.length;i++){
+    var src=parsedSections[i];
+    newSectionId++;
+    var secId=newSectionId;
+    newSections.push({id:secId,name:src.title||('Section '+secId),notes:src.notes||''});
+    var items=Array.isArray(src.items)?src.items:[];
+    for(var j=0;j<items.length;j++){
+      var item=items[j];
+      newUid++;
+      var parentId=newUid;
+      newBasket.push({id:parentId,pid:null,kind:'line',collapsed:false,sectionId:secId,item:item&&item.name?item.name:'',qty:isFinite(item&&item.qty)?item.qty:0,ex:isFinite(item&&item.price)?item.price:0});
+      var children=Array.isArray(item&&item.children)?item.children:[];
+      for(var k=0;k<children.length;k++){
+        var child=children[k];
+        newUid++;
+        newBasket.push({id:newUid,pid:parentId,kind:'sub',sectionId:secId,item:child&&child.name?child.name:'',qty:isFinite(child&&child.qty)?child.qty:0,ex:isFinite(child&&child.price)?child.price:0});
+      }
+    }
+  }
+  basket=newBasket;
+  sections=newSections;
+  sectionSeq=newSectionId;
+  uid=newUid;
+  activeSectionId=newSections[0]?newSections[0].id:1;
+  captureParentId=null;
+  discountPercent=isFinite(model.discount)?model.discount:0;
+  currentGrandTotal=0;
+  lastBaseTotal=0;
+  normalizeBasketItems();
+  ensureSectionState();
+  renderBasket();
+  showToast('Quote imported. Undo?',function(){restoreBackup();},UNDO_TOAST_MS);
+}
+function handleImportInputChange(){
+  if(!importInput) return;
+  var file=importInput.files&&importInput.files[0];
+  if(!file){
+    return;
+  }
+  if(!window.confirm('Importing will replace the current quote. Continue?')){
+    importInput.value='';
+    return;
+  }
+  if(!window.Papa){
+    importInput.value='';
+    showIssuesModal('Import failed',['Papa Parse library is unavailable.']);
+    return;
+  }
+  backupCurrentQuote();
+  Papa.parse(file,{
+    header:false,
+    dynamicTyping:false,
+    skipEmptyLines:false,
+    complete:function(results){
+      importInput.value='';
+      var parserIssues=[];
+      if(results&&Array.isArray(results.errors)){
+        for(var i=0;i<results.errors.length;i++){
+          var err=results.errors[i];
+          if(err&&err.message){
+            var rowNumber=(typeof err.row==='number'&&err.row>=0)?(err.row+1):'?';
+            parserIssues.push('Row '+rowNumber+': '+err.message);
+          }
+        }
+      }
+      var model=buildImportModel(results&&results.data?results.data:[]);
+      var combinedIssues=parserIssues.slice();
+      if(model&&Array.isArray(model.issues)&&model.issues.length){
+        combinedIssues=combinedIssues.concat(model.issues);
+      }
+      if(combinedIssues.length){
+        showIssuesModal('Import failed',combinedIssues.slice(0,5));
+        return;
+      }
+      applyImportedModel(model);
+    },
+    error:function(err){
+      importInput.value='';
+      var message=err&&err.message?err.message:'Unable to parse CSV file.';
+      showIssuesModal('Import failed',[message]);
+    }
+  });
+}
 function cloneRect(state){if(!state||typeof state!=='object')return{x:0,y:0,w:0,h:0,dockHeight:0};return{x:isFinite(state.x)?+state.x:0,y:isFinite(state.y)?+state.y:0,w:isFinite(state.w)?+state.w:0,h:isFinite(state.h)?+state.h:0,dockHeight:isFinite(state.dockHeight)?+state.dockHeight:0};}
 function getDefaultDockHeight(){var winH=window.innerHeight||800;var minDock=240;var base=Math.round((winH||800)*0.35)||minDock;if(!isFinite(base)||base<=0)base=320;var maxDock=Math.max(minDock,winH-96);if(!isFinite(maxDock)||maxDock<minDock)maxDock=Math.max(minDock,480);return Math.min(Math.max(minDock,base),maxDock);}
 function defaultUiState(){var winW=window.innerWidth||1200;var winH=window.innerHeight||800;var width=Math.min(1100,Math.max(360,Math.round((winW||0)*0.9)||600));if(!isFinite(width)||width<=0)width=800;if(width>winW&&winW>0)width=winW;var height=Math.round((winH||0)*0.65)||520;height=Math.min(height,Math.round((winH||0)*0.8)||height);if(!isFinite(height)||height<=0)height=Math.min(winH||600,600);if(height>winH&&winH>0)height=winH;var maxX=Math.max(0,(winW||width)-width-32);var y=Math.min(64,Math.max(0,(winH||height)-height));return{x:maxX,y:y,w:width,h:height,minimized:false,full:false,docked:false,dockHeight:getDefaultDockHeight()};}
@@ -682,6 +1047,13 @@ if(bFootEl){
   });
 }
 if(addSectionBtn){addSectionBtn.addEventListener('click',function(){ensureSectionState();var suggestion='Section '+(sectionSeq+1);var name=prompt('Section name',suggestion);if(name===null)return;name=name.trim();if(!name){showToast('Section name is required');return;}var newId=sectionSeq+1;sections.push({id:newId,name:name,notes:''});sectionSeq=newId;activeSectionId=newId;captureParentId=null;renderBasket();showToast('Section added');});}
+if(importBtn&&importInput){
+  importBtn.addEventListener('click',function(){
+    importInput.value='';
+    importInput.click();
+  });
+  importInput.addEventListener('change',handleImportInputChange);
+}
 var addCustomBtn=document.getElementById('addCustomBtn');
 if(addCustomBtn){addCustomBtn.addEventListener('click',function(){var nl=null;if(captureParentId){var parent=getParentItemById(captureParentId);if(parent){var parentSection=sections.some(function(sec){return sec.id===parent.sectionId;})?parent.sectionId:activeSectionId;nl={id:++uid,pid:captureParentId,kind:'sub',sectionId:parentSection,item:'Sub item',qty:1,ex:0};}else{captureParentId=null;}}if(!nl){nl={id:++uid,pid:null,kind:'line',collapsed:false,sectionId:activeSectionId,item:'Custom item',qty:1,ex:0};}basket.push(nl);renderBasket();try{var rows=bBody.querySelectorAll('tr.main-row');if(rows.length){var last=rows[rows.length-1].querySelector('.item-input');if(last)last.focus();}}catch(_){}});}
 function updateBasketHeaderOffset(){
