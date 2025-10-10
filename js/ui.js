@@ -3,6 +3,25 @@ window.DefCost.state = window.DefCost.state || {};
 window.DefCost.api = window.DefCost.api || {};
 window.DefCost.ui = window.DefCost.ui || {};
 
+var renderBasketRef = null;
+var renderPending = false;
+var scheduleFrame = (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function')
+  ? window.requestAnimationFrame.bind(window)
+  : function (cb) { return window.setTimeout(cb, 16); };
+
+export function scheduleRenderBasket() {
+  if (renderPending) {
+    return;
+  }
+  renderPending = true;
+  scheduleFrame(function () {
+    renderPending = false;
+    if (typeof renderBasketRef === 'function') {
+      renderBasketRef();
+    }
+  });
+}
+
 (function(){
   var DEFAULT_TOAST_MS = 3000;
 
@@ -441,7 +460,7 @@ window.DefCost.ui = window.DefCost.ui || {};
         var newSectionId = parseInt(secSelect.value, 10);
         captureParentId = setCaptureParentId(null);
         setParentSection(b, newSectionId);
-        renderBasket();
+        scheduleRenderBasket();
       };
       tdSection.appendChild(secSelect);
       tr.appendChild(tdSection);
@@ -454,7 +473,7 @@ window.DefCost.ui = window.DefCost.ui || {};
       cap.textContent = '⊞';
       cap.onclick = function () {
         captureParentId = setCaptureParentId(captureParentId === b.id ? null : b.id);
-        renderBasket();
+        scheduleRenderBasket();
       };
       var addS = document.createElement('button');
       addS.className = 'subbtn';
@@ -463,7 +482,7 @@ window.DefCost.ui = window.DefCost.ui || {};
       addS.onclick = function () {
         var newId = incrementUid();
         basket.push({ id: newId, pid: b.id, kind: 'sub', sectionId: b.sectionId, item: '', qty: 1, ex: 0 });
-        renderBasket();
+        scheduleRenderBasket();
       };
       var tog = document.createElement('button');
       tog.className = 'subbtn';
@@ -471,7 +490,7 @@ window.DefCost.ui = window.DefCost.ui || {};
       tog.textContent = b.collapsed ? '▸' : '▾';
       tog.onclick = function () {
         b.collapsed = !b.collapsed;
-        renderBasket();
+        scheduleRenderBasket();
       };
       ctrl.appendChild(cap);
       ctrl.appendChild(addS);
@@ -501,15 +520,15 @@ window.DefCost.ui = window.DefCost.ui || {};
       plus.textContent = '+';
       minus.onclick = function () {
         b.qty = Math.max(1, (b.qty || 1) - 1);
-        renderBasket();
+        scheduleRenderBasket();
       };
       plus.onclick = function () {
         b.qty = (b.qty || 1) + 1;
-        renderBasket();
+        scheduleRenderBasket();
       };
       inp.onchange = function () {
         b.qty = Math.max(1, parseFloat(inp.value) || 1);
-        renderBasket();
+        scheduleRenderBasket();
       };
       qc.appendChild(minus);
       qc.appendChild(inp);
@@ -525,7 +544,7 @@ window.DefCost.ui = window.DefCost.ui || {};
       exInput.onchange = function () {
         var v = parseFloat(exInput.value);
         b.ex = isFinite(v) ? v : NaN;
-        renderBasket();
+        scheduleRenderBasket();
       };
       tdEx.appendChild(exInput);
       tr.appendChild(tdEx);
@@ -554,7 +573,7 @@ window.DefCost.ui = window.DefCost.ui || {};
         if (captureParentId === id) {
           captureParentId = setCaptureParentId(null);
         }
-        renderBasket();
+        scheduleRenderBasket();
       };
       tdRem.appendChild(x);
       tr.appendChild(tdRem);
@@ -608,15 +627,15 @@ window.DefCost.ui = window.DefCost.ui || {};
           plus.textContent = '+';
           minus.onclick = function () {
             s.qty = Math.max(1, (s.qty || 1) - 1);
-            renderBasket();
+            scheduleRenderBasket();
           };
           plus.onclick = function () {
             s.qty = (s.qty || 1) + 1;
-            renderBasket();
+            scheduleRenderBasket();
           };
           inp.onchange = function () {
             s.qty = Math.max(1, parseFloat(inp.value) || 1);
-            renderBasket();
+            scheduleRenderBasket();
           };
           qc.appendChild(minus);
           qc.appendChild(inp);
@@ -632,7 +651,7 @@ window.DefCost.ui = window.DefCost.ui || {};
           exInput.onchange = function () {
             var v = parseFloat(exInput.value);
             s.ex = isFinite(v) ? v : NaN;
-            renderBasket();
+            scheduleRenderBasket();
           };
           c4.appendChild(exInput);
           sr.appendChild(c4);
@@ -651,7 +670,7 @@ window.DefCost.ui = window.DefCost.ui || {};
                 break;
               }
             }
-            renderBasket();
+            scheduleRenderBasket();
           };
           c6.appendChild(rx);
           sr.appendChild(c6);
@@ -800,7 +819,7 @@ window.DefCost.ui = window.DefCost.ui || {};
           }
           basket = setBasket(rest.slice(0, insertPos).concat(sectionBlock, rest.slice(insertPos)));
           persistBasket();
-          renderBasket();
+          scheduleRenderBasket();
         }
       });
       bBody.setAttribute('data-sortable', '1');
@@ -810,7 +829,9 @@ window.DefCost.ui = window.DefCost.ui || {};
     updateBasketHeaderOffset();
   }
 
-  window.DefCost.ui.renderBasket = renderBasket;
+  renderBasketRef = renderBasket;
+  window.DefCost.ui.renderBasket = scheduleRenderBasket;
+  window.DefCost.ui.renderBasketImmediate = renderBasket;
   window.DefCost.ui.showImportSummaryModal = showImportSummaryModal;
   window.DefCost.ui.showToast = showToast;
 })();
