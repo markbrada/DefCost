@@ -5,7 +5,7 @@
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
 <meta charset="UTF-8">
-<title>DefCost 3.1.0</title>
+<title>DefCost 3.0.0</title>
 <style>
 :root{--bg:#f7f7f7;--fg:#333;--header:#e0e0e0;--btn:#007bff;--btnh:#0056b3;--add:#28a745;--addh:#218838;--border:#aaa;--alt:#f9f9f9;--panel:#fff;--toast:#007bff;--toastfg:#fff;--rowHover:#e9f1ff}
 .dark-mode{--bg:#222;--fg:#eee;--header:#444;--btn:#0d6efd;--btnh:#0a58ca;--add:#198754;--addh:#157347;--border:#555;--alt:#2a2a2a;--panel:#333;--toast:#0d6efd;--toastfg:#fff;--rowHover:#383838}
@@ -159,7 +159,7 @@ input[type=number]{-moz-appearance:textfield}
 </style>
 </head>
 <body>
-<h1>DefCost 3.1.0</h1>
+<h1>DefCost 3.0.0</h1>
 <button id="darkModeToggle">Toggle Dark Mode</button>
 <div id="quoteBuilderMain" aria-label="Quote Builder" role="region">
   <div id="quoteHeader">
@@ -172,8 +172,7 @@ input[type=number]{-moz-appearance:textfield}
       <button id="addCustomBtn" type="button">Add custom line</button>
       <button id="addSectionBtn" type="button">+ Section</button>
       <button id="importCsvBtn" type="button">Import CSV</button>
-      <button id="exportXlsxBtn" type="button">Export Excel (.xlsx)</button>
-      <button id="exportCsvBtn" type="button">Export CSV (Legacy)</button>
+      <button id="exportCsvBtn" type="button">Export quote CSV</button>
       <input id="importCsvInput" type="file" accept=".csv" style="display:none">
     </div>
   </div>
@@ -348,61 +347,6 @@ function showToast(msg,undo,duration){
   toastTimer=setTimeout(function(){
     clear();
   },timeout);
-}
-function getQuoteMetadata(){
-  var meta={
-    quoteNo:'',
-    revision:'',
-    date:'',
-    description:'',
-    client:'',
-    site:'',
-    status:''
-  };
-  try{
-    var stored=localStorage.getItem('defcost_quote_meta');
-    if(stored){
-      var parsed=JSON.parse(stored);
-      if(parsed&&typeof parsed==='object'){
-        meta.quoteNo=parsed.quoteNo!=null?String(parsed.quoteNo).trim():meta.quoteNo;
-        meta.revision=parsed.revision!=null?String(parsed.revision).trim():meta.revision;
-        meta.date=parsed.date!=null?String(parsed.date).trim():meta.date;
-        meta.description=parsed.description!=null?String(parsed.description).trim():meta.description;
-        meta.client=parsed.client!=null?String(parsed.client).trim():meta.client;
-        meta.site=parsed.site!=null?String(parsed.site).trim():meta.site;
-        meta.status=parsed.status!=null?String(parsed.status).trim():meta.status;
-      }
-    }
-  }catch(e){}
-  var attrMap=['quoteNo','revision','date','description','client','site','status'];
-  for(var i=0;i<attrMap.length;i++){
-    var key=attrMap[i];
-    if(meta[key]) continue;
-    var attrEl=document.querySelector('[data-quote-meta="'+key+'"]');
-    if(attrEl){
-      var val='value' in attrEl?attrEl.value:attrEl.textContent;
-      if(val!=null&&String(val).trim()){ meta[key]=String(val).trim(); continue; }
-    }
-    var candidates=[];
-    if(key==='quoteNo'){ candidates=['quoteNumber','quote-no','quote_no','quoteNo','quote-number']; }
-    else if(key==='revision'){ candidates=['quoteRevision','quote-revision','revision','rev']; }
-    else if(key==='date'){ candidates=['quoteDate','quote-date','date']; }
-    else if(key==='description'){ candidates=['quoteDescription','quote-description','description']; }
-    else if(key==='client'){ candidates=['quoteClient','quote-client','client']; }
-    else if(key==='site'){ candidates=['quoteSite','quote-site','site']; }
-    else if(key==='status'){ candidates=['quoteStatus','quote-status','status']; }
-    for(var j=0;j<candidates.length;j++){
-      var el=document.getElementById(candidates[j]);
-      if(el){
-        var content='value' in el?el.value:el.textContent;
-        if(content!=null&&String(content).trim()){
-          meta[key]=String(content).trim();
-          break;
-        }
-      }
-    }
-  }
-  return meta;
 }
 function backupCurrentQuote(){
   try{
@@ -1371,278 +1315,6 @@ function renderBasket(){
   saveBasket();
   updateBasketHeaderOffset();
 }
-function exportBasketToExcel(opts){
-  if(!basket.length){
-    showToast('Add items before exporting');
-    return false;
-  }
-  if(!window.XLSX||!XLSX.utils||!XLSX.writeFile){
-    showToast('Excel export unavailable');
-    return false;
-  }
-  var report=buildReportModel(basket,sections);
-  var meta=getQuoteMetadata();
-  var wb=XLSX.utils.book_new();
-  var baseFont={name:'Calibri',sz:10};
-  function getOrCreateCell(sheet,addr){
-    if(!sheet) return null;
-    var cell=sheet[addr];
-    if(!cell){
-      cell={t:'s',v:''};
-      sheet[addr]=cell;
-      ensureCellFont(cell);
-    }else{
-      ensureCellFont(cell);
-    }
-    return cell;
-  }
-  function ensureCellFont(cell,overrides){
-    if(!cell) return;
-    cell.s=cell.s||{};
-    cell.s.font=cell.s.font||{};
-    if(!cell.s.font.name) cell.s.font.name=baseFont.name;
-    if(!cell.s.font.sz) cell.s.font.sz=baseFont.sz;
-    if(overrides){
-      for(var k in overrides){ if(overrides.hasOwnProperty(k)){ cell.s.font[k]=overrides[k]; } }
-    }
-  }
-  function applyFill(cell,hex){
-    if(!cell) return;
-    var rgb=hex.replace('#','').toUpperCase();
-    cell.s=cell.s||{};
-    cell.s.fill={patternType:'solid',fgColor:{rgb:rgb},bgColor:{rgb:rgb}};
-  }
-  function applyAlignment(cell,align){
-    if(!cell) return;
-    cell.s=cell.s||{};
-    cell.s.alignment=cell.s.alignment||{};
-    for(var k in align){ if(align.hasOwnProperty(k)){ cell.s.alignment[k]=align[k]; } }
-  }
-  function applyBorder(cell,color){
-    if(!cell) return;
-    var rgb=color.replace('#','').toUpperCase();
-    cell.s=cell.s||{};
-    cell.s.border=cell.s.border||{};
-    var edges=['top','bottom','left','right'];
-    for(var i=0;i<edges.length;i++){
-      var edge=edges[i];
-      cell.s.border[edge]=cell.s.border[edge]||{};
-      cell.s.border[edge].style='thin';
-      cell.s.border[edge].color={rgb:rgb};
-    }
-  }
-  function applyNumberFormat(cell,fmt){
-    if(!cell) return;
-    cell.s=cell.s||{};
-    cell.s.numFmt=fmt;
-    cell.z=fmt;
-  }
-  function applyBaseFont(sheet){
-    if(!sheet) return;
-    for(var addr in sheet){
-      if(!sheet.hasOwnProperty(addr)||addr[0]==='!') continue;
-      ensureCellFont(sheet[addr]);
-    }
-  }
-  function buildSummarySheet(){
-    var rows=[
-      ['Workplace Defender Quote Summary',''],
-      ['Quote No.',meta.quoteNo||''],
-      ['Revision',meta.revision||''],
-      ['Date',meta.date||''],
-      ['Quote Description',meta.description||''],
-      ['Client',meta.client||''],
-      ['Site',meta.site||''],
-      ['Status',meta.status||'']
-    ];
-    var sheet=XLSX.utils.aoa_to_sheet(rows);
-    sheet['!merges']=[{s:{r:0,c:0},e:{r:0,c:1}}];
-    sheet['!cols']=[{wch:22},{wch:44}];
-    applyBaseFont(sheet);
-    var range=XLSX.utils.decode_range(sheet['!ref']);
-    var alt=['FFFFFF','F4F6FB'];
-    for(var r=0;r<=range.e.r;r++){
-      for(var c=0;c<=range.e.c;c++){
-        var addr=XLSX.utils.encode_cell({r:r,c:c});
-        var cell=getOrCreateCell(sheet,addr);
-        applyBorder(cell,'#D9D9D9');
-        if(r===0){
-          applyFill(cell,'#002D72');
-          ensureCellFont(cell,{bold:true,color:{rgb:'FFFFFF'},sz:12});
-          applyAlignment(cell,{horizontal:'center',vertical:'center'});
-        }else{
-          applyFill(cell,'#'+alt[(r-1)%alt.length]);
-          if(c===0){
-            ensureCellFont(cell,{bold:true});
-            applyAlignment(cell,{horizontal:'left'});
-          }else{
-            applyAlignment(cell,{horizontal:'left'});
-          }
-        }
-      }
-    }
-    return sheet;
-  }
-  function formatValue(val){
-    var num=parseFloat(val);
-    return isFinite(num)?num:null;
-  }
-  function buildDetailsSheet(){
-    var header=['Section','Item','Quantity','Price','Line Total','Notes'];
-    var rows=[header];
-    var sectionTitleRows=[];
-    var notesRows=[];
-    var sectionsData=report.sections||[];
-    for(var s=0;s<sectionsData.length;s++){
-      if(rows.length>1){ rows.push(['','','','','','']); }
-      var section=sectionsData[s];
-      sectionTitleRows.push(rows.length);
-      rows.push([section.name||('Section '+(s+1)),'','','','','']);
-      var items=section.items||[];
-      for(var i=0;i<items.length;i++){
-        var grp=items[i];
-        var parent=grp.parent||{};
-        var qty=isFinite(parent.qty)?+parent.qty:1;
-        var price=formatValue(parent.ex);
-        var lineTotal=price==null?null:roundCurrency((qty||1)*price);
-        rows.push([
-          section.name||('Section '+(s+1)),
-          parent.item||'',
-          qty,
-          price==null?null:roundCurrency(price),
-          lineTotal==null?null:lineTotal,
-          parent.notes||''
-        ]);
-        var subs=grp.subs||[];
-        for(var j=0;j<subs.length;j++){
-          var sub=subs[j]||{};
-          var sq=isFinite(sub.qty)?+sub.qty:1;
-          var sp=formatValue(sub.ex);
-          var subTotal=sp==null?null:roundCurrency((sq||1)*sp);
-          rows.push([
-            section.name||('Section '+(s+1)),
-            '- '+(sub.item||''),
-            sq,
-            sp==null?null:roundCurrency(sp),
-            subTotal==null?null:subTotal,
-            sub.notes||''
-          ]);
-        }
-      }
-      var noteText=(section.notes||'').trim();
-      notesRows.push(rows.length);
-      rows.push(['','','','','',noteText]);
-    }
-    var sheet=XLSX.utils.aoa_to_sheet(rows);
-    sheet['!cols']=[{wch:24},{wch:42},{wch:14},{wch:16},{wch:18},{wch:46}];
-    applyBaseFont(sheet);
-    var range=XLSX.utils.decode_range(sheet['!ref']);
-    for(var r=0;r<=range.e.r;r++){
-      for(var c=0;c<=range.e.c;c++){
-        var addr=XLSX.utils.encode_cell({r:r,c:c});
-        var cell=getOrCreateCell(sheet,addr);
-        applyBorder(cell,'#D9D9D9');
-        if(r===0){
-          applyFill(cell,'#002D72');
-          ensureCellFont(cell,{bold:true,color:{rgb:'FFFFFF'}});
-          applyAlignment(cell,{horizontal:'center',vertical:'center'});
-        }else if(sectionTitleRows.indexOf(r)!==-1){
-          applyFill(cell,'#E8EEF7');
-          ensureCellFont(cell,{bold:true});
-          applyAlignment(cell,{horizontal:'left'});
-        }else{
-          applyAlignment(cell,{vertical:'top'});
-          if(c>=2&&c<=4){
-            if(cell.v!=null&&cell.v!==''){
-              var numeric=formatValue(cell.v);
-              if(numeric!=null){ cell.v=numeric; }
-            }
-            applyAlignment(cell,{horizontal:'right'});
-            applyNumberFormat(cell,'#,##0.00');
-          }else if(c===5){
-            applyAlignment(cell,{horizontal:'left',wrapText:true});
-          }else{
-            applyAlignment(cell,{horizontal:'left'});
-          }
-        }
-      }
-    }
-    for(var n=0;n<notesRows.length;n++){
-      var rowIndex=notesRows[n];
-      for(var c2=0;c2<=range.e.c;c2++){
-        var noteAddr=XLSX.utils.encode_cell({r:rowIndex,c:c2});
-        var noteCell=getOrCreateCell(sheet,noteAddr);
-        if(c2===5){
-          applyAlignment(noteCell,{horizontal:'left',vertical:'top',wrapText:true});
-        }else{
-          noteCell.v='';
-        }
-      }
-    }
-    return sheet;
-  }
-  function buildTotalsSheet(){
-    var discountedEx=recalcGrandTotal(report.grandEx,discountPercent);
-    var gstAfter=calculateGst(discountedEx);
-    var grandIncl=roundCurrency(discountedEx+gstAfter);
-    var rows=[
-      ['Label','Value'],
-      ['Total (Ex. GST)',roundCurrency(report.grandEx)],
-      ['Discount (%)',roundCurrency(discountPercent)],
-      ['Grand Total (Ex. GST)',discountedEx],
-      ['GST (10%)',gstAfter],
-      ['Grand Total (Incl. GST)',grandIncl]
-    ];
-    var sheet=XLSX.utils.aoa_to_sheet(rows);
-    sheet['!cols']=[{wch:28},{wch:20}];
-    applyBaseFont(sheet);
-    var range=XLSX.utils.decode_range(sheet['!ref']);
-    for(var r=0;r<=range.e.r;r++){
-      for(var c=0;c<=range.e.c;c++){
-        var addr=XLSX.utils.encode_cell({r:r,c:c});
-        var cell=getOrCreateCell(sheet,addr);
-        applyBorder(cell,'#D9D9D9');
-        if(r===0){
-          applyFill(cell,'#002D72');
-          ensureCellFont(cell,{bold:true,color:{rgb:'FFFFFF'}});
-          if(c===0){ applyAlignment(cell,{horizontal:'left'}); }
-          else{ applyAlignment(cell,{horizontal:'right'}); }
-        }else{
-          if(c===1){
-            applyAlignment(cell,{horizontal:'right'});
-            applyNumberFormat(cell,'#,##0.00');
-          }else{
-            applyAlignment(cell,{horizontal:'left'});
-          }
-          if(r===range.e.r){
-            applyFill(cell,'#F47B20');
-            ensureCellFont(cell,{bold:true,color:{rgb:'FFFFFF'}});
-          }
-        }
-      }
-    }
-    return sheet;
-  }
-  var summarySheet=buildSummarySheet();
-  var detailsSheet=buildDetailsSheet();
-  var totalsSheet=buildTotalsSheet();
-  XLSX.utils.book_append_sheet(wb,summarySheet,'Quote Summary');
-  XLSX.utils.book_append_sheet(wb,detailsSheet,'Quote Details');
-  XLSX.utils.book_append_sheet(wb,totalsSheet,'Totals');
-  var fileBase=(meta.quoteNo||'quote').trim()||'quote';
-  var fileRev=(meta.revision||'1').trim()||'1';
-  fileBase=fileBase.replace(/[^A-Za-z0-9._-]+/g,'_');
-  fileRev=fileRev.replace(/[^A-Za-z0-9._-]+/g,'_');
-  var filename=fileBase+'_rev'+fileRev+'.xlsx';
-  try{
-    XLSX.writeFile(wb,filename);
-    if(!(opts&&opts.silent)){ showToast('Quote Excel exported'); }
-    return true;
-  }catch(e){
-    showToast('Unable to export Excel');
-    return false;
-  }
-}
 function exportBasketToCsv(opts){
   if(!basket.length) return false;
   var esc=function(v){return '"'+String(v).replace(/"/g,'""')+'"';};
@@ -1713,10 +1385,6 @@ function showDeleteDialog(){
   saveBtn.addEventListener('click',function(){ var exported=exportBasketToCsv({silent:true}); resetQuote(exported?'Quote exported and deleted':'Quote deleted'); closeDialog(); });
   deleteBtn.addEventListener('click',function(){ resetQuote('Quote deleted'); closeDialog(); });
   setTimeout(function(){ try{saveBtn.focus();}catch(e){} },0);
-}
-var exportExcelBtn=document.getElementById("exportXlsxBtn");
-if(exportExcelBtn){
-  exportExcelBtn.onclick=function(){ exportBasketToExcel(); };
 }
 var exportBtn=document.getElementById("exportCsvBtn");
 if(exportBtn){
