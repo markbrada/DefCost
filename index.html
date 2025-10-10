@@ -5,7 +5,7 @@
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
 <meta charset="UTF-8">
-<title>DefCost 2.0.5</title>
+<title>DefCost 2.0.6</title>
 <style>
 :root{--bg:#f7f7f7;--fg:#333;--header:#e0e0e0;--btn:#007bff;--btnh:#0056b3;--add:#28a745;--addh:#218838;--border:#aaa;--alt:#f9f9f9;--panel:#fff;--toast:#007bff;--toastfg:#fff;--rowHover:#e9f1ff}
 .dark-mode{--bg:#222;--fg:#eee;--header:#444;--btn:#0d6efd;--btnh:#0a58ca;--add:#198754;--addh:#157347;--border:#555;--alt:#2a2a2a;--panel:#333;--toast:#0d6efd;--toastfg:#fff;--rowHover:#383838}
@@ -122,10 +122,11 @@ summary:hover{background:var(--btn);color:#fff}
 .item-input{display:block;width:100%;min-height:1.6em;max-height:8em;resize:vertical;overflow:auto;white-space:pre-wrap;line-height:1.24}
 .price-input{width:100%;min-height:1.6em;max-width:none;text-align:right;box-sizing:border-box;margin:0}
 #basketTable th:nth-child(1),#basketTable td:nth-child(1){width:36px}
-#basketTable th:nth-child(3),#basketTable td:nth-child(3){width:140px}
+#basketTable th:nth-child(2),#basketTable td:nth-child(2){width:200px}
 #basketTable th:nth-child(4),#basketTable td:nth-child(4){width:120px}
-#basketTable th:nth-child(5),#basketTable td:nth-child(5){width:150px}
-#basketTable th:nth-child(6),#basketTable td:nth-child(6){width:50px}
+#basketTable th:nth-child(5),#basketTable td:nth-child(5){width:110px}
+#basketTable th:nth-child(6),#basketTable td:nth-child(6){width:140px}
+#basketTable th:nth-child(7),#basketTable td:nth-child(7){width:50px}
 #basketTable col#col-item,#basketHead col#col-item{width:auto}
 .grand-totals-table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--panel)}
 .grand-totals-table th,.grand-totals-table td{padding:.4rem .5rem;border-bottom:1px solid var(--border);text-align:left;font-weight:600}
@@ -144,8 +145,10 @@ summary:hover{background:var(--btn);color:#fff}
 .dark-mode .section-notes-wrapper textarea{background:#2c2c2c;color:#fff;border-color:#555}
 .qty-controls{display:flex;align-items:center;gap:.25rem}
 .qty-controls button{padding:.15rem .4rem;line-height:1}
-.section-select{margin-left:.35rem;padding:.2rem .3rem;border:1px solid var(--border);border-radius:4px;background:var(--panel);color:var(--fg);font-size:.85rem}
+.section-cell{vertical-align:middle}
+.section-select{width:100%;padding:.28rem .35rem;border:1px solid var(--border);border-radius:4px;background:var(--panel);color:var(--fg);font-size:.9rem;box-sizing:border-box}
 .dark-mode .section-select{background:#444;color:#fff;border-color:#666}
+.section-readonly{display:block;padding:.28rem .35rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #basketSticky{position:sticky;top:0;z-index:4;background:var(--panel);box-shadow:0 2px 4px rgba(0,0,0,.06);padding:1rem 0 0;border-top:1px solid var(--border)}
 #basketStickyHead{background:var(--panel)}
 #basketStickyHead table{width:100%;table-layout:fixed;border-collapse:collapse}
@@ -156,7 +159,7 @@ input[type=number]{-moz-appearance:textfield}
 </style>
 </head>
 <body>
-<h1>DefCost 2.0.5</h1>
+<h1>DefCost 2.0.6</h1>
 <button id="darkModeToggle">Toggle Dark Mode</button>
 <div id="quoteBuilderMain" aria-label="Quote Builder" role="region">
   <div id="quoteHeader">
@@ -180,6 +183,7 @@ input[type=number]{-moz-appearance:textfield}
         <table id="basketHead">
           <colgroup>
             <col style="width:36px">
+            <col style="width:200px">
             <col id="col-item">
             <col style="width:120px">
             <col style="width:110px">
@@ -187,7 +191,7 @@ input[type=number]{-moz-appearance:textfield}
             <col style="width:50px">
           </colgroup>
           <thead><tr>
-            <th class="sort-handle">≡</th><th>Item</th><th>Quantity</th>
+            <th class="sort-handle">≡</th><th>Section</th><th>Item</th><th>Quantity</th>
             <th>Price</th>
             <th>Line Total</th><th></th>
           </tr></thead>
@@ -199,6 +203,7 @@ input[type=number]{-moz-appearance:textfield}
       <table id="basketTable">
         <colgroup>
           <col style="width:36px">
+          <col style="width:200px">
           <col id="col-item">
           <col style="width:120px">
           <col style="width:110px">
@@ -206,7 +211,7 @@ input[type=number]{-moz-appearance:textfield}
           <col style="width:50px">
         </colgroup>
           <thead><tr>
-            <th class="sort-handle">≡</th><th>Item</th><th>Quantity</th>
+            <th class="sort-handle">≡</th><th>Section</th><th>Item</th><th>Quantity</th>
             <th>Price</th>
             <th>Line Total</th><th></th>
           </tr></thead>
@@ -384,20 +389,35 @@ function ensureSectionState(){
 function normalizeBasketItems(){
   uid=0;
   var fallback=sections[0]?sections[0].id:1;
+  var parentsById={};
   for(var i=0;i<basket.length;i++){
     var item=basket[i];
     if(!item||typeof item!=='object') continue;
     var iid=+item.id||0;
     if(iid>uid) uid=iid;
-    if(item.pid){
-      if(typeof item.qty==='undefined'||!isFinite(item.qty)){item.qty=1;}
-    }else{
+    if(!item.pid){
       if(!sections.some(function(sec){return sec.id===item.sectionId;})){
         item.sectionId=fallback;
       }
       if(typeof item.qty==='undefined'||!isFinite(item.qty)){item.qty=1;}
       if(typeof item.kind==='undefined') item.kind='line';
       if(typeof item.collapsed==='undefined') item.collapsed=false;
+      parentsById[item.id]=item;
+    }
+  }
+  for(var j=0;j<basket.length;j++){
+    var child=basket[j];
+    if(!child||typeof child!=='object') continue;
+    if(child.pid){
+      if(typeof child.qty==='undefined'||!isFinite(child.qty)){child.qty=1;}
+      var parent=parentsById[child.pid];
+      if(parent){
+        child.sectionId=parent.sectionId;
+      }else if(!sections.some(function(sec){return sec.id===child.sectionId;})){
+        child.sectionId=fallback;
+      }
+    }else if(typeof child.qty==='undefined'||!isFinite(child.qty)){
+      child.qty=1;
     }
   }
 }
@@ -478,6 +498,82 @@ function getSectionById(id){
 function getSectionNameById(id){
   var sec=getSectionById(id);
   return sec?sec.name:('Section '+id);
+}
+function getSectionIndexById(id){
+  for(var i=0;i<sections.length;i++){
+    if(sections[i].id===id) return i;
+  }
+  return sections.length;
+}
+function getParentItemById(id){
+  for(var i=0;i<basket.length;i++){
+    var item=basket[i];
+    if(item && item.id===id && !item.pid){
+      return item;
+    }
+  }
+  return null;
+}
+function cascadeSectionToChildren(parentId,newSectionId){
+  for(var i=0;i<basket.length;i++){
+    var item=basket[i];
+    if(item && item.pid===parentId){
+      item.sectionId=newSectionId;
+    }
+  }
+}
+function moveParentGroupToSection(parentId,newSectionId){
+  if(!basket||!basket.length) return;
+  var group=[];
+  var removeMap={};
+  for(var i=0;i<basket.length;i++){
+    var entry=basket[i];
+    if(!entry) continue;
+    if(entry.id===parentId||entry.pid===parentId){
+      group.push(entry);
+      removeMap[i]=true;
+    }
+  }
+  if(!group.length) return;
+  var remaining=[];
+  for(var r=0;r<basket.length;r++){
+    if(!removeMap[r]) remaining.push(basket[r]);
+  }
+  var targetOrder=getSectionIndexById(newSectionId);
+  var insertIndex=remaining.length;
+  for(var idx=0;idx<remaining.length;){
+    var item=remaining[idx];
+    if(!item){ idx++; continue; }
+    if(!item.pid){
+      var itemOrder=getSectionIndexById(item.sectionId);
+      if(item.sectionId===newSectionId){
+        var after=idx+1;
+        while(after<remaining.length && remaining[after].pid===item.id){ after++; }
+        insertIndex=after;
+        idx=after;
+        continue;
+      }
+      if(itemOrder>targetOrder){
+        insertIndex=idx;
+        break;
+      }
+      var skip=idx+1;
+      while(skip<remaining.length && remaining[skip].pid===item.id){ skip++; }
+      idx=skip;
+      continue;
+    }
+    idx++;
+  }
+  basket=remaining.slice(0,insertIndex).concat(group,remaining.slice(insertIndex));
+}
+function setParentSection(parentItem,newSectionId){
+  if(!parentItem||parentItem.pid) return;
+  if(parentItem.sectionId===newSectionId) return;
+  if(!sections.some(function(sec){return sec.id===newSectionId;})) return;
+  parentItem.sectionId=newSectionId;
+  cascadeSectionToChildren(parentItem.id,newSectionId);
+  moveParentGroupToSection(parentItem.id,newSectionId);
+  saveBasket();
 }
 function renderSectionTabs(){
   if(!sectionTabsEl) return;
@@ -587,7 +683,7 @@ if(bFootEl){
 }
 if(addSectionBtn){addSectionBtn.addEventListener('click',function(){ensureSectionState();var suggestion='Section '+(sectionSeq+1);var name=prompt('Section name',suggestion);if(name===null)return;name=name.trim();if(!name){showToast('Section name is required');return;}var newId=sectionSeq+1;sections.push({id:newId,name:name,notes:''});sectionSeq=newId;activeSectionId=newId;captureParentId=null;renderBasket();showToast('Section added');});}
 var addCustomBtn=document.getElementById('addCustomBtn');
-if(addCustomBtn){addCustomBtn.addEventListener('click',function(){var nl;if(captureParentId){nl={id:++uid,pid:captureParentId,kind:'sub',item:'Sub item',qty:1,ex:0};}else{nl={id:++uid,pid:null,kind:'line',collapsed:false,sectionId:activeSectionId,item:'Custom item',qty:1,ex:0};}basket.push(nl);renderBasket();try{var rows=bBody.querySelectorAll('tr.main-row');if(rows.length){var last=rows[rows.length-1].querySelector('.item-input');if(last)last.focus();}}catch(_){}});}
+if(addCustomBtn){addCustomBtn.addEventListener('click',function(){var nl=null;if(captureParentId){var parent=getParentItemById(captureParentId);if(parent){var parentSection=sections.some(function(sec){return sec.id===parent.sectionId;})?parent.sectionId:activeSectionId;nl={id:++uid,pid:captureParentId,kind:'sub',sectionId:parentSection,item:'Sub item',qty:1,ex:0};}else{captureParentId=null;}}if(!nl){nl={id:++uid,pid:null,kind:'line',collapsed:false,sectionId:activeSectionId,item:'Custom item',qty:1,ex:0};}basket.push(nl);renderBasket();try{var rows=bBody.querySelectorAll('tr.main-row');if(rows.length){var last=rows[rows.length-1].querySelector('.item-input');if(last)last.focus();}}catch(_){}});}
 function updateBasketHeaderOffset(){
   var cont=document.getElementById('basketContainer');
   var sticky=document.getElementById('basketSticky');
@@ -614,11 +710,20 @@ function addItem(row,header){
   }
   var desc=itemCol!==-1?row[itemCol]:firstNonEmpty||'Unnamed Item';
   var exVal=exIdx===-1?NaN:+row[exIdx];
+  var newItem=null;
   if(captureParentId){
-    basket.push({id:++uid,pid:captureParentId,kind:'sub',item:desc,qty:1,ex:exVal});
-  }else{
-    basket.push({id:++uid,pid:null,kind:'line',collapsed:false,sectionId:activeSectionId,item:desc,qty:1,ex:exVal});
+    var parent=getParentItemById(captureParentId);
+    if(parent){
+      var parentSection=sections.some(function(sec){return sec.id===parent.sectionId;})?parent.sectionId:activeSectionId;
+      newItem={id:++uid,pid:captureParentId,kind:'sub',sectionId:parentSection,item:desc,qty:1,ex:exVal};
+    }else{
+      captureParentId=null;
+    }
   }
+  if(!newItem){
+    newItem={id:++uid,pid:null,kind:'line',collapsed:false,sectionId:activeSectionId,item:desc,qty:1,ex:exVal};
+  }
+  basket.push(newItem);
   renderBasket();
 }
 
@@ -654,28 +759,37 @@ function renderBasket(){
     if(!sections.some(function(sec){return sec.id===b.sectionId;})){
       b.sectionId=fallback;
     }
+    var parentSectionName=getSectionNameById(b.sectionId);
     if(captureParentId===b.id){ captureFound=true; }
     var tr=document.createElement('tr'); tr.className='main-row'; tr.dataset.id=String(b.id||'');
     var tdHandle=document.createElement('td'); tdHandle.className='sort-handle'; tdHandle.textContent='≡'; tr.appendChild(tdHandle);
+    var tdSection=document.createElement('td'); tdSection.className='section-cell';
+    var secSelect=document.createElement('select'); secSelect.className='section-select';
+    for(var si=0;si<sections.length;si++){
+      var opt=document.createElement('option');
+      opt.value=String(sections[si].id);
+      opt.textContent=sections[si].name;
+      if(sections[si].id===b.sectionId) opt.selected=true;
+      secSelect.appendChild(opt);
+    }
+    secSelect.value=String(b.sectionId);
+    secSelect.onchange=function(){
+      var newSectionId=parseInt(secSelect.value,10);
+      captureParentId=null;
+      setParentSection(b,newSectionId);
+      renderBasket();
+    };
+    tdSection.appendChild(secSelect);
+    tr.appendChild(tdSection);
     var tdItem=document.createElement('td');
     var ctrl=document.createElement('span'); ctrl.className='sub-controls';
     var cap=document.createElement('button'); cap.className='subbtn'+(captureParentId===b.id?' active':''); cap.title='Capture catalog adds as sub-items'; cap.textContent='⊞';
     cap.onclick=function(){ captureParentId=(captureParentId===b.id?null:b.id); renderBasket(); };
     var addS=document.createElement('button'); addS.className='subbtn'; addS.title='Add note sub-item'; addS.textContent='+';
-    addS.onclick=function(){ basket.push({id:++uid,pid:b.id,kind:'sub',item:'',qty:1,ex:0}); renderBasket(); };
+    addS.onclick=function(){ basket.push({id:++uid,pid:b.id,kind:'sub',sectionId:b.sectionId,item:'',qty:1,ex:0}); renderBasket(); };
     var tog=document.createElement('button'); tog.className='subbtn'; tog.title='Collapse/expand sub-items'; tog.textContent=b.collapsed?'▸':'▾';
     tog.onclick=function(){ b.collapsed=!b.collapsed; renderBasket(); };
     ctrl.appendChild(cap); ctrl.appendChild(addS); ctrl.appendChild(tog); tdItem.appendChild(ctrl);
-    var secSelect=document.createElement('select'); secSelect.className='section-select';
-    for(var si=0;si<sections.length;si++){
-      var opt=document.createElement('option');
-      opt.value=sections[si].id;
-      opt.textContent=sections[si].name;
-      if(sections[si].id===b.sectionId) opt.selected=true;
-      secSelect.appendChild(opt);
-    }
-    secSelect.onchange=function(){ b.sectionId=parseInt(secSelect.value,10); captureParentId=null; renderBasket(); };
-    tdItem.appendChild(secSelect);
     var itemInput=document.createElement('textarea'); itemInput.rows=1; itemInput.value=b.item||''; itemInput.className='editable item-input';
     itemInput.oninput=function(){ b.item=itemInput.value; saveBasket(); };
     tdItem.appendChild(itemInput); tr.appendChild(tdItem);
@@ -702,8 +816,12 @@ function renderBasket(){
     for(var k=0;k<kids.length;k++){
       (function(s){
         if(typeof s.qty==='undefined'||!isFinite(s.qty)) s.qty=1;
+        s.sectionId=b.sectionId;
         var sr=document.createElement('tr'); sr.className='sub-row'; sr.dataset.id=String(s.id||'');
         var c1=document.createElement('td'); c1.textContent=''; sr.appendChild(c1);
+        var sectionCell=document.createElement('td'); sectionCell.className='section-cell';
+        var sectionLabel=document.createElement('span'); sectionLabel.className='section-readonly'; sectionLabel.textContent=parentSectionName;
+        sectionCell.appendChild(sectionLabel); sr.appendChild(sectionCell);
         var c2=document.createElement('td'); c2.className='sub-item-cell'; var t=document.createElement('textarea'); t.rows=1; t.className='editable item-input'; t.value=s.item||''; t.oninput=function(){ s.item=t.value; saveBasket(); }; c2.appendChild(t); sr.appendChild(c2);
         var c3=document.createElement('td'); var qc=document.createElement('div'); qc.className='qty-controls';
         var minus=document.createElement('button'); minus.textContent='-';
@@ -745,7 +863,7 @@ function renderBasket(){
   bFoot.innerHTML='';
   var notesRow=document.createElement('tr');
   var notesCell=document.createElement('td');
-  notesCell.colSpan=6;
+  notesCell.colSpan=7;
   notesCell.className='section-notes-cell';
   var wrapper=document.createElement('div'); wrapper.className='section-notes-wrapper';
   var notesId='section-notes-'+activeSectionId;
