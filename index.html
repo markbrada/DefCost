@@ -5,7 +5,7 @@
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
 <meta charset="UTF-8">
-<title>DefCost 2.0.3</title>
+<title>DefCost 2.0.4</title>
 <style>
 :root{--bg:#f7f7f7;--fg:#333;--header:#e0e0e0;--btn:#007bff;--btnh:#0056b3;--add:#28a745;--addh:#218838;--border:#aaa;--alt:#f9f9f9;--panel:#fff;--toast:#007bff;--toastfg:#fff;--rowHover:#e9f1ff}
 .dark-mode{--bg:#222;--fg:#eee;--header:#444;--btn:#0d6efd;--btnh:#0a58ca;--add:#198754;--addh:#157347;--border:#555;--alt:#2a2a2a;--panel:#333;--toast:#0d6efd;--toastfg:#fff;--rowHover:#383838}
@@ -85,10 +85,10 @@ summary:hover{background:var(--btn);color:#fff}
 #basketContainer{display:flex;flex-direction:column;min-height:100%;gap:0}
 #basketContent{display:flex;flex-direction:column;gap:1rem}
 .basket-table-area{flex:1 1 auto;min-width:0}
-.grand-totals-wrapper{display:none;justify-content:flex-end;margin-top:.75rem}
+.grand-totals-wrapper{display:none;justify-content:flex-end;margin-top:1rem}
 
-#grandTotals{margin:0;padding:.75rem;border:1px solid var(--border);border-radius:8px;background:var(--panel);display:none;font-weight:600;width:min(320px,100%);max-width:340px}
-#sectionTabsBar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;padding:.35rem .5rem;background:var(--header);border:1px solid var(--border);border-top:0}
+#grandTotals{margin:0;padding:0;border:0;border-radius:8px;background:transparent;display:none;font-weight:600;width:min(320px,100%);max-width:340px}
+#sectionTabsBar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;padding:.45rem .65rem;min-height:48px;background:var(--header);border:1px solid var(--border);border-bottom:0;border-radius:8px 8px 0 0}
 #sectionTabs{display:flex;flex-wrap:wrap;gap:.25rem}
 .section-tab{display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .6rem;border:1px solid var(--border);border-radius:6px;background:var(--panel);color:var(--fg);cursor:pointer;transition:.2s}
 .section-tab.active{background:var(--btn);color:#fff;border-color:var(--btn)}
@@ -99,11 +99,11 @@ summary:hover{background:var(--btn);color:#fff}
 #addSectionBtn:hover{background:var(--addh)}
 #basketTable{table-layout:fixed;background:var(--panel)}
 #basketContent{background:var(--panel)}
-#basketTable th,#basketTable td{border:1px solid var(--border);padding:.28rem;box-sizing:border-box;vertical-align:middle;overflow:hidden}
+#basketTable th,#basketTable td{border:1px solid var(--border);padding:.24rem .28rem;box-sizing:border-box;vertical-align:middle;overflow:hidden}
 #basketContainer thead th{position:static}
 #basketTable tbody tr:hover{background:var(--rowHover)}
 .sort-handle{cursor:move;user-select:none;text-align:left;font-size:1.1rem;min-width:2em}
-.qty-input{width:48px;text-align:center}
+.qty-input{width:48px;text-align:center;height:1.6em}
 .remove-btn{color:red;font-weight:bold;cursor:pointer}
 .sub-row td{background:var(--alt);font-size:.95em}
 .sub-row .item-input{min-height:1.6em}
@@ -118,31 +118,32 @@ summary:hover{background:var(--btn);color:#fff}
 .dark-mode .subbtn.active{background:var(--btn);color:#fff;border-color:var(--btn)}
 #toast{margin-left:1rem;background:var(--toast);color:var(--toastfg);padding:.3rem .6rem;border-radius:4px;opacity:0;transition:.3s}
 #toast.show{opacity:1}
-.editable{background:#fff;border:1px solid var(--border);padding:.35rem .45rem;border-radius:6px;width:100%;box-sizing:border-box;display:block;margin:0}
-.item-input{display:block;width:100%;min-height:2.2em;max-height:8em;resize:vertical;overflow:auto;white-space:pre-wrap;line-height:1.22}
-.price-input{width:100%;height:2.2em;max-width:none;text-align:right;box-sizing:border-box;margin:0}
+.editable{background:#fff;border:1px solid var(--border);padding:.28rem .4rem;border-radius:6px;width:100%;box-sizing:border-box;display:block;margin:0}
+.item-input{display:block;width:100%;min-height:1.6em;max-height:8em;resize:vertical;overflow:auto;white-space:pre-wrap;line-height:1.24}
+.price-input{width:100%;min-height:1.6em;max-width:none;text-align:right;box-sizing:border-box;margin:0}
 #basketTable th:nth-child(1),#basketTable td:nth-child(1){width:36px}
 #basketTable th:nth-child(3),#basketTable td:nth-child(3){width:140px}
 #basketTable th:nth-child(4),#basketTable td:nth-child(4){width:120px}
 #basketTable th:nth-child(5),#basketTable td:nth-child(5){width:150px}
 #basketTable th:nth-child(6),#basketTable td:nth-child(6){width:50px}
 #basketTable col#col-item,#basketHead col#col-item{width:auto}
-.grand-totals-table{width:100%;border-collapse:collapse}
-.grand-totals-table th,.grand-totals-table td{padding:.35rem .45rem;border-bottom:1px solid var(--border);text-align:left;font-weight:600}
+.grand-totals-table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--panel)}
+.grand-totals-table th,.grand-totals-table td{padding:.4rem .5rem;border-bottom:1px solid var(--border);text-align:left;font-weight:600}
 .grand-totals-table tr:last-child th,.grand-totals-table tr:last-child td{border-bottom:0}
 .grand-totals-table th{font-weight:700;white-space:nowrap}
 .grand-totals-table td{font-weight:600}
+.grand-totals-table tr th:first-child,.grand-totals-table tr td:first-child{border-right:1px solid var(--border)}
 .grand-totals-table .totals-value{text-align:right;font-variant-numeric:tabular-nums}
 .grand-totals-table .grand-totals-input{display:flex;align-items:center;gap:.35rem}
-.grand-totals-table .grand-totals-input input{width:100%;padding:.35rem .45rem;border:1px solid var(--border);border-radius:6px;background:var(--panel);color:var(--fg)}
+.grand-totals-table .grand-totals-input input{width:100%;padding:.32rem .4rem;border:1px solid var(--border);border-radius:6px;background:var(--panel);color:var(--fg)}
 .grand-totals-table .grand-totals-input span{opacity:.75}
 .section-notes-cell{padding:0!important}
-.section-notes-wrapper{display:flex;flex-direction:column;gap:.35rem;padding:.6rem .75rem}
+.section-notes-wrapper{display:flex;flex-direction:column;gap:.4rem;padding:.45rem .65rem}
 .section-notes-wrapper label{font-weight:600}
-.section-notes-wrapper textarea{width:100%;min-height:80px;padding:.45rem;border:1px solid var(--border);border-radius:6px;background:var(--panel);color:var(--fg);resize:vertical;font-family:inherit;font-size:.95rem}
+.section-notes-wrapper textarea{width:100%;min-height:72px;padding:.32rem .4rem;border:1px solid var(--border);border-radius:6px;background:var(--panel);color:var(--fg);resize:vertical;font-family:inherit;font-size:1rem;line-height:1.28}
 .dark-mode .section-notes-wrapper textarea{background:#2c2c2c;color:#fff;border-color:#555}
 .qty-controls{display:flex;align-items:center;gap:.25rem}
-.qty-controls button{padding:.2rem .45rem;line-height:1}
+.qty-controls button{padding:.15rem .4rem;line-height:1}
 .section-select{margin-left:.35rem;padding:.2rem .3rem;border:1px solid var(--border);border-radius:4px;background:var(--panel);color:var(--fg);font-size:.85rem}
 .dark-mode .section-select{background:#444;color:#fff;border-color:#666}
 #basketSticky{position:sticky;top:0;z-index:4;background:var(--panel);box-shadow:0 2px 4px rgba(0,0,0,.06);padding:1rem 0 0;border-top:1px solid var(--border)}
@@ -155,7 +156,7 @@ input[type=number]{-moz-appearance:textfield}
 </style>
 </head>
 <body>
-<h1>DefCost 2.0.3</h1>
+<h1>DefCost 2.0.4</h1>
 <button id="darkModeToggle">Toggle Dark Mode</button>
 <div id="quoteBuilderMain" aria-label="Quote Builder" role="region">
   <div id="quoteHeader">
@@ -258,6 +259,7 @@ var dragInfo=null,resizeInfo=null,prevUserSelect='';
 var currentSearchInput=null;
 applyQBState(true);
 ensureWindowWithinViewport(true);
+renderSectionTabs();
  if(qbTitlebar){qbTitlebar.addEventListener('mousedown',startDrag);qbTitlebar.addEventListener('touchstart',startDrag,{passive:false});}
  if(qbMin){qbMin.addEventListener('click',toggleDock);}
  if(qbDockIcon){qbDockIcon.addEventListener('click',restoreFromDock);}
@@ -674,7 +676,7 @@ function renderBasket(){
     }
     secSelect.onchange=function(){ b.sectionId=parseInt(secSelect.value,10); captureParentId=null; renderBasket(); };
     tdItem.appendChild(secSelect);
-    var itemInput=document.createElement('textarea'); itemInput.rows=2; itemInput.value=b.item||''; itemInput.className='editable item-input';
+    var itemInput=document.createElement('textarea'); itemInput.rows=1; itemInput.value=b.item||''; itemInput.className='editable item-input';
     itemInput.oninput=function(){ b.item=itemInput.value; saveBasket(); };
     tdItem.appendChild(itemInput); tr.appendChild(tdItem);
     var tdQ=document.createElement('td'); var qc=document.createElement('div'); qc.className='qty-controls';
