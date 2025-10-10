@@ -84,6 +84,7 @@ Defender Price List.xlsx   # Workbook loaded by the app
 
 ## Versioning
 
+- **3.0.6** – Hybrid modularisation C: Minimal catalogue module for open/close/state persistence. No functional changes.
 - **3.0.5** – Hybrid modularisation B: Moved renderBasket into /js/ui.js; render uses window.DefCost state/API. No functional changes.
 - **3.0.4** – Hybrid modularisation A: Introduced global namespace and moved Import Summary modal + toast to /js/ui.js (reads/writes global state). No functional changes.
 - **3.0.3** – Split calculation and storage logic into dedicated modules (calc.js and storage.js). No behavioural changes.
