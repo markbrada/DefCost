@@ -99,7 +99,8 @@ Defender.jpeg              # Brand image / logo
 
 ## Versioning
 
-- **3.0.6** – Hybrid modularisation C: Minimal catalogue module (open/close/state persistence). No functional changes.  
+- **3.0.7** – Prevented duplicate Section names (case-insensitive) to maintain clean CSV import/export integrity.
+- **3.0.6** – Hybrid modularisation C: Minimal catalogue module (open/close/state persistence). No functional changes.
 - **3.0.5** – Hybrid modularisation B: Moved renderBasket into /ui.js. No functional changes.  
 - **3.0.4** – Hybrid modularisation A: Introduced global namespace and moved Import Summary modal + toast to /ui.js. No functional changes.  
 - **3.0.3** – Split calculation and storage logic into calc.js and storage.js. No behavioural changes.  
