@@ -496,15 +496,17 @@ window.DefCost.ui = window.DefCost.ui || {};
       inp.type = 'number';
       inp.step = '0.1';
       inp.className = 'qty-input';
-      inp.value = b.qty || 1;
+      inp.value = Number.isFinite(b.qty) ? b.qty : 1;
       var plus = document.createElement('button');
       plus.textContent = '+';
       minus.onclick = function () {
-        b.qty = Math.max(1, (b.qty || 1) - 1);
+        var baseQty = Number.isFinite(b.qty) ? b.qty : 1;
+        b.qty = Math.max(1, baseQty - 1);
         renderBasket();
       };
       plus.onclick = function () {
-        b.qty = (b.qty || 1) + 1;
+        var baseQty = Number.isFinite(b.qty) ? b.qty : 1;
+        b.qty = baseQty + 1;
         renderBasket();
       };
       inp.onchange = function () {
@@ -529,7 +531,8 @@ window.DefCost.ui = window.DefCost.ui || {};
       };
       tdEx.appendChild(exInput);
       tr.appendChild(tdEx);
-      var lineTotal = isNaN(b.ex) ? NaN : (b.qty || 1) * b.ex;
+      var safeQty = Number.isFinite(b.qty) ? b.qty : 1;
+      var lineTotal = isNaN(b.ex) ? NaN : safeQty * b.ex;
       var tdLi = document.createElement('td');
       tdLi.textContent = isNaN(lineTotal) ? 'N/A' : lineTotal.toFixed(2);
       tr.appendChild(tdLi);
@@ -603,15 +606,17 @@ window.DefCost.ui = window.DefCost.ui || {};
           inp.type = 'number';
           inp.step = '0.1';
           inp.className = 'qty-input';
-          inp.value = s.qty || 1;
+          inp.value = Number.isFinite(s.qty) ? s.qty : 1;
           var plus = document.createElement('button');
           plus.textContent = '+';
           minus.onclick = function () {
-            s.qty = Math.max(1, (s.qty || 1) - 1);
+            var baseQty = Number.isFinite(s.qty) ? s.qty : 1;
+            s.qty = Math.max(1, baseQty - 1);
             renderBasket();
           };
           plus.onclick = function () {
-            s.qty = (s.qty || 1) + 1;
+            var baseQty = Number.isFinite(s.qty) ? s.qty : 1;
+            s.qty = baseQty + 1;
             renderBasket();
           };
           inp.onchange = function () {
@@ -636,7 +641,8 @@ window.DefCost.ui = window.DefCost.ui || {};
           };
           c4.appendChild(exInput);
           sr.appendChild(c4);
-          var lineSubTotal = isNaN(s.ex) ? NaN : (s.qty || 1) * s.ex;
+          var safeQty = Number.isFinite(s.qty) ? s.qty : 1;
+          var lineSubTotal = isNaN(s.ex) ? NaN : safeQty * s.ex;
           var c5 = document.createElement('td');
           c5.textContent = isNaN(lineSubTotal) ? 'N/A' : lineSubTotal.toFixed(2);
           sr.appendChild(c5);
