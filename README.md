@@ -1,20 +1,20 @@
 # DefCost – Workplace Defender Pricing Tool
 
-DefCost is a browser-based estimating and quoting tool for Workplace Defender.
-It loads an Excel workbook of products/services and lets estimators build quotes structured into **Sections**, with support for **sub-items**, drag-reorder, per-section notes, and CSV export.
+DefCost is a browser-based estimating and quoting tool for **Workplace Defender**.  
+It loads an Excel workbook of products and services and lets estimators build quotes structured into **Sections**, with support for **sub-items**, drag-reorder, per-section notes, and CSV import/export.
 
 ---
 
 ## Tech Stack
 
-- Pure **HTML / CSS / Vanilla JavaScript** (single file: `index.html`)
+- Pure **HTML / CSS / Vanilla JavaScript** (modular **ES6**, see `/js/`)
 - Hosted on **GitHub Pages**
-- Libraries
-  - **SheetJS** (`xlsx.full.min.js`) – Excel parsing
+- Libraries  
+  - **SheetJS** (`xlsx.full.min.js`) – Excel parsing  
   - **SortableJS** – drag-and-drop ordering
 - Data source: **`Defender Price List.xlsx`** (must be in repo root)
 - Persistence: **localStorage** key `defcost_basket_v2`
-- Locale: **AUD**, **GST 10%**
+- Locale: **AUD**, **GST 10 %**
 - Dark mode supported
 
 ---
@@ -23,97 +23,114 @@ It loads an Excel workbook of products/services and lets estimators build quotes
 
 ### Quote Builder (primary workspace)
 
-- **Sections**: create, rename, delete; one **active** section at a time
-- **Items**: add from catalog or custom; qty, unit price, line totals (Ex. GST)
-- **Sub-items**: optional nested lines that roll up into the parent and section totals
-- **Section notes**: dedicated notes field stored alongside each section in localStorage
-- **Reorder**: drag-and-drop for items (and keep sub-items with their parent)
-- **Totals**:
-  - Right-aligned summary table (beneath the active section) lists **Total (Ex. GST)**, **Discount %**, **Grand Total (Ex. GST)**, **GST (10%)**, **Grand Total (Incl. GST)**
-  - Discount % and Grand Total inputs stay in sync
-- **CSV export**: section-aware, includes grand totals
-- **Clipboard**: click any non-input cell to copy its text
-- **Sticky header**: stable sizing with `scrollbar-gutter: stable`
+- **Sections** – create, rename, delete; one **active** section at a time  
+- **Items** – add from catalog or custom; quantity, unit price, line totals (Ex. GST)  
+- **Sub-items** – optional nested lines that roll up into the parent and section totals  
+- **Section notes** – dedicated notes field stored alongside each section in localStorage  
+- **Reorder** – drag-and-drop for items (and keep sub-items with their parent)  
+- **Totals**
+  - Right-aligned summary table (beneath the active section) lists **Total (Ex. GST)**, **Discount %**, **Grand Total (Ex. GST)**, **GST (10 %)**, **Grand Total (Incl. GST)**
+  - Discount % and Grand Total inputs stay in sync  
+- **CSV export/import** – section-aware, includes grand totals and per-section notes  
+- **Clipboard** – click any non-input cell to copy its text  
+- **Sticky header** – stable sizing with `scrollbar-gutter: stable`
 
 ### Catalogue (floating utility window)
-- **Excel-driven** data rendered from the included workbook tabs
-- **Search**: keyword filtering per sheet with highlight on matches
-- **Click-to-copy**: quickly copies values for use in the Quote Builder
-- **Add buttons**: send catalogue items straight into the active section
-- **Window controls**: drag, minimise to dock icon, or toggle full-screen view
-- **Dark mode aware** so the window matches the active theme
+
+- **Excel-driven** data rendered from the included workbook tabs  
+- **Search** – keyword filtering per sheet with highlight on matches  
+- **Click-to-copy** – quickly copies values for use in the Quote Builder  
+- **Add buttons** – send catalogue items straight into the active section  
+- **Window controls** – drag, minimise to dock icon, or toggle full-screen view  
+- **Dark-mode aware** so the window matches the active theme
 
 ---
 
 ## Totals Logic
 
-- Line Total (displayed) = `qty × price` (Ex. GST)
-- Section Ex. GST subtotal = sum of **parent items + sub-items** in that section
-- Discounted Grand Total (Ex. GST) = `Section Ex. GST subtotal × (1 - Discount %)`
-- GST (10%) = `Discounted Grand Total × 0.10`
-- Grand Total (Incl. GST) = `Discounted Grand Total + GST`
+- **Line Total** = `qty × price` (Ex. GST)  
+- **Section Ex. GST subtotal** = sum of parent + sub-items in that section  
+- **Discounted Grand Total (Ex. GST)** = `Section Ex. GST subtotal × (1 − Discount %)`  
+- **GST (10 %)** = `Discounted Grand Total × 0.10`  
+- **Grand Total (Incl. GST)** = `Discounted Grand Total + GST`
 
 ---
 
 ## File Layout
-index.html                 # All UI + logic
+
+```
+index.html                 # Main HTML shell, loads modules under /js
+/js/                       # JavaScript modules
+  main.js                  # App bootstrap and event wiring
+  ui.js                    # Rendering and UI helpers
+  storage.js               # localStorage, CSV import/export, backups
+  calc.js                  # Totals, rounding, currency logic
+  catalogue.js             # Floating catalogue window behaviour
 xlsx.full.min.js           # SheetJS (local fallback)
 Defender Price List.xlsx   # Workbook loaded by the app
+Defender.jpeg              # Brand image / logo
+```
+
 ---
 
 ## Do Not Break
 
-- **Workbook loading** path or filename
-- **localStorage schema** and key: `defcost_basket_v2`
-- **Sections** structure and item→sub-item relationships
-- **Sticky header** / seam fix (don’t move padding/borders from the sticky wrapper)
-- **CSV export** shape and ordering
-- **Clipboard copy** behavior
-- **Dark mode** toggle
+- **Workbook loading** path or filename  
+- **localStorage schema** and key `defcost_basket_v2`  
+- **Sections** structure and item ↔ sub-item relationships  
+- **Sticky header** layout (do not move padding/borders from sticky wrapper)  
+- **CSV export** shape and ordering  
+- **Clipboard copy** behaviour  
+- **Dark mode** toggle  
+- **Global namespace** `window.DefCost` must remain until fully ES6-scoped  
 
 ---
 
 ## Current Status
 
-- Implemented: **Sections, sub-items, and per-section notes** with persistence
-- Implemented: **Quote Builder** promoted to the main workspace
-- Implemented: **Catalogue** running in the floating macOS-style window
-- Implemented: **Window controls** – delete quote modal, minimise, dock icon, full-screen toggle
+- Implemented: **Sections, sub-items, and per-section notes** with persistence  
+- Implemented: **Quote Builder** as main workspace  
+- Implemented: **Catalogue** in floating macOS-style window  
+- Implemented: **Window controls** (delete quote modal, minimise, dock icon, full-screen toggle)  
+- Implemented: **Import Summary modal** and Undo system after CSV import  
+- Implemented: **Hybrid modular JS architecture** (main, ui, storage, calc, catalogue)
 
 ---
 
 ## Versioning
 
-- **3.0.6** – Hybrid modularisation C: Minimal catalogue module for open/close/state persistence. No functional changes.
-- **3.0.5** – Hybrid modularisation B: Moved renderBasket into /js/ui.js; render uses window.DefCost state/API. No functional changes.
-- **3.0.4** – Hybrid modularisation A: Introduced global namespace and moved Import Summary modal + toast to /js/ui.js (reads/writes global state). No functional changes.
-- **3.0.3** – Split calculation and storage logic into dedicated modules (calc.js and storage.js). No behavioural changes.
-- **3.0.2** – Extracted inline JavaScript from index.html into /js/main.js — no logic changes.
-- **3.0.1** – Added Import Summary modal after CSV import — shows counts of sections, items, notes, and total value with Undo option.
-- **3.0.0** – Added CSV Import: restores sections, items, children ('- ' prefix), and per-section notes ('Section X Notes' rows). Includes backup/undo and strict header validation.
-- **2.0.7** – Fixed CSV header ('Line Total' label) and added Notes rows under each section in CSV export.
-- **2.0.6** – Section selector moved to its own column; children inherit section (read-only)
-- **2.0.5** – Simplified line total header copy and reduced Quote Builder title size
-- **2.0.4** – Refined section tabs, tightened quote row spacing, refreshed notes + totals styling
-- **2.0.3** – Hardened the dark mode toggle binding and bumped the displayed version
-- **2.0.2** – Repositioned the quote totals into a dedicated table beneath the sections
-- **2.0.1** – Fixed merge regression that duplicated the totals sidebar and broke the main script bootstrap
-- **2.0.0** – Added per-section notes, Ex. GST line totals, and redesigned totals sidebar with synced discount logic
-- **1.2.0** – Quote Builder moved to the main page; Catalogue lives in the floating window with macOS-style controls
-- **1.1.1** – Sections UI refinements, bug fixes
-- **1.1.0** – Introduced Sections and section totals
+- **3.0.6** – Hybrid modularisation C: Minimal catalogue module (open/close/state persistence). No functional changes.  
+- **3.0.5** – Hybrid modularisation B: Moved renderBasket into /ui.js. No functional changes.  
+- **3.0.4** – Hybrid modularisation A: Introduced global namespace and moved Import Summary modal + toast to /ui.js. No functional changes.  
+- **3.0.3** – Split calculation and storage logic into calc.js and storage.js. No behavioural changes.  
+- **3.0.2** – Extracted inline JavaScript into /js/main.js. No logic changes.  
+- **3.0.1** – Added Import Summary modal after CSV import (with Undo).  
+- **3.0.0** – Added CSV Import (restores sections, items, children, notes). Includes backup/undo.  
+- **2.0.7** – Fixed CSV header ('Line Total' label) and added Notes rows under each section in CSV export.  
+- **2.0.6** – Section selector moved to its own column; children inherit section (read-only).  
+- **2.0.5** – Simplified line total header copy and reduced Quote Builder title size.  
+- **2.0.4** – Refined section tabs, tightened quote row spacing, refreshed notes + totals styling.  
+- **2.0.3** – Hardened the dark mode toggle binding and bumped displayed version.  
+- **2.0.2** – Repositioned the quote totals into a dedicated table beneath the sections.  
+- **2.0.1** – Fixed merge regression that duplicated the totals sidebar and broke the main script bootstrap.  
+- **2.0.0** – Added per-section notes, Ex. GST line totals, and redesigned totals sidebar with synced discount logic.  
+- **1.2.0** – Quote Builder moved to the main page; Catalogue lives in the floating window with macOS-style controls.  
+- **1.1.1** – Sections UI refinements and bug fixes.  
+- **1.1.0** – Introduced Sections and section totals.  
+- **1.0.0** – Initial release with basic quoting table and Excel-driven catalogue.
 
 ---
 
 ## For Codex & AI Editors
 
-When you make feature changes in this repo, also keep this README aligned.
+When you make feature changes in this repo, keep this README aligned.
 
-1. **Update the version** in this README when you change the `<title>` and `<h1>` in `index.html`.
-2. Add a concise bullet under **Versioning** describing the change.
-3. Preserve the **Do Not Break** rules (don’t alter the loading path, persistence key, or sticky header structure).
-4. Keep the **CSV export format** and **section/sub-item** relationships intact.
-5. If you modify basket/sections/sub-items logic, confirm **grand totals** still equal the sum of all sections and that CSV export remains consistent.
+1. **Update the version** in this README and in `index.html` (`<title>` + `<h1>`).  
+2. Add a concise bullet under **Versioning** describing the change.  
+3. Preserve the **Do Not Break** rules (localStorage key, paths, sticky header).  
+4. Keep the **CSV export format** and **section/sub-item** relationships intact.  
+5. If you change basket or totals logic, confirm Grand Totals = sum of all sections and CSV remains consistent.  
+6. Follow phase-based commits for major refactors to avoid timeouts.
 
 ---
 
