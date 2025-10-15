@@ -585,7 +585,7 @@ function renderSectionTabs(){
       tab.onclick=function(){ if(activeSectionId!==sec.id){ activeSectionId=sec.id; captureParentId=null; window.DefCost.ui.renderBasket(); } };
       var nameSpan=document.createElement('span'); nameSpan.className='section-name'; nameSpan.textContent=sec.name; tab.appendChild(nameSpan);
       var renameBtn=document.createElement('button'); renameBtn.type='button'; renameBtn.textContent='✎'; renameBtn.title='Rename section';
-      renameBtn.onclick=function(ev){ ev.stopPropagation(); var newName=prompt('Section name',sec.name); if(newName===null) return; newName=newName.trim(); if(!newName){ showToast('Section name is required'); return; } var normalized=newName.toLowerCase().trim(); for(var si2=0;si2<sections.length;si2++){ var existing=sections[si2]; if(!existing||existing.id===sec.id) continue; var existingName=((existing.name||existing.title)||'').toLowerCase().trim(); if(existingName===normalized){ showToast('A section named \u2018'+newName+'\u2019 already exists.'); return; } } sec.name=newName; window.DefCost.ui.renderBasket(); showToast('Section renamed'); };
+      renameBtn.onclick=function(ev){ ev.stopPropagation(); var newName=prompt('Section name',sec.name); if(newName===null) return; newName=newName.trim(); if(!newName){ showToast('Section name is required'); return; } sec.name=newName; window.DefCost.ui.renderBasket(); showToast('Section renamed'); };
       tab.appendChild(renameBtn);
       if(sections.length>1){
         var delBtn=document.createElement('button'); delBtn.type='button'; delBtn.textContent='✕'; delBtn.title='Delete section';
@@ -681,7 +681,7 @@ if(bFootEl){
     navigator.clipboard.writeText(text).then(function(){ td.classList.add('copied-cell'); void td.offsetWidth; setTimeout(function(){ td.classList.remove('copied-cell'); },150); }).catch(function(){});
   });
 }
-if(addSectionBtn){addSectionBtn.addEventListener('click',function(){ensureSectionState();var suggestion='Section '+(sectionSeq+1);var name=prompt('Section name',suggestion);if(name===null)return;name=name.trim();if(!name){showToast('Section name is required');return;}var normalized=name.toLowerCase().trim();for(var si=0;si<sections.length;si++){var existing=sections[si];var existingName=((existing&&(existing.name||existing.title))||'').toLowerCase().trim();if(existingName===normalized){showToast('A section named \u2018'+name+'\u2019 already exists.');return;}}var newId=sectionSeq+1;sections.push({id:newId,name:name,notes:''});sectionSeq=newId;activeSectionId=newId;captureParentId=null;window.DefCost.ui.renderBasket();showToast('Section added');});}
+if(addSectionBtn){addSectionBtn.addEventListener('click',function(){ensureSectionState();var suggestion='Section '+(sectionSeq+1);var name=prompt('Section name',suggestion);if(name===null)return;name=name.trim();if(!name){showToast('Section name is required');return;}var newId=sectionSeq+1;sections.push({id:newId,name:name,notes:''});sectionSeq=newId;activeSectionId=newId;captureParentId=null;window.DefCost.ui.renderBasket();showToast('Section added');});}
 if(importBtn&&importInput){
   importBtn.addEventListener('click',function(){
     importInput.value='';
