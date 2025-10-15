@@ -209,3 +209,4 @@ export function computeGrandTotalsState({
   };
 }
 
+export { GST_RATE };

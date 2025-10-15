@@ -9,13 +9,6 @@ var scheduleFrame = (typeof window !== 'undefined' && typeof window.requestAnima
   ? window.requestAnimationFrame.bind(window)
   : function (cb) { return window.setTimeout(cb, 16); };
 
-export function normalizeSectionTitle(title) {
-  if (typeof title !== 'string') {
-    return '';
-  }
-  return title.trim().toLowerCase();
-}
-
 export function scheduleRenderBasket() {
   if (renderPending) {
     return;
@@ -288,6 +281,13 @@ export function scheduleRenderBasket() {
         options.onUndo();
       }
     });
+  }
+
+  function normalizeSectionTitle(title) {
+    if (typeof title !== 'string') {
+      return '';
+    }
+    return title.trim().toLowerCase();
   }
 
   function getSectionsFromState() {
@@ -1045,7 +1045,6 @@ export function scheduleRenderBasket() {
   window.DefCost.ui.renderBasketImmediate = renderBasket;
   window.DefCost.ui.showImportSummaryModal = showImportSummaryModal;
   window.DefCost.ui.showToast = showToast;
-  window.DefCost.ui.normalizeSectionTitle = normalizeSectionTitle;
   window.DefCost.ui.isSectionTitleTaken = isSectionTitleTaken;
   window.DefCost.ui.openSectionNameDialog = openSectionNameDialog;
   window.DefCost.ui.closeSectionNameDialog = closeSectionNameDialog;
