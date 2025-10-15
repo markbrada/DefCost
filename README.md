@@ -17,7 +17,7 @@ It loads an Excel price list (catalogue), lets you build sectioned quotes with p
 
 ---
 
-## Architecture (v3.1.0-B+)
+## Architecture (v3.0.7+)
 
 Modules (ES6):
 
@@ -126,7 +126,6 @@ Always update:
 2) Changelog below
 
 Changelog:
-- **3.1.0-B** – Optimised renderBasket(): now debounced per animation frame to reduce redundant DOM rebuilds on edits. No functional change.
 - **3.0.7** – Completed catalogue module; added debounce search + drag/resize polish.
 - **3.0.6** – Hybrid modularisation C: Minimal catalogue module for open/close/state persistence. No functional changes.
 - **3.0.5** – Hybrid modularisation B: Moved renderBasket into /js/ui.js; render uses window.DefCost state/API. No functional changes.

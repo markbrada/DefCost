@@ -16,7 +16,7 @@ import {
   closeImportSummaryModal,
   handleImportInputChange
 } from './storage.js';
-import { scheduleRenderBasket } from './ui.js';
+import './ui.js';
 import './catalogue.js';
 
 window.DefCost = window.DefCost || {};
@@ -165,7 +165,7 @@ function hydrateFromStorage(){
   lastBaseTotal=0;
   ensureSectionState();
   normalizeBasketItems();
-  scheduleRenderBasket();
+  window.DefCost.ui.renderBasket();
 }
 
 function restoreQuoteFromBackup(){
@@ -193,7 +193,7 @@ function restoreQuoteFromBackup(){
   lastBaseTotal=0;
   normalizeBasketItems();
   ensureSectionState();
-  scheduleRenderBasket();
+  window.DefCost.ui.renderBasket();
   showToast('Quote restored from backup');
 }
 function showIssuesModal(title,messages){
@@ -302,7 +302,7 @@ function applyImportedModel(model){
   lastBaseTotal=0;
   normalizeBasketItems();
   ensureSectionState();
-  scheduleRenderBasket();
+  window.DefCost.ui.renderBasket();
   if(latestReport&&isFinite(latestReport.grandEx)){
     summaryData.totalEx=latestReport.grandEx;
   }else{
@@ -570,10 +570,10 @@ function renderSectionTabs(){
     (function(sec){
       var tab=document.createElement('div');
       tab.className='section-tab'+(sec.id===activeSectionId?' active':'');
-      tab.onclick=function(){ if(activeSectionId!==sec.id){ activeSectionId=sec.id; captureParentId=null; scheduleRenderBasket(); } };
+      tab.onclick=function(){ if(activeSectionId!==sec.id){ activeSectionId=sec.id; captureParentId=null; window.DefCost.ui.renderBasket(); } };
       var nameSpan=document.createElement('span'); nameSpan.className='section-name'; nameSpan.textContent=sec.name; tab.appendChild(nameSpan);
       var renameBtn=document.createElement('button'); renameBtn.type='button'; renameBtn.textContent='✎'; renameBtn.title='Rename section';
-      renameBtn.onclick=function(ev){ ev.stopPropagation(); var newName=prompt('Section name',sec.name); if(newName===null) return; newName=newName.trim(); if(!newName){ showToast('Section name is required'); return; } sec.name=newName; scheduleRenderBasket(); showToast('Section renamed'); };
+      renameBtn.onclick=function(ev){ ev.stopPropagation(); var newName=prompt('Section name',sec.name); if(newName===null) return; newName=newName.trim(); if(!newName){ showToast('Section name is required'); return; } sec.name=newName; window.DefCost.ui.renderBasket(); showToast('Section renamed'); };
       tab.appendChild(renameBtn);
       if(sections.length>1){
         var delBtn=document.createElement('button'); delBtn.type='button'; delBtn.textContent='✕'; delBtn.title='Delete section';
@@ -628,7 +628,7 @@ function removeSection(sectionId){
     activeSectionId=sections[0].id;
   }
   normalizeBasketItems();
-  scheduleRenderBasket();
+  window.DefCost.ui.renderBasket();
   showToast('Deleted '+deletedName);
 }
 hydrateFromStorage();
@@ -823,7 +823,7 @@ if(bFootEl){
     navigator.clipboard.writeText(text).then(function(){ td.classList.add('copied-cell'); void td.offsetWidth; setTimeout(function(){ td.classList.remove('copied-cell'); },150); }).catch(function(){});
   });
 }
-if(addSectionBtn){addSectionBtn.addEventListener('click',function(){ensureSectionState();var suggestion='Section '+(sectionSeq+1);var name=prompt('Section name',suggestion);if(name===null)return;name=name.trim();if(!name){showToast('Section name is required');return;}var newId=sectionSeq+1;sections.push({id:newId,name:name,notes:''});sectionSeq=newId;activeSectionId=newId;captureParentId=null;scheduleRenderBasket();showToast('Section added');});}
+if(addSectionBtn){addSectionBtn.addEventListener('click',function(){ensureSectionState();var suggestion='Section '+(sectionSeq+1);var name=prompt('Section name',suggestion);if(name===null)return;name=name.trim();if(!name){showToast('Section name is required');return;}var newId=sectionSeq+1;sections.push({id:newId,name:name,notes:''});sectionSeq=newId;activeSectionId=newId;captureParentId=null;window.DefCost.ui.renderBasket();showToast('Section added');});}
 if(importBtn&&importInput){
   importBtn.addEventListener('click',function(){
     importInput.value='';
@@ -840,7 +840,7 @@ if(importBtn&&importInput){
   });
 }
 var addCustomBtn=document.getElementById('addCustomBtn');
-if(addCustomBtn){addCustomBtn.addEventListener('click',function(){var nl=null;if(captureParentId){var parent=getParentItemById(captureParentId);if(parent){var parentSection=sections.some(function(sec){return sec.id===parent.sectionId;})?parent.sectionId:activeSectionId;nl={id:++uid,pid:captureParentId,kind:'sub',sectionId:parentSection,item:'Sub item',qty:1,ex:0};}else{captureParentId=null;}}if(!nl){nl={id:++uid,pid:null,kind:'line',collapsed:false,sectionId:activeSectionId,item:'Custom item',qty:1,ex:0};}basket.push(nl);scheduleRenderBasket();var focusNewRow=function(){try{var rows=bBody?bBody.querySelectorAll('tr.main-row'):[];if(rows&&rows.length){var last=rows[rows.length-1].querySelector('.item-input');if(last&&typeof last.focus==='function'){last.focus();}}}catch(_){}};if(typeof window.requestAnimationFrame==='function'){window.requestAnimationFrame(focusNewRow);}else{setTimeout(focusNewRow,16);}});}
+if(addCustomBtn){addCustomBtn.addEventListener('click',function(){var nl=null;if(captureParentId){var parent=getParentItemById(captureParentId);if(parent){var parentSection=sections.some(function(sec){return sec.id===parent.sectionId;})?parent.sectionId:activeSectionId;nl={id:++uid,pid:captureParentId,kind:'sub',sectionId:parentSection,item:'Sub item',qty:1,ex:0};}else{captureParentId=null;}}if(!nl){nl={id:++uid,pid:null,kind:'line',collapsed:false,sectionId:activeSectionId,item:'Custom item',qty:1,ex:0};}basket.push(nl);window.DefCost.ui.renderBasket();try{var rows=bBody.querySelectorAll('tr.main-row');if(rows.length){var last=rows[rows.length-1].querySelector('.item-input');if(last)last.focus();}}catch(_){}});}
 function updateBasketHeaderOffset(){
   var cont=document.getElementById('basketContainer');
   var sticky=document.getElementById('basketSticky');
@@ -881,7 +881,7 @@ function addItem(row,header){
     newItem={id:++uid,pid:null,kind:'line',collapsed:false,sectionId:activeSectionId,item:desc,qty:1,ex:exVal};
   }
   basket.push(newItem);
-  scheduleRenderBasket();
+  window.DefCost.ui.renderBasket();
 }
 
 function resetQuote(toastMessage){
@@ -895,7 +895,7 @@ function resetQuote(toastMessage){
   discountPercent=0;
   currentGrandTotal=0;
   lastBaseTotal=0;
-  scheduleRenderBasket();
+  window.DefCost.ui.renderBasket();
   if(toastMessage){ showToast(toastMessage); }
 }
 function showDeleteDialog(){

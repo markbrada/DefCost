@@ -3,25 +3,6 @@ window.DefCost.state = window.DefCost.state || {};
 window.DefCost.api = window.DefCost.api || {};
 window.DefCost.ui = window.DefCost.ui || {};
 
-var renderBasketRef = null;
-var renderPending = false;
-var scheduleFrame = (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function')
-  ? window.requestAnimationFrame.bind(window)
-  : function (cb) { return window.setTimeout(cb, 16); };
-
-export function scheduleRenderBasket() {
-  if (renderPending) {
-    return;
-  }
-  renderPending = true;
-  scheduleFrame(function () {
-    renderPending = false;
-    if (typeof renderBasketRef === 'function') {
-      renderBasketRef();
-    }
-  });
-}
-
 (function(){
   var DEFAULT_TOAST_MS = 3000;
 
@@ -460,7 +441,7 @@ export function scheduleRenderBasket() {
         var newSectionId = parseInt(secSelect.value, 10);
         captureParentId = setCaptureParentId(null);
         setParentSection(b, newSectionId);
-        scheduleRenderBasket();
+        renderBasket();
       };
       tdSection.appendChild(secSelect);
       tr.appendChild(tdSection);
@@ -473,7 +454,7 @@ export function scheduleRenderBasket() {
       cap.textContent = '⊞';
       cap.onclick = function () {
         captureParentId = setCaptureParentId(captureParentId === b.id ? null : b.id);
-        scheduleRenderBasket();
+        renderBasket();
       };
       var addS = document.createElement('button');
       addS.className = 'subbtn';
@@ -482,7 +463,7 @@ export function scheduleRenderBasket() {
       addS.onclick = function () {
         var newId = incrementUid();
         basket.push({ id: newId, pid: b.id, kind: 'sub', sectionId: b.sectionId, item: '', qty: 1, ex: 0 });
-        scheduleRenderBasket();
+        renderBasket();
       };
       var tog = document.createElement('button');
       tog.className = 'subbtn';
@@ -490,7 +471,7 @@ export function scheduleRenderBasket() {
       tog.textContent = b.collapsed ? '▸' : '▾';
       tog.onclick = function () {
         b.collapsed = !b.collapsed;
-        scheduleRenderBasket();
+        renderBasket();
       };
       ctrl.appendChild(cap);
       ctrl.appendChild(addS);
@@ -520,15 +501,15 @@ export function scheduleRenderBasket() {
       plus.textContent = '+';
       minus.onclick = function () {
         b.qty = Math.max(1, (b.qty || 1) - 1);
-        scheduleRenderBasket();
+        renderBasket();
       };
       plus.onclick = function () {
         b.qty = (b.qty || 1) + 1;
-        scheduleRenderBasket();
+        renderBasket();
       };
       inp.onchange = function () {
         b.qty = Math.max(1, parseFloat(inp.value) || 1);
-        scheduleRenderBasket();
+        renderBasket();
       };
       qc.appendChild(minus);
       qc.appendChild(inp);
@@ -544,7 +525,7 @@ export function scheduleRenderBasket() {
       exInput.onchange = function () {
         var v = parseFloat(exInput.value);
         b.ex = isFinite(v) ? v : NaN;
-        scheduleRenderBasket();
+        renderBasket();
       };
       tdEx.appendChild(exInput);
       tr.appendChild(tdEx);
@@ -573,7 +554,7 @@ export function scheduleRenderBasket() {
         if (captureParentId === id) {
           captureParentId = setCaptureParentId(null);
         }
-        scheduleRenderBasket();
+        renderBasket();
       };
       tdRem.appendChild(x);
       tr.appendChild(tdRem);
@@ -627,15 +608,15 @@ export function scheduleRenderBasket() {
           plus.textContent = '+';
           minus.onclick = function () {
             s.qty = Math.max(1, (s.qty || 1) - 1);
-            scheduleRenderBasket();
+            renderBasket();
           };
           plus.onclick = function () {
             s.qty = (s.qty || 1) + 1;
-            scheduleRenderBasket();
+            renderBasket();
           };
           inp.onchange = function () {
             s.qty = Math.max(1, parseFloat(inp.value) || 1);
-            scheduleRenderBasket();
+            renderBasket();
           };
           qc.appendChild(minus);
           qc.appendChild(inp);
@@ -651,7 +632,7 @@ export function scheduleRenderBasket() {
           exInput.onchange = function () {
             var v = parseFloat(exInput.value);
             s.ex = isFinite(v) ? v : NaN;
-            scheduleRenderBasket();
+            renderBasket();
           };
           c4.appendChild(exInput);
           sr.appendChild(c4);
@@ -670,7 +651,7 @@ export function scheduleRenderBasket() {
                 break;
               }
             }
-            scheduleRenderBasket();
+            renderBasket();
           };
           c6.appendChild(rx);
           sr.appendChild(c6);
@@ -819,7 +800,7 @@ export function scheduleRenderBasket() {
           }
           basket = setBasket(rest.slice(0, insertPos).concat(sectionBlock, rest.slice(insertPos)));
           persistBasket();
-          scheduleRenderBasket();
+          renderBasket();
         }
       });
       bBody.setAttribute('data-sortable', '1');
@@ -829,9 +810,7 @@ export function scheduleRenderBasket() {
     updateBasketHeaderOffset();
   }
 
-  renderBasketRef = renderBasket;
-  window.DefCost.ui.renderBasket = scheduleRenderBasket;
-  window.DefCost.ui.renderBasketImmediate = renderBasket;
+  window.DefCost.ui.renderBasket = renderBasket;
   window.DefCost.ui.showImportSummaryModal = showImportSummaryModal;
   window.DefCost.ui.showToast = showToast;
 })();
