@@ -299,9 +299,6 @@ function parseNumericCell(raw, rowNumber, label, issues) {
   }
   const num = parseFloat(cleaned);
   if (!isFinite(num)) {
-    if (label === 'Price') {
-      return { value: 0 };
-    }
     issues.push('Row ' + rowNumber + ': ' + label + ' is not a number');
     return { value: 0, invalid: true };
   }
@@ -402,26 +399,24 @@ export function exportBasketToCsv({
     for (let gi = 0; gi < sec.items.length; gi++) {
       const group = sec.items[gi];
       const parent = group.parent;
-      const safeParentQty = Number.isFinite(parent.qty) ? parent.qty : 1;
-      const lineEx = isNaN(parent.ex) ? NaN : safeParentQty * parent.ex;
+      const lineEx = isNaN(parent.ex) ? NaN : (parent.qty || 1) * parent.ex;
       lines.push([
         sec.name,
         parent.item || '',
-        safeParentQty,
-        Number.isFinite(parent.ex) ? Number(parent.ex).toFixed(2) : '',
-        isNaN(lineEx) ? '' : lineEx.toFixed(2)
+        parent.qty || 1,
+        isNaN(parent.ex) ? 'N/A' : Number(parent.ex).toFixed(2),
+        isNaN(lineEx) ? 'N/A' : lineEx.toFixed(2)
       ]);
       const subs = group.subs || [];
       for (let sj = 0; sj < subs.length; sj++) {
         const sub = subs[sj];
-        const safeSubQty = Number.isFinite(sub.qty) ? sub.qty : 1;
-        const subLineEx = isNaN(sub.ex) ? NaN : safeSubQty * sub.ex;
+        const subLineEx = isNaN(sub.ex) ? NaN : (sub.qty || 1) * sub.ex;
         lines.push([
           sec.name,
           ' - ' + (sub.item || ''),
-          safeSubQty,
-          Number.isFinite(sub.ex) ? Number(sub.ex).toFixed(2) : '',
-          isNaN(subLineEx) ? '' : subLineEx.toFixed(2)
+          sub.qty || 1,
+          isNaN(sub.ex) ? 'N/A' : Number(sub.ex).toFixed(2),
+          isNaN(subLineEx) ? 'N/A' : subLineEx.toFixed(2)
         ]);
       }
     }

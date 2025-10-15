@@ -96,8 +96,7 @@ export function buildReportModel(basket, sections) {
   }
 
   function addAmounts(obj, qty, ex) {
-    const safeQty = Number.isFinite(qty) ? qty : 1;
-    const lineEx = isNaN(ex) ? 0 : safeQty * ex;
+    const lineEx = isNaN(ex) ? 0 : (qty || 1) * ex;
     const gst = lineEx * GST_RATE;
     obj.subtotalEx += lineEx;
     obj.subtotalGst += gst;
