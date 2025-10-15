@@ -1,132 +1,89 @@
-# DefCost — Workplace Defender Quoting Tool
+# DefCost – Workplace Defender Pricing Tool
 
-DefCost is a browser-based estimating/quoting app for Workplace Defender.
-It loads an Excel price list (catalogue), lets you build sectioned quotes with parent/child items, and supports CSV import/export with full round-trip capability. State is stored locally in the browser (localStorage). Future cloud sync (Google Drive) is planned.
-
----
-
-## Features
-
-- Section-based quote builder with parent and child items
-- Per-section notes
-- Quote-level totals with discount ↔ grand total sync and 10% GST
-- CSV export and import (round-trip, including notes)
-- Floating catalogue window (open/close, drag/resize/search, position persistence)
-- Undo backup on imports and destructive actions
-- Dark-mode friendly UI and responsive layout
+DefCost is a browser-based estimating and quoting tool for Workplace Defender.
+It loads an Excel workbook of products/services and lets estimators build quotes structured into **Sections**, with support for **sub-items**, drag-reorder, per-section notes, and CSV export.
 
 ---
 
-## Architecture (v3.0.7+)
+## Tech Stack
 
-Modules (ES6):
-
-- js/main.js — App bootstrap, event wiring, orchestration
-- js/ui.js — Render sections/items/notes/totals, dialogs, toasts, import summary modal
-- js/storage.js — localStorage, undo history, CSV import/export (Papa Parse), backups
-- js/calc.js — Currency helpers; totals/discount/GST calculations and formatting
-- js/catalogue.js — Floating catalogue (open/close, drag/resize/search, state persistence)
-- js/utils.js — Shared helpers (DOM selectors, debounce/throttle, parsing, ids)
-
-Global interop (lightweight bridge on window):
-
-    window.DefCost = {
-      state: {},
-      api: {},
-      ui: {},
-      catalogue: {}
-    };
-
-External libraries:
-
-- SheetJS (xlsx.full.min.js) — kept for future XLSX export
-- Papa Parse — CSV parsing
-- SortableJS — drag/drop reordering
+- Pure **HTML / CSS / Vanilla JavaScript** (single file: `index.html`)
+- Hosted on **GitHub Pages**
+- Libraries
+  - **SheetJS** (`xlsx.full.min.js`) – Excel parsing
+  - **SortableJS** – drag-and-drop ordering
+- Data source: **`Defender Price List.xlsx`** (must be in repo root)
+- Persistence: **localStorage** key `defcost_basket_v2`
+- Locale: **AUD**, **GST 10%**
+- Dark mode supported
 
 ---
 
-## Data Model & Persistence
+## Core Features
 
-localStorage keys:
+### Quote Builder (primary workspace)
 
-- defcost_basket_v2 — canonical quote state (sections, items, notes, totals)
-- defcost_basket_backup — last backup (for Undo)
-- defcost_catalogue_state — catalogue window UI state (x, y, w, h, isOpen)
+- **Sections**: create, rename, delete; one **active** section at a time
+- **Items**: add from catalog or custom; qty, unit price, line totals (Ex. GST)
+- **Sub-items**: optional nested lines that roll up into the parent and section totals
+- **Section notes**: dedicated notes field stored alongside each section in localStorage
+- **Reorder**: drag-and-drop for items (and keep sub-items with their parent)
+- **Totals**:
+  - Right-aligned summary table (beneath the active section) lists **Total (Ex. GST)**, **Discount %**, **Grand Total (Ex. GST)**, **GST (10%)**, **Grand Total (Incl. GST)**
+  - Discount % and Grand Total inputs stay in sync
+- **CSV export**: section-aware, includes grand totals
+- **Clipboard**: click any non-input cell to copy its text
+- **Sticky header**: stable sizing with `scrollbar-gutter: stable`
 
-Sections & items:
-
-- Parent items may have children[]
-- Per-section notes stored as a string and exported as a dedicated CSV row
-
-Totals:
-
-- Centralised in js/calc.js
-- Discount (%) and Grand Total (ex GST) inputs keep each other in sync
-- GST = 10% of Grand Total (ex GST)
-- Grand Total (Incl. GST) = Grand Total + GST
-
----
-
-## CSV Format (Round-Trip)
-
-Header (strict):
-
-    Section,Item,Quantity,Price,Line Total
-
-Row types:
-
-- Parent item — normal item name in Item
-- Child item — Item begins with "- " (hyphen + space)
-- Notes row — Section contains "Section X Notes"; notes text stored in Item; numeric columns empty
-
-Rules:
-
-- Import ignores CSV Line Total and recomputes values
-- Commas/newlines in notes are quoted by the exporter for Excel compatibility
-- If an item name must literally start with "- ", escape it as "\- " (importer strips the backslash)
+### Catalogue (floating utility window)
+- **Excel-driven** data rendered from the included workbook tabs
+- **Search**: keyword filtering per sheet with highlight on matches
+- **Click-to-copy**: quickly copies values for use in the Quote Builder
+- **Add buttons**: send catalogue items straight into the active section
+- **Window controls**: drag, minimise to dock icon, or toggle full-screen view
+- **Dark mode aware** so the window matches the active theme
 
 ---
 
-## Usage
+## Totals Logic
 
-- Export CSV — saves the current quote to a CSV file using the format above
-- Import CSV — validates headers, parses rows, rebuilds sections/items/notes, shows an Import Summary modal, and offers Undo
-- Catalogue — open/close via button; drag, resize, and search; state is persisted across reloads
-- Totals — edit Discount (%) or Grand Total (ex GST); other totals update automatically
+- Line Total (displayed) = `qty × price` (Ex. GST)
+- Section Ex. GST subtotal = sum of **parent items + sub-items** in that section
+- Discounted Grand Total (Ex. GST) = `Section Ex. GST subtotal × (1 - Discount %)`
+- GST (10%) = `Discounted Grand Total × 0.10`
+- Grand Total (Incl. GST) = `Discounted Grand Total + GST`
 
 ---
 
-## Contributing / Editing with Codex
+## File Layout
+index.html                 # All UI + logic
+xlsx.full.min.js           # SheetJS (local fallback)
+Defender Price List.xlsx   # Workbook loaded by the app
+---
 
-- Prefer small, reversible patches (≤ ~300 lines)
-- Keep module boundaries:
-  - js/calc.js — all totals math and currency helpers
-  - js/storage.js — persistence and CSV import/export
-  - js/ui.js — DOM rendering and modals/toasts
-  - js/catalogue.js — catalogue behaviours
-- If you change persistence schema or CSV shape, update this README and bump version appropriately
-- Quick smoke test after changes:
-  1) Add parent + child, edit qty/price → totals update
-  2) Import known CSV → Import Summary counts correct → Undo works
-  3) Open catalogue → drag/resize/search → refresh → state persists
-  4) Export CSV → headers + Notes rows correct
+## Do Not Break
+
+- **Workbook loading** path or filename
+- **localStorage schema** and key: `defcost_basket_v2`
+- **Sections** structure and item→sub-item relationships
+- **Sticky header** / seam fix (don’t move padding/borders from the sticky wrapper)
+- **CSV export** shape and ordering
+- **Clipboard copy** behavior
+- **Dark mode** toggle
+
+---
+
+## Current Status
+
+- Implemented: **Sections, sub-items, and per-section notes** with persistence
+- Implemented: **Quote Builder** promoted to the main workspace
+- Implemented: **Catalogue** running in the floating macOS-style window
+- Implemented: **Window controls** – delete quote modal, minimise, dock icon, full-screen toggle
 
 ---
 
 ## Versioning
 
-Semantic rules:
-
-- Major (X.0.0) — structural refactor or platform feature (e.g., Drive sync)
-- Minor (X.Y.0) — new functionality or UI feature
-- Patch (X.Y.Z) — bug fix or UX polish
-
-Always update:
-1) Visible version header in the UI
-2) Changelog below
-
-Changelog:
-- **3.0.7** – Completed catalogue module; added debounce search + drag/resize polish.
 - **3.0.6** – Hybrid modularisation C: Minimal catalogue module for open/close/state persistence. No functional changes.
 - **3.0.5** – Hybrid modularisation B: Moved renderBasket into /js/ui.js; render uses window.DefCost state/API. No functional changes.
 - **3.0.4** – Hybrid modularisation A: Introduced global namespace and moved Import Summary modal + toast to /js/ui.js (reads/writes global state). No functional changes.
@@ -145,3 +102,21 @@ Changelog:
 - **1.2.0** – Quote Builder moved to the main page; Catalogue lives in the floating window with macOS-style controls
 - **1.1.1** – Sections UI refinements, bug fixes
 - **1.1.0** – Introduced Sections and section totals
+
+---
+
+## For Codex & AI Editors
+
+When you make feature changes in this repo, also keep this README aligned.
+
+1. **Update the version** in this README when you change the `<title>` and `<h1>` in `index.html`.
+2. Add a concise bullet under **Versioning** describing the change.
+3. Preserve the **Do Not Break** rules (don’t alter the loading path, persistence key, or sticky header structure).
+4. Keep the **CSV export format** and **section/sub-item** relationships intact.
+5. If you modify basket/sections/sub-items logic, confirm **grand totals** still equal the sum of all sections and that CSV export remains consistent.
+
+---
+
+## Author
+
+Maintained by **markbrada** for [Workplace Defender](https://workplacedefender.com.au)
