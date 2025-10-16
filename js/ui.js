@@ -407,6 +407,43 @@ window.DefCost.ui = window.DefCost.ui || {};
     var getSectionById = typeof state.getSectionById === 'function'
       ? state.getSectionById
       : function () { return null; };
+    var lineTotalFn = typeof api.lineTotal === 'function'
+      ? api.lineTotal
+      : function (qty, price) {
+          var q = Number.isFinite(qty) ? qty : 0;
+          if (q < 0) {
+            q = 0;
+          }
+          var p = Number.isFinite(price) ? price : 0;
+          return q * p;
+        };
+    var formatCurrency = typeof api.formatCurrency === 'function'
+      ? api.formatCurrency
+      : function (value) {
+          var num = Number(value);
+          if (!isFinite(num)) {
+            return '0.00';
+          }
+          return num.toFixed(2);
+        };
+    var getDisplayQty = function (value) {
+      if (Number.isFinite(value)) {
+        return value > 0 ? value : 0;
+      }
+      return 1;
+    };
+    var clampQty = function (value) {
+      if (!Number.isFinite(value) || value <= 0) {
+        return 0;
+      }
+      return value;
+    };
+    var getQtyOrDefault = function (value) {
+      if (!Number.isFinite(value)) {
+        return 1;
+      }
+      return value;
+    };
 
     function renderParent(b) {
       if (!sections.some(function (sec) { return sec.id === b.sectionId; })) {
@@ -496,19 +533,25 @@ window.DefCost.ui = window.DefCost.ui || {};
       inp.type = 'number';
       inp.step = '0.1';
       inp.className = 'qty-input';
-      inp.value = b.qty || 1;
+      inp.value = getDisplayQty(b.qty);
       var plus = document.createElement('button');
       plus.textContent = '+';
       minus.onclick = function () {
-        b.qty = Math.max(1, (b.qty || 1) - 1);
+        var currentQty = getQtyOrDefault(b.qty);
+        currentQty = currentQty > 0 ? currentQty : 0;
+        var nextQty = currentQty - 1;
+        b.qty = nextQty > 0 ? nextQty : 0;
         renderBasket();
       };
       plus.onclick = function () {
-        b.qty = (b.qty || 1) + 1;
+        var currentQty = getQtyOrDefault(b.qty);
+        currentQty = currentQty > 0 ? currentQty : 0;
+        b.qty = currentQty + 1;
         renderBasket();
       };
       inp.onchange = function () {
-        b.qty = Math.max(1, parseFloat(inp.value) || 1);
+        var parsed = parseFloat(inp.value);
+        b.qty = clampQty(parsed);
         renderBasket();
       };
       qc.appendChild(minus);
@@ -529,9 +572,10 @@ window.DefCost.ui = window.DefCost.ui || {};
       };
       tdEx.appendChild(exInput);
       tr.appendChild(tdEx);
-      var lineTotal = isNaN(b.ex) ? NaN : (b.qty || 1) * b.ex;
+      var hasPrice = Number.isFinite(b.ex);
+      var lineValue = hasPrice ? lineTotalFn(b.qty, b.ex) : NaN;
       var tdLi = document.createElement('td');
-      tdLi.textContent = isNaN(lineTotal) ? 'N/A' : lineTotal.toFixed(2);
+      tdLi.textContent = Number.isFinite(lineValue) ? formatCurrency(lineValue) : 'N/A';
       tr.appendChild(tdLi);
       var tdRem = document.createElement('td');
       var x = document.createElement('span');
@@ -565,8 +609,10 @@ window.DefCost.ui = window.DefCost.ui || {};
       var kids = childrenMap[b.id] || [];
       for (var k = 0; k < kids.length; k++) {
         (function (s) {
-          if (typeof s.qty === 'undefined' || !isFinite(s.qty)) {
+          if (!Number.isFinite(s.qty)) {
             s.qty = 1;
+          } else if (s.qty < 0) {
+            s.qty = 0;
           }
           s.sectionId = b.sectionId;
           var sr = document.createElement('tr');
@@ -603,19 +649,25 @@ window.DefCost.ui = window.DefCost.ui || {};
           inp.type = 'number';
           inp.step = '0.1';
           inp.className = 'qty-input';
-          inp.value = s.qty || 1;
+          inp.value = getDisplayQty(s.qty);
           var plus = document.createElement('button');
           plus.textContent = '+';
           minus.onclick = function () {
-            s.qty = Math.max(1, (s.qty || 1) - 1);
+            var currentQty = getQtyOrDefault(s.qty);
+            currentQty = currentQty > 0 ? currentQty : 0;
+            var nextQty = currentQty - 1;
+            s.qty = nextQty > 0 ? nextQty : 0;
             renderBasket();
           };
           plus.onclick = function () {
-            s.qty = (s.qty || 1) + 1;
+            var currentQty = getQtyOrDefault(s.qty);
+            currentQty = currentQty > 0 ? currentQty : 0;
+            s.qty = currentQty + 1;
             renderBasket();
           };
           inp.onchange = function () {
-            s.qty = Math.max(1, parseFloat(inp.value) || 1);
+            var parsed = parseFloat(inp.value);
+            s.qty = clampQty(parsed);
             renderBasket();
           };
           qc.appendChild(minus);
@@ -636,9 +688,10 @@ window.DefCost.ui = window.DefCost.ui || {};
           };
           c4.appendChild(exInput);
           sr.appendChild(c4);
-          var lineSubTotal = isNaN(s.ex) ? NaN : (s.qty || 1) * s.ex;
+          var subHasPrice = Number.isFinite(s.ex);
+          var lineSubTotal = subHasPrice ? lineTotalFn(s.qty, s.ex) : NaN;
           var c5 = document.createElement('td');
-          c5.textContent = isNaN(lineSubTotal) ? 'N/A' : lineSubTotal.toFixed(2);
+          c5.textContent = Number.isFinite(lineSubTotal) ? formatCurrency(lineSubTotal) : 'N/A';
           sr.appendChild(c5);
           var c6 = document.createElement('td');
           var rx = document.createElement('span');
@@ -671,6 +724,8 @@ window.DefCost.ui = window.DefCost.ui || {};
         }
         if (typeof candidate.qty === 'undefined' || !isFinite(candidate.qty)) {
           candidate.qty = 1;
+        } else if (candidate.qty < 0) {
+          candidate.qty = 0;
         }
         if (!sections.some(function (sec) { return sec.id === candidate.sectionId; })) {
           candidate.sectionId = fallback;

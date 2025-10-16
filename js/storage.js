@@ -4,7 +4,8 @@ import {
   formatPercent,
   recalcGrandTotal,
   calculateGst,
-  buildReportModel
+  buildReportModel,
+  lineTotal
 } from './calc.js';
 
 export const LS_KEY = 'defcost_basket_v2';
@@ -399,24 +400,28 @@ export function exportBasketToCsv({
     for (let gi = 0; gi < sec.items.length; gi++) {
       const group = sec.items[gi];
       const parent = group.parent;
-      const lineEx = isNaN(parent.ex) ? NaN : (parent.qty || 1) * parent.ex;
+      const parentQty = Number.isFinite(parent.qty) ? (parent.qty > 0 ? parent.qty : 0) : 0;
+      const parentHasPrice = Number.isFinite(parent.ex);
+      const parentLineTotal = parentHasPrice ? lineTotal(parentQty, parent.ex) : NaN;
       lines.push([
         sec.name,
         parent.item || '',
-        parent.qty || 1,
-        isNaN(parent.ex) ? 'N/A' : Number(parent.ex).toFixed(2),
-        isNaN(lineEx) ? 'N/A' : lineEx.toFixed(2)
+        parentQty,
+        parentHasPrice ? formatCurrency(Number(parent.ex)) : 'N/A',
+        Number.isFinite(parentLineTotal) ? formatCurrency(parentLineTotal) : 'N/A'
       ]);
       const subs = group.subs || [];
       for (let sj = 0; sj < subs.length; sj++) {
         const sub = subs[sj];
-        const subLineEx = isNaN(sub.ex) ? NaN : (sub.qty || 1) * sub.ex;
+        const subQty = Number.isFinite(sub.qty) ? (sub.qty > 0 ? sub.qty : 0) : 0;
+        const subHasPrice = Number.isFinite(sub.ex);
+        const subLineEx = subHasPrice ? lineTotal(subQty, sub.ex) : NaN;
         lines.push([
           sec.name,
           ' - ' + (sub.item || ''),
-          sub.qty || 1,
-          isNaN(sub.ex) ? 'N/A' : Number(sub.ex).toFixed(2),
-          isNaN(subLineEx) ? 'N/A' : subLineEx.toFixed(2)
+          subQty,
+          subHasPrice ? formatCurrency(Number(sub.ex)) : 'N/A',
+          Number.isFinite(subLineEx) ? formatCurrency(subLineEx) : 'N/A'
         ]);
       }
     }
