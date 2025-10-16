@@ -8,7 +8,6 @@ It loads an Excel workbook of products and services and lets estimators build qu
 ## Tech Stack
 
 - Pure **HTML / CSS / Vanilla JavaScript** (modular **ES6**, see `/js/`)
-- `/css/style.css` – centralized styling and theme variables
 - Hosted on **GitHub Pages**
 - Libraries  
   - **SheetJS** (`xlsx.full.min.js`) – Excel parsing  
@@ -61,7 +60,6 @@ It loads an Excel workbook of products and services and lets estimators build qu
 
 ```
 index.html                 # Main HTML shell, loads modules under /js
-/css/style.css              # Centralized styling and theme variables
 /js/                       # JavaScript modules
   main.js                  # App bootstrap and event wiring
   ui.js                    # Rendering and UI helpers
@@ -83,9 +81,8 @@ Defender.jpeg              # Brand image / logo
 - **Sticky header** layout (do not move padding/borders from sticky wrapper)  
 - **CSV export** shape and ordering  
 - **Clipboard copy** behaviour  
-- **Dark mode** toggle
-- **CSS** link path (`css/style.css`) and dark-mode variable structure (`:root` / `:root.light` + `body.dark-mode`)
-- **Global namespace** `window.DefCost` must remain until fully ES6-scoped
+- **Dark mode** toggle  
+- **Global namespace** `window.DefCost` must remain until fully ES6-scoped  
 
 ---
 
@@ -97,13 +94,11 @@ Defender.jpeg              # Brand image / logo
 - Implemented: **Window controls** (delete quote modal, minimise, dock icon, full-screen toggle)  
 - Implemented: **Import Summary modal** and Undo system after CSV import  
 - Implemented: **Hybrid modular JS architecture** (main, ui, storage, calc, catalogue)
-- Implemented: **Centralized CSS architecture** in `/css/style.css` with theme variables
 
 ---
 
 ## Versioning
 
-- **3.0.11** – CSS architecture refactor: centralized styles in `/css/style.css`; visuals unchanged.
 - **3.0.10** – Removed redundant ‘Add note sub-item’ button; streamlined sub-item creation via ‘Capture catalogue adds as sub-item’ and ‘Add custom line’.
 - **3.0.9** – Added an “All Tabs” catalogue search scope with tab labels plus Enter-to-add and ⌘K / Ctrl+K catalogue shortcuts.
 - **3.0.8** – Fixed zero-quantity rows being counted as 1; qty=0 now contributes 0 to all totals and CSV round-trips correctly.
