@@ -66,6 +66,17 @@ Codex may continue to reference these globals for coordination until a full ES6 
 
 ---
 
+## Design System / visual layer (3.1.0+)
+
+- The UI is driven by the design tokens `color-primary`, `color-surface`, `color-muted`, `spacing-unit`, `shadow-base`, and `radius-base`.
+- Layout containers: `.page-heading`, `.quote-shell`, `.quote-shell__body`, `.quote-shell__summary`, and `.quote-summary-card` define the new grid pairing for basket + totals.
+- Buttons use the shared `.btn` family with variants (`.btn-primary`, `.btn-tonal`, `.btn-outline`, `.btn-danger`, `.btn-ghost`). Keep token-driven colours/hover states intact.
+- Section tabs and catalogue sheet tabs are pill-like segmented controls; preserve the DOM hooks (`.section-tab`, `#sheetTabs button`) and their focus/hover behaviour.
+- Tables rely on the `col-*` width classes plus `grand-totals-wrapper` for JS toggling—do not remove these hooks when restyling.
+- Catalogue window, modals, search controls, and import summary cards share the same surface/border/shadow tokens for dark/light parity.
+
+---
+
 ## Versioning Rules
 
 Codex must update the **displayed project version** in both the UI header and `README.md` whenever a patch is applied.  

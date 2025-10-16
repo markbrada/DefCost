@@ -97,6 +97,26 @@ Defender.jpeg              # Brand image / logo
 
 ---
 
+## Design System / tokens / visual layer
+
+- New design tokens anchor the interface: `color-primary`, `color-surface`, `color-muted`, `spacing-unit`, `shadow-base`, `radius-base`.
+- Buttons, inputs, textareas, cards, and tabs all inherit the token palette for consistent dark/light rendering.
+- Quote Builder now uses a responsive grid to pair the basket with the totals card and maintain even spacing.
+- Section tabs and catalogue sheet tabs present as pill-shaped segmented controls with hover/focus transitions.
+- Shared rounded corners (`radius-base`) and soft elevation (`shadow-base`) unify cards, modals, and floating windows.
+- Subtle motion on hover/focus keeps interactions smooth without altering existing behaviour.
+
+---
+
+## 3.1.0 – Sleek visual redesign (phase 1)
+
+- Introduced cohesive design tokens and refreshed the entire visual layer for light/dark mode parity.
+- Modernised Quote Builder layout with a grid shell, elevated totals card, and pill-style section tabs.
+- Restyled buttons, inputs, textarea, and catalogue window with shared hover/focus transitions.
+- Tuned table column widths and alignments for the rebuilt quote/totals presentation.
+
+---
+
 ## 3.0.11 – CSS architecture introduced
 
 - Added `/css/style.css` as the single design layer for layout, spacing, and colour tokens.
@@ -108,6 +128,7 @@ Defender.jpeg              # Brand image / logo
 
 ## Versioning
 
+- **3.1.0** – Sleek visual redesign phase 1 with shared design tokens, rebalanced quote layout, and catalogue restyle.
 - **3.0.11** – Technical CSS refactor: moved inline styling to `/css/style.css`, identical UI/behaviour; ensured dark-mode toggle compatibility and table alignment.
 - **3.0.10** – Removed redundant ‘Add note sub-item’ button; streamlined sub-item creation via ‘Capture catalogue adds as sub-item’ and ‘Add custom line’.
 - **3.0.9** – Added an “All Tabs” catalogue search scope with tab labels plus Enter-to-add and ⌘K / Ctrl+K catalogue shortcuts.
