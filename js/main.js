@@ -674,7 +674,7 @@ hydrateFromStorage();
 var darkModeToggle=document.getElementById('darkModeToggle');
 if(darkModeToggle){
   darkModeToggle.addEventListener('click',function(){
-    document.body.classList.toggle('dark-mode');
+    document.body.classList.toggle('light');
   });
 }
 var statusEl=document.getElementById('status');var pickerWrap=document.getElementById('manualLoad');var picker=document.getElementById('xlsxPicker');

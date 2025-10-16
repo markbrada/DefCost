@@ -57,6 +57,15 @@ Codex may continue to reference these globals for coordination until a full ES6 
 
 ---
 
+## CSS Architecture (3.0.11+)
+
+- `/css/style.css` is the single source for layout, spacing, borders, typography, and colour tokens.
+- `index.html` must reference these styles via classes/IDs; avoid reintroducing inline `style` attributes.
+- Dark/light theming relies on CSS variables with `.light` applied to `<body>` for the light variant (dark is default when `.light` is absent).
+- When editing UI or HTML, keep the class hooks in sync with `/css/style.css` so components remain pixel-perfect.
+
+---
+
 ## Versioning Rules
 
 Codex must update the **displayed project version** in both the UI header and `README.md` whenever a patch is applied.  

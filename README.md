@@ -88,17 +88,27 @@ Defender.jpeg              # Brand image / logo
 
 ## Current Status
 
-- Implemented: **Sections, sub-items, and per-section notes** with persistence  
-- Implemented: **Quote Builder** as main workspace  
-- Implemented: **Catalogue** in floating macOS-style window  
-- Implemented: **Window controls** (delete quote modal, minimise, dock icon, full-screen toggle)  
-- Implemented: **Import Summary modal** and Undo system after CSV import  
+- Implemented: **Sections, sub-items, and per-section notes** with persistence
+- Implemented: **Quote Builder** as main workspace
+- Implemented: **Catalogue** in floating macOS-style window
+- Implemented: **Window controls** (delete quote modal, minimise, dock icon, full-screen toggle)
+- Implemented: **Import Summary modal** and Undo system after CSV import
 - Implemented: **Hybrid modular JS architecture** (main, ui, storage, calc, catalogue)
+
+---
+
+## 3.0.11 – CSS architecture introduced
+
+- Added `/css/style.css` as the single design layer for layout, spacing, and colour tokens.
+- Refactored `index.html` to remove inline styles in favour of reusable class hooks.
+- Maintained pixel-perfect parity with 3.0.10 — no behavioural or visual changes.
+- Dark mode toggle now switches the `.light` class on `<body>`.
 
 ---
 
 ## Versioning
 
+- **3.0.11** – Technical CSS refactor: moved inline styling to `/css/style.css`, identical UI/behaviour; ensured dark-mode toggle compatibility and table alignment.
 - **3.0.10** – Removed redundant ‘Add note sub-item’ button; streamlined sub-item creation via ‘Capture catalogue adds as sub-item’ and ‘Add custom line’.
 - **3.0.9** – Added an “All Tabs” catalogue search scope with tab labels plus Enter-to-add and ⌘K / Ctrl+K catalogue shortcuts.
 - **3.0.8** – Fixed zero-quantity rows being counted as 1; qty=0 now contributes 0 to all totals and CSV round-trips correctly.
