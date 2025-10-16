@@ -10,7 +10,6 @@ import {
 
 export const LS_KEY = 'defcost_basket_v2';
 export const BACKUP_KEY = 'defcost_basket_backup';
-export const CATALOGUE_STATE_KEY = 'defcost_catalogue_state';
 export const IMPORT_HEADER = ['Section', 'Item', 'Quantity', 'Price', 'Line Total'];
 export const SUMMARY_ROWS = {
   'Total (Ex GST)': 1,
@@ -19,57 +18,6 @@ export const SUMMARY_ROWS = {
   'GST': 1,
   'Grand Total (Incl. GST)': 1
 };
-
-export function loadCatalogueState({
-  storageKey = CATALOGUE_STATE_KEY,
-  storage = window.localStorage
-} = {}) {
-  try {
-    const raw = storage.getItem(storageKey);
-    if (!raw) {
-      return null;
-    }
-    const data = JSON.parse(raw);
-    if (!data || typeof data !== 'object') {
-      return null;
-    }
-    return data;
-  } catch (err) {
-    return null;
-  }
-}
-
-export function saveCatalogueState(state, {
-  storageKey = CATALOGUE_STATE_KEY,
-  storage = window.localStorage
-} = {}) {
-  if (!state || typeof state !== 'object') {
-    return false;
-  }
-  const payload = {
-    isOpen: !!state.isOpen,
-    x: Math.round(isFinite(state.x) ? state.x : 0),
-    y: Math.round(isFinite(state.y) ? state.y : 0),
-    w: Math.round(isFinite(state.w) ? state.w : 0),
-    h: Math.round(isFinite(state.h) ? state.h : 0),
-    allTabs: !!state.allTabs
-  };
-  if (typeof state.docked !== 'undefined') {
-    payload.docked = !!state.docked;
-  }
-  if (typeof state.full !== 'undefined') {
-    payload.full = !!state.full;
-  }
-  if (isFinite(state.dockHeight)) {
-    payload.dockHeight = Math.round(state.dockHeight);
-  }
-  try {
-    storage.setItem(storageKey, JSON.stringify(payload));
-    return true;
-  } catch (err) {
-    return false;
-  }
-}
 
 export function saveBasket({
   basket,
