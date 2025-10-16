@@ -13,6 +13,15 @@ const currencyFormatter = (() => {
   }
 })();
 
+export function lineTotal(qty, price) {
+  let q = Number.isFinite(qty) ? qty : 0;
+  if (q < 0) {
+    q = 0;
+  }
+  const p = Number.isFinite(price) ? price : 0;
+  return q * p;
+}
+
 export function roundCurrency(val) {
   if (!isFinite(val)) {
     return 0;
@@ -96,7 +105,7 @@ export function buildReportModel(basket, sections) {
   }
 
   function addAmounts(obj, qty, ex) {
-    const lineEx = isNaN(ex) ? 0 : (qty || 1) * ex;
+    const lineEx = lineTotal(qty, ex);
     const gst = lineEx * GST_RATE;
     obj.subtotalEx += lineEx;
     obj.subtotalGst += gst;

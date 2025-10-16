@@ -5,7 +5,8 @@ import {
   formatPercent,
   recalcGrandTotal,
   buildReportModel,
-  computeGrandTotalsState
+  computeGrandTotalsState,
+  lineTotal
 } from './calc.js';
 import {
   saveBasket,
@@ -28,6 +29,7 @@ window.DefCost.api.closeImportSummaryModal = closeImportSummaryModal;
 window.DefCost.api.formatCurrency = formatCurrency;
 window.DefCost.api.formatCurrencyWithSymbol = formatCurrencyWithSymbol;
 window.DefCost.api.saveBasket = saveBasket;
+window.DefCost.api.lineTotal = lineTotal;
 
 const catalogueNamespace = window.DefCost.catalogue || {};
 
@@ -407,6 +409,7 @@ function normalizeBasketItems(){
         item.sectionId=fallback;
       }
       if(typeof item.qty==='undefined'||!isFinite(item.qty)){item.qty=1;}
+      else if(item.qty<0){item.qty=0;}
       if(typeof item.kind==='undefined') item.kind='line';
       if(typeof item.collapsed==='undefined') item.collapsed=false;
       parentsById[item.id]=item;
@@ -417,6 +420,7 @@ function normalizeBasketItems(){
     if(!child||typeof child!=='object') continue;
     if(child.pid){
       if(typeof child.qty==='undefined'||!isFinite(child.qty)){child.qty=1;}
+      else if(child.qty<0){child.qty=0;}
       var parent=parentsById[child.pid];
       if(parent){
         child.sectionId=parent.sectionId;
@@ -425,6 +429,8 @@ function normalizeBasketItems(){
       }
     }else if(typeof child.qty==='undefined'||!isFinite(child.qty)){
       child.qty=1;
+    }else if(child.qty<0){
+      child.qty=0;
     }
   }
 }
