@@ -59,7 +59,7 @@ window.DefCost.ui = window.DefCost.ui || {};
 
     var clear = function () {
       toastEl.classList.remove('show');
-      toastEl.style.cursor = 'default';
+      toastEl.classList.remove('is-clickable');
       toastEl.onclick = null;
       if (state.toastTimer) {
         clearTimeout(state.toastTimer);
@@ -68,7 +68,7 @@ window.DefCost.ui = window.DefCost.ui || {};
     };
 
     if (actionHandler) {
-      toastEl.style.cursor = 'pointer';
+      toastEl.classList.add('is-clickable');
       toastEl.onclick = function (ev) {
         if (ev && typeof ev.preventDefault === 'function') {
           ev.preventDefault();
@@ -77,7 +77,7 @@ window.DefCost.ui = window.DefCost.ui || {};
         clear();
       };
     } else {
-      toastEl.style.cursor = 'default';
+      toastEl.classList.remove('is-clickable');
       toastEl.onclick = null;
     }
 
