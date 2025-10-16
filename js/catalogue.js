@@ -22,7 +22,8 @@
       x: maxX,
       y: y,
       w: width,
-      h: height
+      h: height,
+      scope: 'current'
     };
   }
 
@@ -36,7 +37,8 @@
       x: parseFloat(raw.x),
       y: parseFloat(raw.y),
       w: parseFloat(raw.w),
-      h: parseFloat(raw.h)
+      h: parseFloat(raw.h),
+      scope: raw.scope === 'all' ? 'all' : 'current'
     };
     if(!isFinite(next.w) || next.w < 320) next.w = defaults.w;
     next.w = Math.min(Math.max(320, next.w), winW || next.w);
@@ -58,6 +60,7 @@
     state.y = normalized.y;
     state.w = normalized.w;
     state.h = normalized.h;
+    state.scope = normalized.scope;
     return normalized;
   }
 
@@ -109,7 +112,8 @@
         x: Math.round(isFinite(normalized.x) ? normalized.x : 0),
         y: Math.round(isFinite(normalized.y) ? normalized.y : 0),
         w: Math.round(isFinite(normalized.w) ? normalized.w : 0),
-        h: Math.round(isFinite(normalized.h) ? normalized.h : 0)
+        h: Math.round(isFinite(normalized.h) ? normalized.h : 0),
+        scope: normalized.scope === 'all' ? 'all' : 'current'
       }));
     }catch(e){}
     return normalized;

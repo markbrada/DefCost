@@ -99,6 +99,7 @@ Defender.jpeg              # Brand image / logo
 
 ## Versioning
 
+- **3.0.9** – Added “All Tabs” catalogue search scope and keyboard shortcuts (Enter adds first result, Esc clears or closes).
 - **3.0.8** – Fixed zero-quantity rows being counted as 1; qty=0 now contributes 0 to all totals and CSV round-trips correctly.
 - **3.0.7** – Prevented duplicate Section names (case-insensitive) to maintain clean CSV import/export integrity.
 - **3.0.6** – Hybrid modularisation C: Minimal catalogue module (open/close/state persistence). No functional changes.
