@@ -5,83 +5,75 @@
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
 <meta charset="UTF-8">
-  <title>DefCost 3.1.0</title>
+  <title>DefCost 3.0.11</title>
 <link rel="stylesheet" href="./css/style.css">
 </head>
 <body class="light">
-<header class="page-heading" role="banner">
-  <h1 class="page-title">DefCost 3.1.0</h1>
-  <button id="darkModeToggle" class="btn btn-ghost" type="button">Toggle dark mode</button>
-</header>
-<div id="quoteBuilderMain" class="quote-shell" aria-label="Quote Builder" role="region">
-  <header id="quoteHeader" class="quote-shell__header">
+        <h1>DefCost 3.0.11</h1>
+<button id="darkModeToggle">Toggle Dark Mode</button>
+<div id="quoteBuilderMain" aria-label="Quote Builder" role="region">
+  <div id="quoteHeader">
     <div class="quote-header-left">
       <h2 id="qbTitle">Quote Builder</h2>
       <span id="toast"></span>
     </div>
-    <div id="quoteActions" class="quote-actions">
-      <button id="clearQuoteBtn" class="btn btn-danger" type="button" aria-label="Delete quote">Delete quote</button>
-      <button id="addCustomBtn" class="btn btn-primary" type="button">Add custom line</button>
-      <button id="addSectionBtn" class="btn btn-primary" type="button">+ Section</button>
-      <button id="importCsvBtn" class="btn btn-tonal" type="button">Import CSV</button>
-      <button id="exportCsvBtn" class="btn btn-outline" type="button">Export quote CSV</button>
+    <div id="quoteActions">
+      <button id="clearQuoteBtn" type="button" aria-label="Delete quote">Delete quote</button>
+      <button id="addCustomBtn" type="button">Add custom line</button>
+      <button id="addSectionBtn" type="button">+ Section</button>
+      <button id="importCsvBtn" type="button">Import CSV</button>
+      <button id="exportCsvBtn" type="button">Export quote CSV</button>
       <input id="importCsvInput" class="hidden-input" type="file" accept=".csv">
     </div>
-  </header>
-  <div class="quote-shell__body">
-    <section class="quote-shell__table">
-      <div id="sectionTabsBar" class="section-tabs-bar">
-        <div id="sectionTabs"></div>
+  </div>
+  <div id="sectionTabsBar">
+    <div id="sectionTabs"></div>
+  </div>
+  <div id="basketContainer">
+    <div id="basketSticky">
+      <div id="basketStickyHead">
+        <table id="basketHead">
+          <colgroup>
+            <col class="col-handle">
+            <col class="col-section">
+            <col id="col-item">
+            <col class="col-quantity">
+            <col class="col-price">
+            <col class="col-total">
+            <col class="col-actions">
+          </colgroup>
+          <thead><tr>
+            <th class="sort-handle">≡</th><th>Section</th><th>Item</th><th>Quantity</th>
+            <th>Price</th>
+            <th>Line Total</th><th></th>
+          </tr></thead>
+        </table>
       </div>
-      <div id="basketContainer" class="basket-shell">
-        <div id="basketSticky" class="basket-shell__sticky">
-          <div id="basketStickyHead" class="basket-shell__head">
-            <table id="basketHead">
-              <colgroup>
-                <col class="col-handle">
-                <col class="col-section">
-                <col id="col-item">
-                <col class="col-quantity">
-                <col class="col-price">
-                <col class="col-total">
-                <col class="col-actions">
-              </colgroup>
-              <thead><tr>
-                <th class="sort-handle">≡</th><th>Section</th><th>Item</th><th>Quantity</th>
-                <th>Price</th>
-                <th>Line Total</th><th></th>
-              </tr></thead>
-            </table>
-          </div>
-        </div>
-        <div id="basketContent" class="basket-shell__content">
-          <div class="basket-table-area">
-          <table id="basketTable">
-            <colgroup>
-              <col class="col-handle">
-              <col class="col-section">
-              <col id="col-item">
-              <col class="col-quantity">
-              <col class="col-price">
-              <col class="col-total">
-              <col class="col-actions">
-            </colgroup>
-              <thead><tr>
-                <th class="sort-handle">≡</th><th>Section</th><th>Item</th><th>Quantity</th>
-                <th>Price</th>
-                <th>Line Total</th><th></th>
-              </tr></thead>
-            <tbody></tbody><tfoot></tfoot>
-          </table>
-          </div>
-        </div>
+    </div>
+    <div id="basketContent">
+      <div class="basket-table-area">
+      <table id="basketTable">
+        <colgroup>
+          <col class="col-handle">
+          <col class="col-section">
+          <col id="col-item">
+          <col class="col-quantity">
+          <col class="col-price">
+          <col class="col-total">
+          <col class="col-actions">
+        </colgroup>
+          <thead><tr>
+            <th class="sort-handle">≡</th><th>Section</th><th>Item</th><th>Quantity</th>
+            <th>Price</th>
+            <th>Line Total</th><th></th>
+          </tr></thead>
+        <tbody></tbody><tfoot></tfoot>
+      </table>
       </div>
-    </section>
-    <aside class="quote-shell__summary" aria-label="Quote totals panel">
-      <div class="grand-totals-wrapper quote-summary-card">
-        <aside id="grandTotals" aria-live="polite"></aside>
-      </div>
-    </aside>
+    </div>
+  </div>
+  <div class="grand-totals-wrapper">
+    <aside id="grandTotals" aria-live="polite"></aside>
   </div>
 </div>
 <div id="catalogWindow" aria-label="Catalogue window" role="dialog" aria-modal="false">
@@ -101,7 +93,7 @@
   </div>
   <div id="catalogResizeHandle" aria-hidden="true"></div>
 </div>
-<button id="catalogDockIcon" class="btn btn-tonal" title="Open catalogue" aria-label="Open catalogue">Catalogue</button>
+<button id="catalogDockIcon" title="Open catalogue" aria-label="Open catalogue">Catalogue</button>
 <script src="xlsx.full.min.js"></script>
 <script>if(!window.XLSX){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js';s.setAttribute('data-sheetjs','1');document.head.appendChild(s);}</script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
