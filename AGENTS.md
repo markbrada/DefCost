@@ -4,8 +4,6 @@
 This project uses **AI-assisted development (Codex)** to maintain and improve the **DefCost** quoting system — a browser-based tool for Workplace Defender that loads Excel price lists, allows adding catalogue items to a quote, and exports/imports CSVs.  
 Since version **3.0.6**, the system runs on a **hybrid modular JavaScript architecture** (ES6 modules with a shared global namespace `window.DefCost`).
 
-**Current Version:** 3.0.11
-
 ---
 
 ## Active Agent: `DefCost-UI`
@@ -14,9 +12,8 @@ Since version **3.0.6**, the system runs on a **hybrid modular JavaScript archit
 Implement and optimise the front-end quoting interface, including:
 - Table layouts, totals logic, and discount synchronisation  
 - Catalogue window behaviour (open/close, drag, resize, dock)  
-- UI polish and dark-mode styling
+- UI polish and dark-mode styling  
 - CSV import/export workflow and modal feedback (Import Summary, Undo)
-- Responsible for maintaining `/css/style.css` and ensuring layout/colour consistency across HTML components.
 
 **Focus Areas:**  
 HTML, TailwindCSS, and JavaScript logic directly related to:
@@ -90,10 +87,9 @@ DefCost 4.0.0 → Major rework or full modularisation
    - Commit message and changelog line  
 5. Maintain **semantic versioning** consistency between UI and repo tags/releases.  
 6. Document all **localStorage or data schema** updates explicitly.  
-7. If Codex hits time limits on large refactors, break the task into sequential phases (e.g. 3.0.4 → 3.0.5 → 3.0.6).
+7. If Codex hits time limits on large refactors, break the task into sequential phases (e.g. 3.0.4 → 3.0.5 → 3.0.6).  
 8. Always verify:
-   - CSV import/export integrity
-   - Quote total accuracy
-   - Section/sub-item persistence
-   - Catalogue open/close state retention
-9. When adding or modifying UI elements, ensure style definitions live in `/css/style.css` instead of inline styles.
+   - CSV import/export integrity  
+   - Quote total accuracy  
+   - Section/sub-item persistence  
+   - Catalogue open/close state retention  
