@@ -99,7 +99,6 @@ Defender.jpeg              # Brand image / logo
 
 ## Versioning
 
-- **3.0.11** – Visual facelift using /css/style.css, class-based styling, and improved dark/light tokens. No logic changes.
 - **3.0.10** – Removed redundant ‘Add note sub-item’ button; streamlined sub-item creation via ‘Capture catalogue adds as sub-item’ and ‘Add custom line’.
 - **3.0.9** – Added an “All Tabs” catalogue search scope with tab labels plus Enter-to-add and ⌘K / Ctrl+K catalogue shortcuts.
 - **3.0.8** – Fixed zero-quantity rows being counted as 1; qty=0 now contributes 0 to all totals and CSV round-trips correctly.
