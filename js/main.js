@@ -91,7 +91,7 @@ var FALL=META["uncategorised"];
 var PRICE_EX=["Rate Ex. GST","Price Ex. GST","Price","Price Ex Tax","Price ex GST"];
 var UNDO_TOAST_MS=60000;
 var wb=null,sheetCache={},basket=[],sections=getDefaultSections(),uid=0,sectionSeq=1,activeSectionId=sections[0].id,captureParentId=null;
-var tabs=document.getElementById("sheetTabs"),container=document.getElementById("sheetContainer"),sectionTabsEl=document.getElementById("sectionTabs"),grandTotalsEl=document.getElementById("grandTotals"),grandTotalsWrap=document.querySelector('.grand-totals-wrapper');
+var tabs=document.getElementById("sheetTabs"),container=document.getElementById("sheetContainer"),sectionTabsEl=document.getElementById("sectionTabs"),grandTotalsEl=document.getElementById("grandTotals"),grandTotalsWrap=document.querySelector('.grand-totals-wrapper'),quoteBuilderMain=document.getElementById('quoteBuilderMain');
 var discountPercent=0,currentGrandTotal=0,lastBaseTotal=0,grandTotalsUi=null,latestReport=null;
 var qbWindow=document.getElementById('catalogWindow'),qbTitlebar=document.getElementById('catalogTitlebar'),qbDockIcon=document.getElementById('catalogDockIcon'),qbMin=document.getElementById('catalogMin'),qbClose=document.getElementById('catalogClose'),qbZoom=document.getElementById('catalogZoom'),qbResizeHandle=document.getElementById('catalogResizeHandle');
 var addSectionBtn=document.getElementById("addSectionBtn"),importBtn=document.getElementById('importCsvBtn'),importInput=document.getElementById('importCsvInput'),qbTitle=document.getElementById('qbTitle'),clearQuoteBtn=document.getElementById('clearQuoteBtn');
@@ -451,7 +451,7 @@ function normalizeBasketItems(){
     }
   }
 }
-function ensureGrandTotalsUi(){if(!grandTotalsEl||grandTotalsUi)return;if(!grandTotalsEl)return;grandTotalsEl.innerHTML='<table class="grand-totals-table" aria-label="Quote totals"><tbody><tr><th scope="row">Total</th><td class="totals-value" data-role="total-value">0.00</td></tr><tr><th scope="row">Discount (%)</th><td><div class="grand-totals-input"><input type="number" step="0.01" inputmode="decimal" aria-label="Discount percentage" data-role="discount-input"><span>%</span></div></td></tr><tr><th scope="row">Grand Total</th><td><div class="grand-totals-input"><input type="number" min="0" step="0.01" inputmode="decimal" aria-label="Grand total after discount" data-role="grand-total-input"></div></td></tr><tr><th scope="row">GST (10%)</th><td class="totals-value" data-role="gst-value">0.00</td></tr><tr><th scope="row">Grand Total (Incl. GST)</th><td class="totals-value" data-role="grand-incl-value">0.00</td></tr></tbody></table>';
+function ensureGrandTotalsUi(){if(!grandTotalsEl||grandTotalsUi)return;if(!grandTotalsEl)return;grandTotalsEl.innerHTML='<div class="rows" aria-label="Quote totals"><div class="row"><span class="label">Total</span><span class="value" data-role="total-value">0.00</span></div><div class="row"><span class="label">Discount (%)</span><div class="grand-totals-input"><input class="input" type="number" step="0.01" inputmode="decimal" aria-label="Discount percentage" data-role="discount-input"><span class="badge">%</span></div></div><div class="row"><span class="label">Grand Total</span><div class="grand-totals-input"><input class="input" type="number" min="0" step="0.01" inputmode="decimal" aria-label="Grand total after discount" data-role="grand-total-input"></div></div><div class="row"><span class="label">GST (10%)</span><span class="value" data-role="gst-value">0.00</span></div><div class="row"><span class="label">Grand Total (Incl. GST)</span><span class="value" data-role="grand-incl-value">0.00</span></div></div>';
   var discountInput=grandTotalsEl.querySelector('[data-role="discount-input"]');
   var grandTotalInput=grandTotalsEl.querySelector('[data-role="grand-total-input"]');
   grandTotalsUi={container:grandTotalsEl,totalValue:grandTotalsEl.querySelector('[data-role="total-value"]'),discountInput:discountInput,grandTotalInput:grandTotalInput,gstValue:grandTotalsEl.querySelector('[data-role="gst-value"]'),grandInclValue:grandTotalsEl.querySelector('[data-role="grand-incl-value"]')};
@@ -476,6 +476,7 @@ function updateGrandTotals(report,opts){
   if(!state.hasItems){
     if(grandTotalsWrap) grandTotalsWrap.style.display='none';
     grandTotalsEl.style.display='none';
+    if(quoteBuilderMain) quoteBuilderMain.classList.remove('has-totals');
     if(grandTotalsUi.totalValue)grandTotalsUi.totalValue.textContent=formatCurrency(0);
     if(grandTotalsUi.gstValue)grandTotalsUi.gstValue.textContent=formatCurrency(0);
     if(grandTotalsUi.grandInclValue)grandTotalsUi.grandInclValue.textContent=formatCurrency(0);
@@ -494,6 +495,7 @@ function updateGrandTotals(report,opts){
     return;
   }
   if(grandTotalsWrap) grandTotalsWrap.style.display='flex';
+  if(quoteBuilderMain) quoteBuilderMain.classList.add('has-totals');
   grandTotalsEl.style.display='block';
   currentGrandTotal=state.currentGrandTotal;
   lastBaseTotal=state.lastBaseTotal;
@@ -608,14 +610,14 @@ function renderSectionTabs(){
   for(var i=0;i<sections.length;i++){
     (function(sec){
       var tab=document.createElement('div');
-      tab.className='section-tab'+(sec.id===activeSectionId?' active':'');
+      tab.className='tab section-tab'+(sec.id===activeSectionId?' active':'');
       tab.onclick=function(){ if(activeSectionId!==sec.id){ activeSectionId=sec.id; captureParentId=null; window.DefCost.ui.renderBasket(); } };
       var nameSpan=document.createElement('span'); nameSpan.className='section-name'; nameSpan.textContent=sec.name; tab.appendChild(nameSpan);
-      var renameBtn=document.createElement('button'); renameBtn.type='button'; renameBtn.textContent='✎'; renameBtn.title='Rename section';
+      var renameBtn=document.createElement('button'); renameBtn.type='button'; renameBtn.textContent='✎'; renameBtn.title='Rename section'; renameBtn.className='close';
       renameBtn.onclick=function(ev){ ev.stopPropagation(); var newName=prompt('Section name',sec.name); if(newName===null) return; newName=newName.trim(); if(!newName){ showToast('Section name is required'); return; } var newNameNorm=normalizeSectionName(newName); var exists=sections.some(function(other){ return other&&other.id!==sec.id&&normalizeSectionName(other.name)===newNameNorm; }); if(exists){ showToast('A section named “'+newName+'” already exists.'); return; } sec.name=newName; window.DefCost.ui.renderBasket(); showToast('Section renamed'); };
       tab.appendChild(renameBtn);
       if(sections.length>1){
-        var delBtn=document.createElement('button'); delBtn.type='button'; delBtn.textContent='✕'; delBtn.title='Delete section';
+        var delBtn=document.createElement('button'); delBtn.type='button'; delBtn.textContent='✕'; delBtn.title='Delete section'; delBtn.className='close';
         delBtn.onclick=function(ev){ ev.stopPropagation(); if(!confirm('Delete section "'+sec.name+'" and all of its items?')) return; removeSection(sec.id); };
         tab.appendChild(delBtn);
       }
@@ -673,8 +675,18 @@ function removeSection(sectionId){
 hydrateFromStorage();
 var darkModeToggle=document.getElementById('darkModeToggle');
 if(darkModeToggle){
+  var root=document.documentElement;
+  if(root&&!root.classList.contains('light')){
+    root.classList.add('light');
+  }
   darkModeToggle.addEventListener('click',function(){
-    document.body.classList.toggle('dark-mode');
+    if(!root) return;
+    var isLight=root.classList.toggle('light');
+    if(isLight){
+      document.body.classList.remove('dark-mode');
+    }else{
+      document.body.classList.add('dark-mode');
+    }
   });
 }
 var statusEl=document.getElementById('status');var pickerWrap=document.getElementById('manualLoad');var picker=document.getElementById('xlsxPicker');
@@ -682,7 +694,7 @@ function showStatus(html){if(statusEl){statusEl.innerHTML=html;}}
 function showPicker(reason){showStatus('<span style="color:#b00">Couldn\'t load <code>Defender Price List.xlsx</code> ('+reason+').</span> You can upload the workbook manually below.');if(pickerWrap)pickerWrap.style.display='block';}
 function whenXLSXReady(cb){if(window.XLSX){cb();return;}var s=document.querySelector('script[data-sheetjs]');if(!s){s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js';s.setAttribute('data-sheetjs','1');s.onload=function(){cb()};s.onerror=function(){showPicker('SheetJS failed to load')};document.head.appendChild(s);}else{var tries=0;var t=setInterval(function(){if(window.XLSX){clearInterval(t);cb();}else if(++tries>50){clearInterval(t);showPicker('SheetJS failed to load');}},100);}}
 function readSheetData(name){if(!wb||!wb.Sheets||!wb.Sheets[name])return{error:'No such sheet.'};var cached=sheetCache[name];if(cached)return cached;var sheet=wb.Sheets[name];if(!sheet)return{error:'No such sheet.'};var rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:""});if(!rows.length){var empty={error:'Empty sheet.'};sheetCache[name]=empty;return empty;}var header=rows[0].map(function(h){return String(h).trim();});var catIdx=header.indexOf("Category");if(catIdx===-1){var missing={error:'No "Category" column in this sheet.'};sheetCache[name]=missing;return missing;}var body=rows.slice(1);var headerMap={};for(var i=0;i<header.length;i++){headerMap[header[i]]=i;}var data={header:header,body:body,catIdx:catIdx,headerMap:headerMap};sheetCache[name]=data;return data;}
-function parseAndBuild(buf){try{wb=XLSX.read(buf,{type:'array'});}catch(e){console.error(e);showPicker('invalid file');return;}sheetCache={};var names=Object.keys(wb.Sheets||{});if(!names.length){showPicker('workbook has no sheets');return;}tabs.innerHTML='';container.innerHTML='';showStatus('');if(pickerWrap)pickerWrap.style.display='none';for(var i=0;i<names.length;i++){(function(name,idx){var b=document.createElement('button');b.textContent=name;b.dataset.sheet=name;b.onclick=function(){active(name);draw(name)};if(idx===0){b.classList.add('active');draw(name);}tabs.appendChild(b);})(names[i],i);} }
+function parseAndBuild(buf){try{wb=XLSX.read(buf,{type:'array'});}catch(e){console.error(e);showPicker('invalid file');return;}sheetCache={};var names=Object.keys(wb.Sheets||{});if(!names.length){showPicker('workbook has no sheets');return;}tabs.innerHTML='';container.innerHTML='';showStatus('');if(pickerWrap)pickerWrap.style.display='none';for(var i=0;i<names.length;i++){(function(name,idx){var b=document.createElement('button');b.className='tab';b.textContent=name;b.dataset.sheet=name;b.onclick=function(){active(name);draw(name)};if(idx===0){b.classList.add('active');draw(name);}tabs.appendChild(b);})(names[i],i);} }
 window.addEventListener('error',function(e){showStatus("<span style='color:#b00'>Error:</span> "+e.message)});
 showStatus('Loading <code>Defender Price List.xlsx</code>…');
 fetch('./Defender%20Price%20List.xlsx',{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer();}).then(function(buf){whenXLSXReady(function(){parseAndBuild(buf);});}).catch(function(err){console.error(err);showPicker(err.message||'network error');});
@@ -697,22 +709,22 @@ function draw(name){
   var catIdx=sheetData.catIdx;
   var headerMap=sheetData.headerMap||{};
   container.innerHTML="";
-  var sDiv=document.createElement("div");sDiv.className="search-container";
+  var sDiv=document.createElement("div");sDiv.className="search-container searchbar";
   var label=document.createElement("label");label.className="search-label";
   var searchId='catalogSearch_'+Date.now();label.setAttribute('for',searchId);label.textContent='Search items:';
   var control=document.createElement("div");control.className="search-control";
-  var inp=document.createElement("input");inp.className="search-input";inp.type='search';inp.id=searchId;inp.placeholder='Type to filter...';
-  var cancelBtn=document.createElement("button");cancelBtn.type='button';cancelBtn.className='search-cancel';cancelBtn.textContent='Cancel';
+  var inp=document.createElement("input");inp.className="search-input input";inp.type='search';inp.id=searchId;inp.placeholder='Type to filter...';
+  var cancelBtn=document.createElement("button");cancelBtn.type='button';cancelBtn.className='search-cancel btn ghost';cancelBtn.textContent='Cancel';
   control.appendChild(inp);control.appendChild(cancelBtn);
   sDiv.appendChild(label);sDiv.appendChild(control);
-  var scopeToggle=document.createElement('label');scopeToggle.className='search-scope-toggle';
+  var scopeToggle=document.createElement('label');scopeToggle.className='search-scope-toggle switch';
   var scopeCheckbox=document.createElement('input');scopeCheckbox.type='checkbox';scopeCheckbox.checked=qbState&&qbState.scope==='all';
   scopeToggle.appendChild(scopeCheckbox);scopeToggle.appendChild(document.createTextNode('All Tabs'));
   sDiv.appendChild(scopeToggle);
   container.appendChild(sDiv);
-  var hint=document.createElement('div');hint.className='search-hint';hint.textContent='Enter = Add first result\u2003Esc = Clear or close';
+  var hint=document.createElement('div');hint.className='search-hint';hint.innerHTML='<span class="kbd">Enter</span> Add first result\u2003<span class="kbd">Esc</span> Clear or close';
   container.appendChild(hint);
-  var wrap=document.createElement("div");container.appendChild(wrap);
+  var wrap=document.createElement("div");wrap.className='list';container.appendChild(wrap);
   currentSearchInput=inp;
   function updateCancel(){if(!cancelBtn)return;cancelBtn.classList.toggle('visible',!!inp.value);}
   function clearSearch(){inp.value='';updateCancel();render();}
