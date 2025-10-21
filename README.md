@@ -97,6 +97,11 @@ Defender.jpeg              # Brand image / logo
 
 ---
 
+## 3.0.12 – Quote drag ordering now respects latest state
+
+- Rebound the SortableJS handler on every render so drag-reordering always targets the current section and basket contents.
+- Prevented deleted parents (or entire sections) from reappearing when dragging after the arrays are rebuilt.
+
 ## 3.0.11 – CSS architecture introduced
 
 - Added `/css/style.css` as the single design layer for layout, spacing, and colour tokens.
@@ -108,6 +113,7 @@ Defender.jpeg              # Brand image / logo
 
 ## Versioning
 
+- **3.0.12** – Refreshed SortableJS bindings each render to keep drag-reorder operations in sync with the active section and latest basket state.
 - **3.0.11** – Technical CSS refactor: moved inline styling to `/css/style.css`, identical UI/behaviour; ensured dark-mode toggle compatibility and table alignment.
 - **3.0.10** – Removed redundant ‘Add note sub-item’ button; streamlined sub-item creation via ‘Capture catalogue adds as sub-item’ and ‘Add custom line’.
 - **3.0.9** – Added an “All Tabs” catalogue search scope with tab labels plus Enter-to-add and ⌘K / Ctrl+K catalogue shortcuts.
