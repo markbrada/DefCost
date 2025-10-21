@@ -277,11 +277,17 @@ window.DefCost.ui = window.DefCost.ui || {};
     var sectionsGetter = typeof state.getSections === 'function' ? state.getSections : null;
     var basket = basketGetter ? basketGetter() : (Array.isArray(state.basket) ? state.basket : []);
     var sections = sectionsGetter ? sectionsGetter() : (Array.isArray(state.sections) ? state.sections : []);
-    var activeSectionId = typeof state.getActiveSectionId === 'function'
-      ? state.getActiveSectionId()
+    var activeSectionIdGetter = typeof state.getActiveSectionId === 'function'
+      ? state.getActiveSectionId
+      : null;
+    var activeSectionId = activeSectionIdGetter
+      ? activeSectionIdGetter()
       : state.activeSectionId;
-    var captureParentId = typeof state.getCaptureParentId === 'function'
-      ? state.getCaptureParentId()
+    var captureParentIdGetter = typeof state.getCaptureParentId === 'function'
+      ? state.getCaptureParentId
+      : null;
+    var captureParentId = captureParentIdGetter
+      ? captureParentIdGetter()
       : state.captureParentId;
 
     var setBasket = typeof state.setBasket === 'function'
@@ -311,6 +317,15 @@ window.DefCost.ui = window.DefCost.ui || {};
           return current;
         };
 
+    var getLatestBasket = function () {
+      var current = basketGetter ? basketGetter() : (Array.isArray(state.basket) ? state.basket : []);
+      return Array.isArray(current) ? current : [];
+    };
+    var getLatestSections = function () {
+      var current = sectionsGetter ? sectionsGetter() : (Array.isArray(state.sections) ? state.sections : []);
+      return Array.isArray(current) ? current : [];
+    };
+
     var persistBasket = typeof state.persistBasket === 'function'
       ? state.persistBasket
       : function () {
@@ -322,8 +337,8 @@ window.DefCost.ui = window.DefCost.ui || {};
               ? state.getActiveSectionId()
               : state.activeSectionId;
             api.saveBasket({
-              basket: basketGetter ? basketGetter() : (Array.isArray(state.basket) ? state.basket : []),
-              sections: sectionsGetter ? sectionsGetter() : (Array.isArray(state.sections) ? state.sections : []),
+              basket: getLatestBasket(),
+              sections: getLatestSections(),
               activeSectionId: currentActive,
               discountPercent: discount
             });
@@ -773,21 +788,22 @@ window.DefCost.ui = window.DefCost.ui || {};
           for (var k = 0; k < rows.length; k++) {
             order.push(+rows[k].dataset.id);
           }
+          var latestBasket = getLatestBasket();
           var childMap = {};
-          for (var t = 0; t < basket.length; t++) {
-            var it = basket[t];
+          for (var t = 0; t < latestBasket.length; t++) {
+            var it = latestBasket[t];
             if (it && it.pid) {
               (childMap[it.pid] || (childMap[it.pid] = [])).push(it);
             }
           }
           var parentsById = {};
-          for (var t2 = 0; t2 < basket.length; t2++) {
-            var current = basket[t2];
+          for (var t2 = 0; t2 < latestBasket.length; t2++) {
+            var current = latestBasket[t2];
             if (current && !current.pid) {
               parentsById[current.id] = current;
             }
           }
-          var sectionId = activeSectionId;
+          var sectionId = activeSectionIdGetter ? activeSectionIdGetter() : activeSectionId;
           var orderedParents = [];
           for (var o = 0; o < order.length; o++) {
             var pid = order[o];
@@ -800,8 +816,8 @@ window.DefCost.ui = window.DefCost.ui || {};
           for (var op = 0; op < orderedParents.length; op++) {
             seen[orderedParents[op].id] = true;
           }
-          for (var bp = 0; bp < basket.length; bp++) {
-            var candidate = basket[bp];
+          for (var bp = 0; bp < latestBasket.length; bp++) {
+            var candidate = latestBasket[bp];
             if (candidate && !candidate.pid && candidate.sectionId === sectionId && !seen[candidate.id]) {
               orderedParents.push(candidate);
               seen[candidate.id] = true;
@@ -810,8 +826,8 @@ window.DefCost.ui = window.DefCost.ui || {};
           var rest = [];
           var insertPos = null;
           var skipParents = {};
-          for (var idx = 0; idx < basket.length; idx++) {
-            var item = basket[idx];
+          for (var idx = 0; idx < latestBasket.length; idx++) {
+            var item = latestBasket[idx];
             if (!item) {
               continue;
             }
@@ -843,7 +859,8 @@ window.DefCost.ui = window.DefCost.ui || {};
               sectionBlock.push(kids[kc]);
             }
           }
-          basket = setBasket(rest.slice(0, insertPos).concat(sectionBlock, rest.slice(insertPos)));
+          var nextBasket = rest.slice(0, insertPos).concat(sectionBlock, rest.slice(insertPos));
+          setBasket(nextBasket);
           persistBasket();
           renderBasket();
         }
