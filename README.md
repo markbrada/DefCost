@@ -97,6 +97,12 @@ Defender.jpeg              # Brand image / logo
 
 ---
 
+## 3.0.12 – Quote deletions stay deleted after reordering
+
+- Fixed the quote builder drag handler so it reads the live basket before reordering, preventing previously deleted parent rows and their sub-items from reappearing after a drag.
+
+---
+
 ## 3.0.11 – CSS architecture introduced
 
 - Added `/css/style.css` as the single design layer for layout, spacing, and colour tokens.
@@ -108,6 +114,7 @@ Defender.jpeg              # Brand image / logo
 
 ## Versioning
 
+- **3.0.12** – Fixed quote builder reordering resurrecting deleted parent lines by using the latest basket snapshot during drag sorting.
 - **3.0.11** – Technical CSS refactor: moved inline styling to `/css/style.css`, identical UI/behaviour; ensured dark-mode toggle compatibility and table alignment.
 - **3.0.10** – Removed redundant ‘Add note sub-item’ button; streamlined sub-item creation via ‘Capture catalogue adds as sub-item’ and ‘Add custom line’.
 - **3.0.9** – Added an “All Tabs” catalogue search scope with tab labels plus Enter-to-add and ⌘K / Ctrl+K catalogue shortcuts.
