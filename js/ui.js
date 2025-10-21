@@ -762,15 +762,8 @@ window.DefCost.ui = window.DefCost.ui || {};
     updateTotals(report);
 
     var SortableCtor = state.Sortable || window.Sortable;
-    if (SortableCtor) {
-      if (state.basketSortable && typeof state.basketSortable.destroy === 'function') {
-        state.basketSortable.destroy();
-      }
-      state.basketSortable = null;
-      if (bBody && typeof bBody.removeAttribute === 'function') {
-        bBody.removeAttribute('data-sortable');
-      }
-      state.basketSortable = SortableCtor.create(bBody, {
+    if (SortableCtor && !bBody.getAttribute('data-sortable')) {
+      SortableCtor.create(bBody, {
         handle: '.sort-handle',
         draggable: 'tr.main-row',
         animation: 150,
@@ -855,9 +848,7 @@ window.DefCost.ui = window.DefCost.ui || {};
           renderBasket();
         }
       });
-      if (bBody && typeof bBody.setAttribute === 'function') {
-        bBody.setAttribute('data-sortable', '1');
-      }
+      bBody.setAttribute('data-sortable', '1');
     }
 
     persistBasket();
