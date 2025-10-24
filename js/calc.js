@@ -66,33 +66,6 @@ export function calculateGst(amount) {
   return roundCurrency(base * GST_RATE);
 }
 
-function clampPercentValue(value) {
-  if (!isFinite(value)) {
-    return 0;
-  }
-  let num = +value;
-  if (num < 0) {
-    num = 0;
-  }
-  if (num > 100) {
-    num = 100;
-  }
-  return Math.round(num * 100) / 100;
-}
-
-function computeEffectivePercent(raw, discounted) {
-  const safeRaw = isFinite(raw) ? raw : 0;
-  const safeDiscounted = isFinite(discounted) ? discounted : 0;
-  if (safeRaw <= 0) {
-    return 0;
-  }
-  const pct = (1 - safeDiscounted / (safeRaw || 1)) * 100;
-  if (!isFinite(pct)) {
-    return 0;
-  }
-  return clampPercentValue(pct);
-}
-
 export function buildReportModel(basket, sections) {
   const safeSections = Array.isArray(sections) && sections.length
     ? sections
@@ -181,62 +154,20 @@ export function buildReportModel(basket, sections) {
     });
   }
 
-  let totalRawEx = 0;
-  let totalDiscountedEx = 0;
-  let overrideFloor = 0;
-
+  let grandEx = 0;
+  let grandGst = 0;
+  let grandTotal = 0;
   for (let s = 0; s < orderedSections.length; s++) {
-    const section = orderedSections[s];
-    const source = sectionsById[section.id];
-    const rawEx = roundCurrency(isFinite(section.subtotalEx) ? section.subtotalEx : 0);
-    let basePercent = source && isFinite(source.sectionDiscountPercent)
-      ? clampPercentValue(source.sectionDiscountPercent)
-      : 0;
-    let overrideValue = source && source.sectionGrandTotalOverride;
-    if (!isFinite(overrideValue)) {
-      overrideValue = null;
-    }
-    if (overrideValue != null) {
-      overrideValue = roundCurrency(overrideValue < 0 ? 0 : overrideValue);
-      if (overrideValue > rawEx) {
-        overrideValue = rawEx;
-      }
-    }
-    let discountedEx;
-    if (overrideValue != null) {
-      discountedEx = overrideValue;
-      basePercent = computeEffectivePercent(rawEx, discountedEx);
-      overrideFloor += discountedEx;
-    } else {
-      discountedEx = roundCurrency(rawEx * (1 - basePercent / 100));
-    }
-    const gst = calculateGst(discountedEx);
-    section.subtotalEx = rawEx;
-    section.subtotalGst = gst;
-    section.subtotalTotal = roundCurrency(discountedEx + gst);
-    section.rawSectionEx = rawEx;
-    section.sectionDiscountPercent = basePercent;
-    section.sectionGrandTotalOverride = overrideValue;
-    section.discountedSectionEx = discountedEx;
-    section.effectiveDiscountPercent = computeEffectivePercent(rawEx, discountedEx);
-    section.overrideActive = overrideValue != null;
-    totalRawEx += rawEx;
-    totalDiscountedEx += discountedEx;
+    grandEx += orderedSections[s].subtotalEx;
+    grandGst += orderedSections[s].subtotalGst;
+    grandTotal += orderedSections[s].subtotalTotal;
   }
-
-  const grandEx = roundCurrency(totalDiscountedEx);
-  const grandGst = calculateGst(grandEx);
-  const grandTotal = roundCurrency(grandEx + grandGst);
-  const effectiveDiscountPercent = computeEffectivePercent(totalRawEx, grandEx);
 
   return {
     sections: orderedSections,
     grandEx: grandEx,
     grandGst: grandGst,
-    grandTotal: grandTotal,
-    totalRawEx: roundCurrency(totalRawEx),
-    effectiveDiscountPercent: effectiveDiscountPercent,
-    overrideFloor: roundCurrency(overrideFloor)
+    grandTotal: grandTotal
   };
 }
 
@@ -248,22 +179,19 @@ export function computeGrandTotalsState({
   lastBaseTotal,
   preserveGrandTotal
 }) {
-  const totalRawEx = report && isFinite(report.totalRawEx) ? report.totalRawEx : 0;
-  const discountedTotal = report && isFinite(report.grandEx) ? report.grandEx : 0;
-  const effectiveDiscount = report && isFinite(report.effectiveDiscountPercent)
-    ? report.effectiveDiscountPercent
-    : computeEffectivePercent(totalRawEx, discountedTotal);
+  const base = report && isFinite(report.grandEx) ? report.grandEx : 0;
   const hasItems = basketCount > 0;
-  const nextGrandTotal = roundCurrency(discountedTotal);
-  const nextLastBase = totalRawEx;
-  const gstAmount = calculateGst(nextGrandTotal);
-  const grandIncl = roundCurrency(nextGrandTotal + gstAmount);
+  const discount = isFinite(discountPercent) ? discountPercent : 0;
+  let nextGrandTotal = isFinite(currentGrandTotal) ? roundCurrency(currentGrandTotal) : 0;
+  let nextLastBase = isFinite(lastBaseTotal) ? lastBaseTotal : 0;
+  let gstAmount = 0;
+  let grandIncl = 0;
 
   if (!hasItems) {
     return {
       hasItems: false,
-      base: totalRawEx,
-      discountPercent: effectiveDiscount,
+      base: base,
+      discountPercent: discount,
       currentGrandTotal: 0,
       lastBaseTotal: 0,
       gstAmount: 0,
@@ -271,10 +199,18 @@ export function computeGrandTotalsState({
     };
   }
 
+  if (!preserveGrandTotal && Math.abs(base - nextLastBase) > 0.005) {
+    nextGrandTotal = recalcGrandTotal(base, discount);
+  }
+
+  nextLastBase = base;
+  gstAmount = calculateGst(nextGrandTotal);
+  grandIncl = roundCurrency(nextGrandTotal + gstAmount);
+
   return {
     hasItems: true,
-    base: totalRawEx,
-    discountPercent: effectiveDiscount,
+    base: base,
+    discountPercent: discount,
     currentGrandTotal: nextGrandTotal,
     lastBaseTotal: nextLastBase,
     gstAmount: gstAmount,
