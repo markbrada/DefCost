@@ -13,7 +13,7 @@ It loads an Excel workbook of products and services and lets estimators build qu
   - **SheetJS** (`xlsx.full.min.js`) – Excel parsing  
   - **SortableJS** – drag-and-drop ordering
 - Data source: **`Defender Price List.xlsx`** (must be in repo root)
-- Persistence: **localStorage** key `defcost_basket_v2` (stores per-section `sectionDiscountPercent` and optional `sectionGrandTotalOverride`)
+- Persistence: **localStorage** key `defcost_basket_v2`
 - Locale: **AUD**, **GST 10 %**
 - Dark mode supported
 
@@ -26,9 +26,8 @@ It loads an Excel workbook of products and services and lets estimators build qu
 - **Sections** – create, rename, delete; one **active** section at a time  
 - **Items** – add from catalog or custom; quantity, unit price, line totals (Ex. GST)  
 - **Sub-items** – optional nested lines that roll up into the parent and section totals  
-- **Section notes** – dedicated notes field stored alongside each section in localStorage
-- **Section summaries** – per-section total, discount %, and optional override inputs with badges and reset control
-- **Reorder** – drag-and-drop for items (and keep sub-items with their parent)
+- **Section notes** – dedicated notes field stored alongside each section in localStorage  
+- **Reorder** – drag-and-drop for items (and keep sub-items with their parent)  
 - **Totals**
   - Right-aligned summary table (beneath the active section) lists **Total (Ex. GST)**, **Discount %**, **Grand Total (Ex. GST)**, **GST (10 %)**, **Grand Total (Incl. GST)**
   - Discount % and Grand Total inputs stay in sync  
@@ -49,12 +48,11 @@ It loads an Excel workbook of products and services and lets estimators build qu
 
 ## Totals Logic
 
-- **Line Total** = `qty × price` (Ex. GST)
-- **Section Total (Ex. GST)** = sum of parent + sub-items per section
-- **Section Grand Total (Ex. GST)** = override value if present, otherwise `Section Total × (1 − Section Discount %)`
-- **Effective Discount (%)** = comparison of combined raw totals vs. summed section grand totals
-- **GST (10 %)** = `Sum of section grand totals × 0.10`
-- **Grand Total (Incl. GST)** = `Sum of section grand totals + GST`
+- **Line Total** = `qty × price` (Ex. GST)  
+- **Section Ex. GST subtotal** = sum of parent + sub-items in that section  
+- **Discounted Grand Total (Ex. GST)** = `Section Ex. GST subtotal × (1 − Discount %)`  
+- **GST (10 %)** = `Discounted Grand Total × 0.10`  
+- **Grand Total (Incl. GST)** = `Discounted Grand Total + GST`
 
 ---
 
@@ -99,15 +97,6 @@ Defender.jpeg              # Brand image / logo
 
 ---
 
-## 3.1.0 – Per-section discount tables and overrides
-
-- Added editable “Section Total”, “Section Discount (%)”, and “Section Grand Total” rows after each section with override badges and a one-click reset.
-- Persisted new `sectionDiscountPercent` and optional `sectionGrandTotalOverride` fields in `defcost_basket_v2` snapshots and undo history.
-- Synced footer discount and grand total edits to redistribute across sections while respecting override floors and clamping with warnings.
-- Extended CSV export/import to include section summary rows and restore per-section discounts/overrides while remaining backward compatible with legacy files.
-
----
-
 ## 3.0.12 – Quote deletions stay deleted after reordering
 
 - Fixed the quote builder drag handler so it reads the live basket before reordering, preventing previously deleted parent rows and their sub-items from reappearing after a drag.
@@ -125,7 +114,6 @@ Defender.jpeg              # Brand image / logo
 
 ## Versioning
 
-- **3.1.0** – Introduced per-section discount tables with override persistence, footer redistribution, and CSV summary rows.
 - **3.0.12** – Fixed quote builder reordering resurrecting deleted parent lines by using the latest basket snapshot during drag sorting.
 - **3.0.11** – Technical CSS refactor: moved inline styling to `/css/style.css`, identical UI/behaviour; ensured dark-mode toggle compatibility and table alignment.
 - **3.0.10** – Removed redundant ‘Add note sub-item’ button; streamlined sub-item creation via ‘Capture catalogue adds as sub-item’ and ‘Add custom line’.
