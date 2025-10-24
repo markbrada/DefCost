@@ -92,7 +92,7 @@ var PRICE_EX=["Rate Ex. GST","Price Ex. GST","Price","Price Ex Tax","Price ex GS
 var UNDO_TOAST_MS=60000;
 var wb=null,sheetCache={},basket=[],sections=getDefaultSections(),uid=0,sectionSeq=1,activeSectionId=sections[0].id,captureParentId=null;
 var tabs=document.getElementById("sheetTabs"),container=document.getElementById("sheetContainer"),sectionTabsEl=document.getElementById("sectionTabs"),grandTotalsEl=document.getElementById("grandTotals"),grandTotalsWrap=document.querySelector('.grand-totals-wrapper');
-var discountPercent=0,currentGrandTotal=0,lastBaseTotal=0,grandTotalsUi=null,latestReport=null;
+var discountPercent=0,currentGrandTotal=0,lastBaseTotal=0,grandTotalsUi=null,latestReport=null,footerDiscountTimer=null,footerGrandTotalTimer=null;
 var qbWindow=document.getElementById('catalogWindow'),qbTitlebar=document.getElementById('catalogTitlebar'),qbDockIcon=document.getElementById('catalogDockIcon'),qbMin=document.getElementById('catalogMin'),qbClose=document.getElementById('catalogClose'),qbZoom=document.getElementById('catalogZoom'),qbResizeHandle=document.getElementById('catalogResizeHandle');
 var addSectionBtn=document.getElementById("addSectionBtn"),importBtn=document.getElementById('importCsvBtn'),importInput=document.getElementById('importCsvInput'),qbTitle=document.getElementById('qbTitle'),clearQuoteBtn=document.getElementById('clearQuoteBtn');
 if(catalogueNamespace&&typeof catalogueNamespace.restoreState==='function'){catalogueNamespace.restoreState({element:qbWindow,dockIcon:qbDockIcon});}
@@ -298,13 +298,18 @@ function applyImportedModel(model){
     var secId=newSectionId;
     var sectionNotes=typeof src.notes==='string'?src.notes:'';
     if(sectionNotes&&sectionNotes.trim()){notesCount++;}
-    newSections.push({id:secId,name:src.title||('Section '+secId),notes:sectionNotes});
+    var basePercent=isFinite(src.discountPercent)?clampPercentValue(src.discountPercent):clampPercentValue(isFinite(model.discount)?model.discount:0);
+    var sectionObj={id:secId,name:src.title||('Section '+secId),notes:sectionNotes,sectionDiscountPercent:basePercent,sectionGrandTotalOverride:null};
+    newSections.push(sectionObj);
+    var importedOverride=isFinite(src.grandTotalOverride)?src.grandTotalOverride:null;
     var items=Array.isArray(src.items)?src.items:[];
+    var sectionRawTotal=0;
     for(var j=0;j<items.length;j++){
       var item=items[j];
       newUid++;
       var parentId=newUid;
       newBasket.push({id:parentId,pid:null,kind:'line',collapsed:false,sectionId:secId,item:item&&item.name?item.name:'',qty:isFinite(item&&item.qty)?item.qty:0,ex:isFinite(item&&item.price)?item.price:0});
+      sectionRawTotal+=lineTotal(isFinite(item&&item.qty)?item.qty:0,isFinite(item&&item.price)?item.price:0);
       parentCount++;
       var children=Array.isArray(item&&item.children)?item.children:[];
       childCount+=children.length;
@@ -312,6 +317,15 @@ function applyImportedModel(model){
         var child=children[k];
         newUid++;
         newBasket.push({id:newUid,pid:parentId,kind:'sub',sectionId:secId,item:child&&child.name?child.name:'',qty:isFinite(child&&child.qty)?child.qty:0,ex:isFinite(child&&child.price)?child.price:0});
+        sectionRawTotal+=lineTotal(isFinite(child&&child.qty)?child.qty:0,isFinite(child&&child.price)?child.price:0);
+      }
+    }
+    sectionRawTotal=roundCurrency(sectionRawTotal);
+    if(importedOverride!=null){
+      var sanitizedOverride=sanitizeOverrideValue(importedOverride,sectionRawTotal);
+      if(sanitizedOverride!=null){
+        sectionObj.sectionGrandTotalOverride=sanitizedOverride;
+        sectionObj.sectionDiscountPercent=computePercentFromTotals(sectionRawTotal,sanitizedOverride);
       }
     }
   }
@@ -375,7 +389,7 @@ function startResize(ev){if(!qbWindow||qbState.full||qbState.isOpen===false||qbS
 function handleResizeMove(ev){if(!resizeInfo)return;var coords=getPointerCoords(ev);if(typeof coords.clientX==='undefined')return;if(ev.cancelable)ev.preventDefault();var winW=window.innerWidth||resizeInfo.startW||800;var winH=window.innerHeight||resizeInfo.startH||600;var deltaX=coords.clientX-resizeInfo.startX;var deltaY=coords.clientY-resizeInfo.startY;var minW=320;var minH=280;var maxW=winW-(isFinite(qbState.x)?qbState.x:0);var maxH=winH-(isFinite(qbState.y)?qbState.y:0);if(!isFinite(maxW)||maxW<minW)maxW=winW;if(!isFinite(maxH)||maxH<minH)maxH=winH;var newW=(resizeInfo.startW||minW)+deltaX;var newH=(resizeInfo.startH||minH)+deltaY;if(newW<minW)newW=minW;if(newH<minH)newH=minH;if(newW>maxW)newW=maxW;if(newH>maxH)newH=maxH;qbState.w=newW;qbState.h=newH;qbWindow.classList.add('qb-floating');qbWindow.classList.remove('qb-full');qbWindow.style.width=newW+'px';qbWindow.style.height=newH+'px';applyQBState(true);}
 function endResize(){if(!resizeInfo)return;document.body.style.userSelect=prevUserSelect||'';document.removeEventListener('mousemove',handleResizeMove);document.removeEventListener('mouseup',endResize);document.removeEventListener('touchmove',handleResizeMove);document.removeEventListener('touchend',endResize);document.removeEventListener('touchcancel',endResize);resizeInfo=null;ensureWindowWithinViewport(true);if(catalogueNamespace&&typeof catalogueNamespace.persistState==='function'){catalogueNamespace.persistState();}rememberCurrentRect();}
 function escapeHtml(s){s=String(s==null?'':s);return s.replace(/[&<>"']/g,function(m){switch(m){case'&':return'&amp;';case'<':return'&lt;';case'>':return'&gt;';case'"':return'&quot;';default:return'&#39;';}});}
-function getDefaultSections(){return [{id:1,name:'Section 1',notes:''}];}
+function getDefaultSections(){return [{id:1,name:'Section 1',notes:'',sectionDiscountPercent:0,sectionGrandTotalOverride:null}];}
 function ensureSectionState(){
   if(!Array.isArray(sections)||!sections.length){
     sections=getDefaultSections();
@@ -402,6 +416,24 @@ function ensureSectionState(){
     if(typeof sec.notes!=='string'){
       sec.notes='';
     }
+    if(!isFinite(sec.sectionDiscountPercent)){
+      if(isFinite(discountPercent)){
+        sec.sectionDiscountPercent=+discountPercent;
+      }else{
+        sec.sectionDiscountPercent=0;
+      }
+    }else{
+      sec.sectionDiscountPercent=Math.min(100,Math.max(0,+sec.sectionDiscountPercent));
+    }
+    if(sec.sectionGrandTotalOverride==null||!isFinite(sec.sectionGrandTotalOverride)){
+      sec.sectionGrandTotalOverride=null;
+    }else{
+      var cleanOverride=+sec.sectionGrandTotalOverride;
+      if(cleanOverride<0){
+        cleanOverride=0;
+      }
+      sec.sectionGrandTotalOverride=cleanOverride;
+    }
   }
   if(!sections.length){
     sections=getDefaultSections();
@@ -411,6 +443,45 @@ function ensureSectionState(){
   if(typeof activeSectionId==='undefined'||!sections.some(function(sec){return sec.id===activeSectionId;})){
     activeSectionId=sections[0].id;
   }
+  if(!isFinite(discountPercent)){
+    discountPercent=0;
+  }else if(discountPercent<0){
+    discountPercent=0;
+  }else if(discountPercent>100){
+    discountPercent=100;
+  }
+}
+
+function clampPercentValue(value){
+  if(!isFinite(value)) return 0;
+  var num=+value;
+  if(num<0) num=0;
+  if(num>100) num=100;
+  return Math.round(num*100)/100;
+}
+
+function computePercentFromTotals(raw,discounted){
+  var safeRaw=isFinite(raw)?raw:0;
+  var safeDiscounted=isFinite(discounted)?discounted:0;
+  if(safeRaw<=0){
+    return 0;
+  }
+  var pct=(1-(safeDiscounted/(safeRaw||1)))*100;
+  if(!isFinite(pct)){
+    pct=0;
+  }
+  return clampPercentValue(pct);
+}
+
+function sanitizeOverrideValue(value,rawTotal){
+  if(value==null||value==='') return null;
+  var num=parseFloat(value);
+  if(!isFinite(num)) return null;
+  var safe=roundCurrency(num<0?0:num);
+  if(isFinite(rawTotal)&&rawTotal>=0&&safe>rawTotal){
+    safe=roundCurrency(rawTotal);
+  }
+  return safe;
 }
 function normalizeBasketItems(){
   uid=0;
@@ -458,8 +529,182 @@ function ensureGrandTotalsUi(){if(!grandTotalsEl||grandTotalsUi)return;if(!grand
   if(discountInput){discountInput.addEventListener('input',handleDiscountChange);}
   if(grandTotalInput){grandTotalInput.addEventListener('input',handleGrandTotalChange);}
 }
-function handleDiscountChange(){if(!grandTotalsUi)return;var base=latestReport&&isFinite(latestReport.grandEx)?latestReport.grandEx:0;var raw=parseFloat(grandTotalsUi.discountInput.value);if(!isFinite(raw))raw=0;discountPercent=raw;currentGrandTotal=recalcGrandTotal(base,discountPercent);lastBaseTotal=base;updateGrandTotals(latestReport,{preserveGrandTotal:true});persistBasket();}
-function handleGrandTotalChange(){if(!grandTotalsUi)return;var base=latestReport&&isFinite(latestReport.grandEx)?latestReport.grandEx:0;var raw=parseFloat(grandTotalsUi.grandTotalInput.value);if(!isFinite(raw))raw=0;raw=Math.max(0,raw);currentGrandTotal=roundCurrency(raw);if(base>0){discountPercent=(1-currentGrandTotal/(base||1))*100;}else{discountPercent=0;}lastBaseTotal=base;updateGrandTotals(latestReport,{preserveGrandTotal:true});persistBasket();}
+function applyFooterDiscountValue(targetPercent){
+  ensureSectionState();
+  var report=latestReport||buildReportModel(basket,sections);
+  var clamped=false;
+  var sanitized=clampPercentValue(targetPercent);
+  if(!isFinite(targetPercent)||targetPercent<0||targetPercent>100){
+    clamped=true;
+  }
+  var changed=false;
+  var sectionMap={};
+  if(report&&Array.isArray(report.sections)){
+    for(var i=0;i<report.sections.length;i++){
+      var rep=report.sections[i];
+      sectionMap[rep.id]=rep;
+    }
+  }
+  for(var s=0;s<sections.length;s++){
+    var sec=sections[s];
+    if(!sec) continue;
+    var repSection=sectionMap[sec.id];
+    if(sec.sectionGrandTotalOverride!=null&&isFinite(sec.sectionGrandTotalOverride)){
+      if(repSection){
+        var derived=computePercentFromTotals(repSection.rawSectionEx,repSection.discountedSectionEx);
+        if(!isFinite(sec.sectionDiscountPercent)||Math.abs(sec.sectionDiscountPercent-derived)>0.0001){
+          sec.sectionDiscountPercent=derived;
+          changed=true;
+        }
+      }
+      continue;
+    }
+    if(!isFinite(sec.sectionDiscountPercent)||Math.abs(sec.sectionDiscountPercent-sanitized)>0.0001){
+      sec.sectionDiscountPercent=sanitized;
+      changed=true;
+    }
+    sec.sectionGrandTotalOverride=null;
+  }
+  if(changed){
+    discountPercent=sanitized;
+    window.DefCost.ui.renderBasket();
+    showToast('Section discount applied');
+  }else if(clamped){
+    showToast('Discount must be between 0% and 100%.');
+  }
+}
+
+function handleDiscountChange(){
+  if(!grandTotalsUi)return;
+  if(footerDiscountTimer){
+    clearTimeout(footerDiscountTimer);
+  }
+  var raw=parseFloat(grandTotalsUi.discountInput.value);
+  if(!isFinite(raw)) raw=0;
+  footerDiscountTimer=setTimeout(function(){
+    footerDiscountTimer=null;
+    applyFooterDiscountValue(raw);
+  },250);
+}
+
+function applyFooterGrandTotalValue(targetGrandTotal){
+  ensureSectionState();
+  var report=buildReportModel(basket,sections);
+  latestReport=report;
+  var warnings=[];
+  var previousGrand=isFinite(currentGrandTotal)?currentGrandTotal:0;
+  var previousPercent=isFinite(discountPercent)?discountPercent:0;
+  var hadChanges=false;
+  var sanitized=isFinite(targetGrandTotal)?targetGrandTotal:0;
+  if(sanitized<0){
+    sanitized=0;
+  }
+  var overrideFloor=report&&isFinite(report.overrideFloor)?roundCurrency(report.overrideFloor):0;
+  if(sanitized<overrideFloor){
+    sanitized=overrideFloor;
+    warnings.push('Grand total cannot be less than override minimum.');
+  }
+  var sectionMap={};
+  if(report&&Array.isArray(report.sections)){
+    for(var i=0;i<report.sections.length;i++){
+      var rep=report.sections[i];
+      sectionMap[rep.id]=rep;
+    }
+  }
+  var rawNonOverride=0;
+  var overridesTotal=0;
+  var adjustableCount=0;
+  for(var idx=0;idx<sections.length;idx++){
+    var sec=sections[idx];
+    if(!sec) continue;
+    var repSection=sectionMap[sec.id];
+    var rawSection=repSection&&isFinite(repSection.rawSectionEx)?repSection.rawSectionEx:0;
+    var discountedSection=repSection&&isFinite(repSection.discountedSectionEx)?repSection.discountedSectionEx:rawSection;
+    if(sec.sectionGrandTotalOverride!=null&&isFinite(sec.sectionGrandTotalOverride)){
+      overridesTotal+=discountedSection;
+      if(repSection){
+        var derivedPct=computePercentFromTotals(repSection.rawSectionEx,discountedSection);
+        if(!isFinite(sec.sectionDiscountPercent)||Math.abs(sec.sectionDiscountPercent-derivedPct)>0.0001){
+          sec.sectionDiscountPercent=derivedPct;
+          hadChanges=true;
+        }
+      }
+    }else{
+      rawNonOverride+=rawSection;
+      adjustableCount++;
+    }
+  }
+  var nextPercent=discountPercent;
+  if(adjustableCount===0||rawNonOverride<=0){
+    sanitized=roundCurrency(overridesTotal);
+    if(adjustableCount===0){
+      warnings.push('All sections use overrides. Adjust section totals directly.');
+    }
+  }else{
+    var targetAdjustable=sanitized-overridesTotal;
+    if(targetAdjustable<0){
+      targetAdjustable=0;
+      warnings.push('Grand total cannot be less than override minimum.');
+    }
+    if(targetAdjustable>rawNonOverride){
+      targetAdjustable=rawNonOverride;
+      warnings.push('Requested total exceeds available section value.');
+    }
+    var computedPct=rawNonOverride>0? (1-(targetAdjustable/(rawNonOverride||1)))*100 : 0;
+    nextPercent=clampPercentValue(computedPct);
+    if(!isFinite(computedPct)||computedPct<0||computedPct>100){
+      warnings.push('Section discounts have been clamped between 0% and 100%.');
+    }
+    var changed=false;
+    for(var si=0;si<sections.length;si++){
+      var section=sections[si];
+      if(!section) continue;
+      if(section.sectionGrandTotalOverride!=null&&isFinite(section.sectionGrandTotalOverride)){
+        continue;
+      }
+      if(!isFinite(section.sectionDiscountPercent)||Math.abs(section.sectionDiscountPercent-nextPercent)>0.0001){
+        section.sectionDiscountPercent=nextPercent;
+        changed=true;
+        hadChanges=true;
+      }
+      if(section.sectionGrandTotalOverride!=null){
+        section.sectionGrandTotalOverride=null;
+        hadChanges=true;
+      }
+    }
+    if(!changed&&warnings.length){
+      // ensure UI reflects clamp even if no section changed
+      window.DefCost.ui.renderBasket();
+      showToast(warnings[0]);
+      return;
+    }
+    if(changed){
+      hadChanges=true;
+    }
+  }
+  discountPercent=nextPercent;
+  currentGrandTotal=roundCurrency(sanitized);
+  lastBaseTotal=report&&isFinite(report.totalRawEx)?report.totalRawEx:lastBaseTotal;
+  window.DefCost.ui.renderBasket();
+  if(warnings.length){
+    showToast(warnings[0]);
+  }else if(hadChanges||Math.abs(previousGrand-currentGrandTotal)>0.01||Math.abs(previousPercent-nextPercent)>0.01){
+    showToast('Grand total redistributed across sections');
+  }
+}
+
+function handleGrandTotalChange(){
+  if(!grandTotalsUi)return;
+  if(footerGrandTotalTimer){
+    clearTimeout(footerGrandTotalTimer);
+  }
+  var raw=parseFloat(grandTotalsUi.grandTotalInput.value);
+  if(!isFinite(raw)) raw=0;
+  footerGrandTotalTimer=setTimeout(function(){
+    footerGrandTotalTimer=null;
+    applyFooterGrandTotalValue(raw);
+  },250);
+}
 function updateGrandTotals(report,opts){
   latestReport=report||null;
   if(!grandTotalsEl)return;
@@ -476,13 +721,14 @@ function updateGrandTotals(report,opts){
   if(!state.hasItems){
     if(grandTotalsWrap) grandTotalsWrap.style.display='none';
     grandTotalsEl.style.display='none';
+    discountPercent=state.discountPercent;
     if(grandTotalsUi.totalValue)grandTotalsUi.totalValue.textContent=formatCurrency(0);
     if(grandTotalsUi.gstValue)grandTotalsUi.gstValue.textContent=formatCurrency(0);
     if(grandTotalsUi.grandInclValue)grandTotalsUi.grandInclValue.textContent=formatCurrency(0);
     if(grandTotalsUi.discountInput){
       grandTotalsUi.discountInput.disabled=true;
       if(document.activeElement!==grandTotalsUi.discountInput){
-        grandTotalsUi.discountInput.value=formatPercent(discountPercent);
+        grandTotalsUi.discountInput.value=formatPercent(state.discountPercent);
       }else{
         grandTotalsUi.discountInput.blur();
       }
@@ -495,6 +741,7 @@ function updateGrandTotals(report,opts){
   }
   if(grandTotalsWrap) grandTotalsWrap.style.display='flex';
   grandTotalsEl.style.display='block';
+  discountPercent=state.discountPercent;
   currentGrandTotal=state.currentGrandTotal;
   lastBaseTotal=state.lastBaseTotal;
   var base=state.base;
@@ -502,7 +749,7 @@ function updateGrandTotals(report,opts){
   if(grandTotalsUi.discountInput){
     grandTotalsUi.discountInput.disabled=false;
     if(document.activeElement!==grandTotalsUi.discountInput){
-      grandTotalsUi.discountInput.value=formatPercent(discountPercent);
+      grandTotalsUi.discountInput.value=formatPercent(state.discountPercent);
     }
   }
   if(grandTotalsUi.grandTotalInput){
@@ -756,7 +1003,7 @@ if(bFootEl){
     navigator.clipboard.writeText(text).then(function(){ td.classList.add('copied-cell'); void td.offsetWidth; setTimeout(function(){ td.classList.remove('copied-cell'); },150); }).catch(function(){});
   });
 }
-if(addSectionBtn){addSectionBtn.addEventListener('click',function(){ensureSectionState();var suggestion='Section '+(sectionSeq+1);var name=prompt('Section name',suggestion);if(name===null)return;name=name.trim();if(!name){showToast('Section name is required');return;}var nameNorm=normalizeSectionName(name);var exists=sections.some(function(sec){return sec&&normalizeSectionName(sec.name)===nameNorm;});if(exists){showToast('A section named “'+name+'” already exists.');return;}var newId=sectionSeq+1;sections.push({id:newId,name:name,notes:''});sectionSeq=newId;activeSectionId=newId;captureParentId=null;window.DefCost.ui.renderBasket();showToast('Section added');});}
+if(addSectionBtn){addSectionBtn.addEventListener('click',function(){ensureSectionState();var suggestion='Section '+(sectionSeq+1);var name=prompt('Section name',suggestion);if(name===null)return;name=name.trim();if(!name){showToast('Section name is required');return;}var nameNorm=normalizeSectionName(name);var exists=sections.some(function(sec){return sec&&normalizeSectionName(sec.name)===nameNorm;});if(exists){showToast('A section named “'+name+'” already exists.');return;}var newId=sectionSeq+1;var defaultPercent=isFinite(discountPercent)?discountPercent:0;sections.push({id:newId,name:name,notes:'',sectionDiscountPercent:defaultPercent,sectionGrandTotalOverride:null});sectionSeq=newId;activeSectionId=newId;captureParentId=null;window.DefCost.ui.renderBasket();showToast('Section added');});}
 if(importBtn&&importInput){
   importBtn.addEventListener('click',function(){
     importInput.value='';
